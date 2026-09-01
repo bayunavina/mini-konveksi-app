@@ -1,27 +1,41 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Parkinsans } from "next/font/google";
+import { Plus_Jakarta_Sans, Roboto_Mono, Lora } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800"],
+  preload: false,
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoMono = Roboto_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+  preload: false,
 });
 
-const parkinsans = Parkinsans({
-  variable: "--font-parkinsans",
+const lora = Lora({
+  variable: "--font-serif",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "Codeguide Starter Fullstack",
-  description:
-    "A modern Next.js starter with TypeScript, TailwindCSS, shadcn/ui, Better Auth, and Drizzle ORM",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -30,9 +44,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${parkinsans.variable} antialiased`}
+        className={`${plusJakartaSans.variable} ${robotoMono.variable} ${lora.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -41,6 +55,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <Toaster position="top-right" richColors closeButton expand />
         </ThemeProvider>
       </body>
     </html>

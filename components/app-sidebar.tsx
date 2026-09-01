@@ -2,188 +2,55 @@
 
 import * as React from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { useSession } from "@/lib/auth-client"
-import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
-
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { Scissors } from "lucide-react"
+import { useSessionWithRole } from "@/lib/use-session-with-role"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-const staticData = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+import { KonveksiSidebar } from "@/components/layout/konveksi-sidebar"
+import { NavUser } from "@/components/nav-user"
+import { APP_NAME } from "@/lib/constants"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession()
+  const { user, isLoading } = useSessionWithRole()
   
-  const userData = session?.user ? {
-    name: session.user.name || "User",
-    email: session.user.email,
-    avatar: session.user.image || "/codeguide-logo.png",
-  } : {
-    name: "Guest",
-    email: "guest@example.com", 
-    avatar: "/codeguide-logo.png",
+  const userData = {
+    name: user?.name || user?.email || "",
+    email: user?.email || "",
+    avatar: user?.image || "/codeguide-logo.png",
+    role: user?.role,
+    isAdmin: user?.isAdmin || false,
   }
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <Link href="/">
-                <Image src="/codeguide-logo.png" alt="CodeGuide" width={32} height={32} className="rounded-lg" />
-                <span className="text-base font-semibold font-parkinsans">CodeGuide</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+    <Sidebar collapsible="offcanvas" className="border-r-0 bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 shadow-xl shadow-black/20 dark:shadow-black/40" {...props}>
+      <SidebarHeader className="border-b border-border/50 py-4 px-3">
+        <div className="flex items-center gap-3 overflow-visible">
+          <div className="relative flex h-12 w-12 min-w-[48px] items-center justify-center p-1 overflow-visible">
+            <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50" />
+            <div className="absolute inset-[2px] rounded-full bg-[#304ffe] flex items-center justify-center p-2">
+              <Scissors className="h-full w-full text-white" />
+            </div>
+          </div>
+          <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+            <span className="text-sm sm:text-base font-bold uppercase tracking-wider whitespace-nowrap">{APP_NAME}</span>
+          </Link>
+        </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={staticData.navMain} />
-        <NavDocuments items={staticData.documents} />
-        <NavSecondary items={staticData.navSecondary} className="mt-auto" />
+        <KonveksiSidebar />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={userData} />
+      <SidebarFooter className="border-t border-border/50">
+        {isLoading ? (
+          <div className="h-16 flex items-center justify-center px-4">
+            <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+          </div>
+        ) : (
+          <NavUser user={userData} />
+        )}
       </SidebarFooter>
     </Sidebar>
   )

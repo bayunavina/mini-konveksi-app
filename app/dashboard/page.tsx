@@ -1,18 +1,46 @@
-import { ChartAreaInteractive } from "@//components/chart-area-interactive"
-import { DataTable } from "@//components/data-table"
-import { SectionCards } from "@//components/section-cards"
-import data from "@/app/dashboard/data.json"
+"use client"
 
-export default function Page() {
-  return (
-    <div className="@container/main flex flex-1 flex-col gap-2">
-      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-        <SectionCards />
-        <div className="px-4 lg:px-6">
-          <ChartAreaInteractive />
-        </div>
-        <DataTable data={data} />
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useSessionWithRole } from "@/lib/use-session-with-role"
+import { Loader2 } from "lucide-react"
+
+export default function DashboardPage() {
+  const { user, isLoading } = useSessionWithRole()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      switch (user.role) {
+        case "ADMIN":
+          router.replace("/dashboard/admin")
+          break
+        case "QC":
+          router.replace("/dashboard/qc")
+          break
+        case "GUDANG":
+          router.replace("/dashboard/gudang")
+          break
+        case "KARYAWAN":
+          router.replace("/dashboard/karyawan")
+          break
+        default:
+          router.replace("/dashboard/karyawan")
+      }
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   )
 }

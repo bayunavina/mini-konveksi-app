@@ -11,3 +11,10 @@ export const {
     useSession,
     getSession,
 } = authClient;
+
+export const signInWithGoogle = () => {
+    return signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+    });
+};

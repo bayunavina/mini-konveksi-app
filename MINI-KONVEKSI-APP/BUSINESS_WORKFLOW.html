@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Bisnis - Mini Konveksi App</title>
+    <style>
+        :root {
+            --primary: #304ffe;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --purple: #8b5cf6;
+            --gray: #6b7280;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(48, 79, 254, 0.3);
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .admin .section-icon { background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%); }
+        .karyawan .section-icon { background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%); }
+        .qc .section-icon { background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%); }
+        .gudang .section-icon { background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%); }
+        
+        .section h2 {
+            font-size: 1.8em;
+            color: #1f2937;
+        }
+        
+        .flow-container {
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: max-content;
+        }
+        
+        .flow-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .node {
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 180px;
+            max-width: 250px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .node:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .node-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .node-title {
+            font-weight: 700;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+        
+        .node-desc {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        
+        .node-start {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            color: white;
+            border-radius: 30px;
+        }
+        
+        .node-process {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1f2937;
+            border: 2px solid #cbd5e1;
+        }
+        
+        .node-decision {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+            color: white;
+            transform: rotate(0deg);
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .node-decision::before {
+            content: '?';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 25px;
+            height: 25px;
+            background: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .node-action {
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            color: white;
+        }
+        
+        .node-end {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            color: white;
+            border-radius: 30px;
+        }
+        
+        .node-error {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .node-notify {
+            background: linear-gradient(135deg, var(--info) 0%, #0891b2 100%);
+            color: white;
+        }
+        
+        .node-db {
+            background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);
+            color: white;
+        }
+        
+        .node-role-admin {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .node-role-karyawan {
+            border-left: 4px solid var(--primary);
+        }
+        
+        .node-role-qc {
+            border-left: 4px solid var(--warning);
+        }
+        
+        .node-role-gudang {
+            border-left: 4px solid var(--success);
+        }
+        
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--gray);
+            font-size: 0.85em;
+            padding: 5px 0;
+        }
+        
+        .arrow-line {
+            width: 3px;
+            height: 30px;
+            background: var(--gray);
+            position: relative;
+        }
+        
+        .arrow-line::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid var(--gray);
+        }
+        
+        .arrow-down {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .arrow-h {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 10px;
+        }
+        
+        .arrow-h .arrow-line {
+            width: 40px;
+            height: 3px;
+        }
+        
+        .arrow-h .arrow-line::after {
+            display: none;
+        }
+        
+        .arrow-h .arrow-line::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 10px solid var(--gray);
+        }
+        
+        .branch {
+            display: flex;
+            gap: 30px;
+            position: relative;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px dashed #e2e8f0;
+        }
+        
+        .branch::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--warning);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .branch-yes::before { content: 'YA ✓'; background: var(--success); }
+        .branch-no::before { content: 'TIDAK ✗'; background: var(--danger); }
+        
+        .branch-item {
+            flex: 1;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+        }
+        
+        .sub-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .sub-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .transaction-flow {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid var(--warning);
+        }
+        
+        .transaction-flow h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        
+        .transaction-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .step {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .step-num {
+            background: var(--warning);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+        
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .summary-table th,
+        .summary-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .summary-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .summary-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .summary-table tr:hover {
+            background: #e2e8f0;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .role-badge.admin { background: #fee2e2; color: var(--danger); }
+        .role-badge.karyawan { background: #dbeafe; color: var(--primary); }
+        .role-badge.qc { background: #fef3c7; color: #d97706; }
+        .role-badge.gudang { background: #dcfce7; color: var(--success); }
+        
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #e2e8f0; }
+            .node:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <h1>📋 Workflow Bisnis Proses</h1>
+            <h2>Mini Konveksi App - ERP Konveksi</h2>
+            <p>Dokumentasi alur proses produksi dan transaksi untuk setiap role pengguna</p>
+        </header>
+
+        <!-- LEGEND -->
+        <div class="section">
+            <h3 style="margin-bottom: 15px;">Legenda Simbol</h3>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);"></div>
+                    <span>Start/End</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 2px solid #cbd5e1;"></div>
+                    <span>Proses</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);"></div>
+                    <span>Keputusan</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);"></div>
+                    <span>Action/Aksi</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);"></div>
+                    <span>Error/Reject</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);"></div>
+                    <span>Database</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, var(--info) 0%, #0891b2 100%);"></div>
+                    <span>Notifikasi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ADMIN WORKFLOW ==================== -->
+        <div class="section admin">
+            <div class="section-header">
+                <div class="section-icon">👨‍💼</div>
+                <h2>Workflow Admin</h2>
+            </div>
+
+            <!-- 1. Job Order Creation -->
+            <div class="sub-section">
+                <h3>📝 1. Pembuatan Job Order</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">🚀</div>
+                                <div class="node-title">Start</div>
+                                <div class="node-desc">Admin Login</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process node-role-admin">
+                                <div class="node-icon">📋</div>
+                                <div class="node-title">Buat Job Order Baru</div>
+                                <div class="node-desc">Input detail produksi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Job Order</div>
+                                <div class="node-desc">Tabel: job_orders</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-action">
+                                <div class="node-icon">👥</div>
+                                <div class="node-title">Assign ke Tim</div>
+                                <div class="node-desc">Pilih team produksi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Assignment</div>
+                                <div class="node-desc">Tabel: production_assignments</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Karyawan</div>
+                                <div class="node-desc">Job Order baru masuk</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-end">
+                                <div class="node-icon">✅</div>
+                                <div class="node-title">Selesai</div>
+                                <div class="node-desc">Job Order aktif</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Production Monitoring -->
+            <div class="sub-section">
+                <h3>📊 2. Monitoring Produksi</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">🚀</div>
+                                <div class="node-title">Monitoring</div>
+                                <div class="node-desc">Dashboard Admin</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">📈</div>
+                                <div class="node-title">Cek Progress</div>
+                                <div class="node-desc">Ambil data produksi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">QC Pending?</div>
+                                <div class="node-desc">Ada job order perlu QC</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-notify" style="min-width: auto;">
+                                        <div class="node-icon">🔔</div>
+                                        <div class="node-title">Notifikasi QC</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-process" style="min-width: auto;">
+                                        <div class="node-icon">⏳</div>
+                                        <div class="node-title">Lanjut Monitoring</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">Transfer Pending?</div>
+                                <div class="node-desc">Ada transfer perlu konfirmasi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-notify" style="min-width: auto;">
+                                        <div class="node-icon">🔔</div>
+                                        <div class="node-title">Notifikasi Gudang</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-end" style="min-width: auto;">
+                                        <div class="node-icon">✅</div>
+                                        <div class="node-title">Monitoring Selesai</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Salary Approval -->
+            <div class="sub-section">
+                <h3>💰 3. Persetujuan Klaim Gaji</h3>
+                <div class="transaction-flow">
+                    <h4>Alur Transaksi Gaji:</h4>
+                    <div class="transaction-steps">
+                        <div class="step"><span class="step-num">1</span> Karyawan Klaim Gaji</div>
+                        <div class="step"><span class="step-num">2</span> Admin Terima Notifikasi</div>
+                        <div class="step"><span class="step-num">3</span> Review Klaim</div>
+                        <div class="step"><span class="step-num">4</span> Setujui/Tolak</div>
+                        <div class="step"><span class="step-num">5</span> Tandai Dibayar</div>
+                        <div class="step"><span class="step-num">6</span> Auto Create Transaction</div>
+                        <div class="step"><span class="step-num">7</span> Notifikasi Karyawan</div>
+                    </div>
+                </div>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">💵</div>
+                                <div class="node-title">Klaim Masuk</div>
+                                <div class="node-desc">Karyawan klaim gaji</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Klaim</div>
+                                <div class="node-desc">Status: CLAIMED</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Admin</div>
+                                <div class="node-desc">有新 klaim gaji</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">✅❌</div>
+                                <div class="node-title">Approve/Reject?</div>
+                                <div class="node-desc">Admin review</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">✅</div>
+                                        <div class="node-title">Approve</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-error" style="min-width: auto;">
+                                        <div class="node-icon">❌</div>
+                                        <div class="node-title">Reject</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">💵</div>
+                                <div class="node-title">Tandai Dibayar?</div>
+                                <div class="node-desc">Finance payment</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="flow" style="gap: 10px;">
+                                        <div class="node node-db" style="min-width: auto;">
+                                            <div class="node-icon">💾</div>
+                                            <div class="node-title">Create Transaction</div>
+                                        </div>
+                                        <div class="node node-notify" style="min-width: auto;">
+                                            <div class="node-icon">🔔</div>
+                                            <div class="node-title">Notif Karyawan</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-process" style="min-width: auto;">
+                                        <div class="node-icon">⏳</div>
+                                        <div class="node-title">Menunggu Pembayaran</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Kasbon Approval -->
+            <div class="sub-section">
+                <h3>💳 4. Persetujuan Kasbon</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">💳</div>
+                                <div class="node-title">Pengajuan Kasbon</div>
+                                <div class="node-desc">Karyawan ajukan</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Kasbon</div>
+                                <div class="node-desc">Status: PENDING</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Admin</div>
+                                <div class="node-desc">有新 pengajuan kasbon</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">✅❌</div>
+                                <div class="node-title">Approve/Reject?</div>
+                                <div class="node-desc">Admin review</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">✅</div>
+                                        <div class="node-title">Approved</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-error" style="min-width: auto;">
+                                        <div class="node-icon">❌</div>
+                                        <div class="node-title">Rejected</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Karyawan</div>
+                                <div class="node-desc">Hasil persetujuan</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== KARYAWAN WORKFLOW ==================== -->
+        <div class="section karyawan">
+            <div class="section-header">
+                <div class="section-icon">👷</div>
+                <h2>Workflow Karyawan</h2>
+            </div>
+
+            <!-- 1. Login & Dashboard -->
+            <div class="sub-section">
+                <h3>🔐 1. Login & Dashboard</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">🔑</div>
+                                <div class="node-title">Login</div>
+                                <div class="node-desc">Input email & password</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">✓</div>
+                                <div class="node-title">Login Berhasil?</div>
+                                <div class="node-desc">Cek autentikasi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-process" style="min-width: auto;">
+                                        <div class="node-icon">📱</div>
+                                        <div class="node-title">Dashboard</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-error" style="min-width: auto;">
+                                        <div class="node-icon">❌</div>
+                                        <div class="node-title">Login Gagal</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Production Work -->
+            <div class="sub-section">
+                <h3>🏭 2. Proses Produksi</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">📋</div>
+                                <div class="node-title">Terima Job Order</div>
+                                <div class="node-desc">Notifikasi masuk</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process">
+                                <div class="node-icon">🔨</div>
+                                <div class="node-title">Kerjakan Produksi</div>
+                                <div class="node-desc">Input progress</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Update Progress</div>
+                                <div class="node-desc">Simpan completed qty</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">Target Tercapai?</div>
+                                <div class="node-desc">Cek progress</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-process" style="min-width: auto;">
+                                        <div class="node-icon">🔨</div>
+                                        <div class="node-title">Lanjut Produksi</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">📤</div>
+                                        <div class="node-title">Kirim ke QC</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Update Status JO</div>
+                                <div class="node-desc">Status: QC_PENDING</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi QC</div>
+                                <div class="node-desc">Barang siap di-QC</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Salary Claim -->
+            <div class="sub-section">
+                <h3>💰 3. Klaim Gaji</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">📊</div>
+                                <div class="node-title">Lihat Progress</div>
+                                <div class="node-desc">Dashboard Karyawan</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">Sudah Ada Progress?</div>
+                                <div class="node-desc">Cek completed qty</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-process" style="min-width: auto;">
+                                        <div class="node-icon">📝</div>
+                                        <div class="node-title">Hitung Gaji</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-end" style="min-width: auto;">
+                                        <div class="node-icon">⏳</div>
+                                        <div class="node-title">Belum Bisa Klaim</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-action">
+                                <div class="node-icon">📤</div>
+                                <div class="node-title">Klaim Gaji</div>
+                                <div class="node-desc">Submit klaim</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Klaim</div>
+                                <div class="node-desc">Status: CLAIMED</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Admin</div>
+                                <div class="node-desc">有新 klaim gaji</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-end">
+                                <div class="node-icon">⏳</div>
+                                <div class="node-title">Menunggu Approval</div>
+                                <div class="node-desc">Status: CLAIMED</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Kasbon Request -->
+            <div class="sub-section">
+                <h3>💳 4. Pengajuan Kasbon</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">💳</div>
+                                <div class="node-title">Ajukan Kasbon</div>
+                                <div class="node-desc">Input nominal</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Kasbon</div>
+                                <div class="node-desc">Status: PENDING</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Admin</div>
+                                <div class="node-desc">有新 pengajuan kasbon</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-end">
+                                <div class="node-icon">⏳</div>
+                                <div class="node-title">Menunggu Approval</div>
+                                <div class="node-desc">Status: PENDING</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. QC Result Notification -->
+            <div class="sub-section">
+                <h3>🔍 5. Hasil QC</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Terima Notifikasi</div>
+                                <div class="node-desc">Hasil QC masuk</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">✅❌</div>
+                                <div class="node-title">QC Passed?</div>
+                                <div class="node-desc">Cek hasil</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">✅</div>
+                                        <div class="node-title">Barang Diterima</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-error" style="min-width: auto;">
+                                        <div class="node-icon">❌</div>
+                                        <div class="node-title">Barang Ditolak</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== QC WORKFLOW ==================== -->
+        <div class="section qc">
+            <div class="section-header">
+                <div class="section-icon">🔍</div>
+                <h2>Workflow QC (Quality Control)</h2>
+            </div>
+
+            <!-- 1. QC Dashboard -->
+            <div class="sub-section">
+                <h3>📊 1. Dashboard QC</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">🔍</div>
+                                <div class="node-title">Login QC</div>
+                                <div class="node-desc">Dashboard QC</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">📈</div>
+                                <div class="node-title">Ambil Data QC</div>
+                                <div class="node-desc">Job orders + QC reports</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">Ada QC Pending?</div>
+                                <div class="node-desc">Cek job orders</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-process" style="min-width: auto;">
+                                        <div class="node-icon">📋</div>
+                                        <div class="node-title">Tampilkan List QC</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-end" style="min-width: auto;">
+                                        <div class="node-icon">✅</div>
+                                        <div class="node-title">Tidak Ada QC</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. QC Process -->
+            <div class="sub-section">
+                <h3>✅ 2. Proses Quality Control</h3>
+                <div class="transaction-flow">
+                    <h4>Alur QC:</h4>
+                    <div class="transaction-steps">
+                        <div class="step"><span class="step-num">1</span> Terima Notifikasi</div>
+                        <div class="step"><span class="step-num">2</span> Periksa Barang</div>
+                        <div class="step"><span class="step-num">3</span> Input Success/Reject</div>
+                        <div class="step"><span class="step-num">4</span> Simpan QC Report</div>
+                        <div class="step"><span class="step-num">5</span> Update Job Order</div>
+                        <div class="step"><span class="step-num">6</span> Notifikasi Karyawan</div>
+                    </div>
+                </div>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">📦</div>
+                                <div class="node-title">Barang Masuk QC</div>
+                                <div class="node-desc">Dari produksi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process">
+                                <div class="node-icon">🔍</div>
+                                <div class="node-title">Inspeksi Barang</div>
+                                <div class="node-desc">Periksa kualitas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">✅❌</div>
+                                <div class="node-title">Lolos QC?</div>
+                                <div class="node-desc">Cek standar</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="flow" style="gap: 10px;">
+                                        <div class="node node-action" style="min-width: auto;">
+                                            <div class="node-icon">✅</div>
+                                            <div class="node-title">Input Success Qty</div>
+                                        </div>
+                                        <div class="node node-action" style="min-width: auto;">
+                                            <div class="node-icon">🔄</div>
+                                            <div class="node-title">Update Job Order</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="flow" style="gap: 10px;">
+                                        <div class="node node-error" style="min-width: auto;">
+                                            <div class="node-icon">❌</div>
+                                            <div class="node-title">Input Reject Qty</div>
+                                        </div>
+                                        <div class="node node-action" style="min-width: auto;">
+                                            <div class="node-icon">📋</div>
+                                            <div class="node-title">Buat Reject Report</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan QC Report</div>
+                                <div class="node-desc">Tabel: qc_reports</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">Target Terpenuhi?</div>
+                                <div class="node-desc">Cek completed qty</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">🏁</div>
+                                        <div class="node-title">Job Order Selesai</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="node node-process" style="min-width: auto;">
+                                    <div class="node-icon">🔄</div>
+                                    <div class="node-title">Lanjut Produksi</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Karyawan</div>
+                                <div class="node-desc">Hasil QC</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-end">
+                                <div class="node-icon">✅</div>
+                                <div class="node-title">QC Selesai</div>
+                                <div class="node-desc">Report tersimpan</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. QC Report Summary -->
+            <div class="sub-section">
+                <h3>📈 3. Laporan QC</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">📊</div>
+                                <div class="node-title">Lihat Statistik</div>
+                                <div class="node-desc">Dashboard QC</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">📈</div>
+                                <div class="node-title">Ambil Data Reports</div>
+                                <div class="node-desc">QC reports summary</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process">
+                                <div class="node-icon">📊</div>
+                                <div class="node-title">Tampilkan Statistik</div>
+                                <div class="node-desc">Success vs Reject</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== GUDANG WORKFLOW ==================== -->
+        <div class="section gudang">
+            <div class="section-header">
+                <div class="section-icon">🏪</div>
+                <h2>Workflow Gudang</h2>
+            </div>
+
+            <!-- 1. Transfer Management -->
+            <div class="sub-section">
+                <h3>🚚 1. Manajemen Transfer</h3>
+                <div class="transaction-flow">
+                    <h4>Alur Transfer:</h4>
+                    <div class="transaction-steps">
+                        <div class="step"><span class="step-num">1</span> Buat Transfer</div>
+                        <div class="step"><span class="step-num">2</span> Pilih Tipe (IN/OUT)</div>
+                        <div class="step"><span class="step-num">3</span> Input Item & Qty</div>
+                        <div class="step"><span class="step-num">4</span> Simpan Transfer</div>
+                        <div class="step"><span class="step-num">5</span> Notifikasi Gudang</div>
+                        <div class="step"><span class="step-num">6</span> Konfirmasi Terima</div>
+                    </div>
+                </div>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">📝</div>
+                                <div class="node-title">Buat Transfer</div>
+                                <div class="node-desc">Pilih tipe</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">📥📤</div>
+                                <div class="node-title">Tipe Transfer</div>
+                                <div class="node-desc">INCOMING atau OUTGOING</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">📥</div>
+                                        <div class="node-title">Barang Masuk</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">📤</div>
+                                        <div class="node-title">Barang Keluar</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process">
+                                <div class="node-icon">📦</div>
+                                <div class="node-title">Input Item & Qty</div>
+                                <div class="node-desc">Pilih produk</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Transfer</div>
+                                <div class="node-desc">Tabel: transfers</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-notify">
+                                <div class="node-icon">🔔</div>
+                                <div class="node-title">Notifikasi Gudang</div>
+                                <div class="node-desc">有新 transfer</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">✅</div>
+                                <div class="node-title">Konfirmasi Terima?</div>
+                                <div class="node-desc">Gudang konfirmasi</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">✅</div>
+                                        <div class="node-title">Terima Barang</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="branch branch-no">
+                                    <div class="node node-error" style="min-width: auto;">
+                                        <div class="node-icon">❌</div>
+                                        <div class="node-title">Tolak/Batal</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-end">
+                                <div class="node-icon">✅</div>
+                                <div class="node-title">Transfer Selesai</div>
+                                <div class="node-desc">Stok diperbarui</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Inventory Management -->
+            <div class="sub-section">
+                <h3>📦 2. Manajemen Inventory</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">📦</div>
+                                <div class="node-title">Dashboard Gudang</div>
+                                <div class="node-desc">Lihat inventory</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">📈</div>
+                                <div class="node-title">Ambil Data Stok</div>
+                                <div class="node-desc">Material lots + Inventory</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-decision">
+                                <div class="node-icon">❓</div>
+                                <div class="node-title">Stok Rendah?</div>
+                                <div class="node-desc">Cek alert level</div>
+                            </div>
+                        </div>
+                        
+                        <div class="branch">
+                            <div class="branch-item">
+                                <div class="branch branch-yes">
+                                    <div class="node node-notify" style="min-width: auto;">
+                                        <div class="node-icon">⚠️</div>
+                                        <div class="node-title">Alert Stok Rendah</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="branch-item">
+                                <div class="node node-end" style="min-width: auto;">
+                                    <div class="node-icon">✅</div>
+                                    <div class="node-title">Stok Aman</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Material Management -->
+            <div class="sub-section">
+                <h3>🧵 3. Manajemen Bahan Baku</h3>
+                <div class="flow-container">
+                    <div class="flow">
+                        <div class="flow-row">
+                            <div class="node node-start">
+                                <div class="node-icon">🧵</div>
+                                <div class="node-title">Kelola Bahan Baku</div>
+                                <div class="node-desc">Material lots</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process">
+                                <div class="node-icon">➕</div>
+                                <div class="node-title">Tambah Material</div>
+                                <div class="node-desc">Input new lot</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-db">
+                                <div class="node-icon">💾</div>
+                                <div class="node-title">Simpan Material</div>
+                                <div class="node-desc">Tabel: material_lots</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-process">
+                                <div class="node-icon">📝</div>
+                                <div class="node-title">Update Penggunaan</div>
+                                <div class="node-desc">Kurangi stok</div>
+                            </div>
+                        </div>
+                        
+                        <div class="arrow"><div class="arrow-line"></div></div>
+                        
+                        <div class="flow-row">
+                            <div class="node node-end">
+                                <div class="node-icon">✅</div>
+                                <div class="node-title">Material Updated</div>
+                                <div class="node-desc">Stok terkini</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== INTEGRATED WORKFLOW ==================== -->
+        <div class="section" style="background: linear-gradient(135deg, #fef3c7 0%, #dbeafe 100%);">
+            <div class="section-header" style="border-color: var(--primary);">
+                <div class="section-icon" style="background: linear-gradient(135deg, var(--primary) 0%, var(--success) 100%);">🔗</div>
+                <h2>Workflow Terintegrasi - Full Production Cycle</h2>
+            </div>
+
+            <div class="flow-container">
+                <div class="flow">
+                    <!-- START -->
+                    <div class="flow-row">
+                        <div class="node node-start" style="background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);">
+                            <div class="node-icon">👨‍💼</div>
+                            <div class="node-title">ADMIN</div>
+                            <div class="node-desc">Buat Job Order</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- NOTIFY KARYAWAN -->
+                    <div class="flow-row">
+                        <div class="node node-notify">
+                            <div class="node-icon">🔔</div>
+                            <div class="node-title">NOTIFIKASI</div>
+                            <div class="node-desc">Karyawan terima JO</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- KARYAWAN PRODUCTION -->
+                    <div class="flow-row">
+                        <div class="node node-process node-role-karyawan">
+                            <div class="node-icon">👷</div>
+                            <div class="node-title">KARYAWAN</div>
+                            <div class="node-desc">Proses Produksi</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- NOTIFY QC -->
+                    <div class="flow-row">
+                        <div class="node node-notify">
+                            <div class="node-icon">🔔</div>
+                            <div class="node-title">NOTIFIKASI</div>
+                            <div class="node-desc">QC perlu inspeksi</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- QC PROCESS -->
+                    <div class="flow-row">
+                        <div class="node node-process node-role-qc">
+                            <div class="node-icon">🔍</div>
+                            <div class="node-title">QC</div>
+                            <div class="node-desc">Inspeksi & Report</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- DECISION -->
+                    <div class="flow-row">
+                        <div class="node node-decision">
+                            <div class="node-icon">✅❌</div>
+                            <div class="node-title">QC PASSED?</div>
+                            <div class="node-desc">Lolos standar?</div>
+                        </div>
+                    </div>
+                    
+                    <div class="branch">
+                        <div class="branch-item">
+                            <div class="branch branch-yes">
+                                <div class="flow" style="gap: 10px;">
+                                    <div class="node node-action" style="min-width: auto;">
+                                        <div class="node-icon">📦</div>
+                                        <div class="node-title">Simpan ke Gudang</div>
+                                    </div>
+                                    <div class="node node-notify" style="min-width: auto;">
+                                        <div class="node-icon">🔔</div>
+                                        <div class="node-title">NOTIFIKASI</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="branch-item">
+                            <div class="branch branch-no">
+                                <div class="node node-error" style="min-width: auto;">
+                                    <div class="node-icon">❌</div>
+                                    <div class="node-title">REJECT</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- GUDANG -->
+                    <div class="flow-row">
+                        <div class="node node-process node-role-gudang">
+                            <div class="node-icon">🏪</div>
+                            <div class="node-title">GUDANG</div>
+                            <div class="node-desc">Terima Barang Jadi</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- SALARY CLAIM -->
+                    <div class="flow-row">
+                        <div class="node node-notify">
+                            <div class="node-icon">🔔</div>
+                            <div class="node-title">NOTIFIKASI</div>
+                            <div class="node-desc">Karyawan klaim gaji</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- ADMIN APPROVAL -->
+                    <div class="flow-row">
+                        <div class="node node-process node-role-admin">
+                            <div class="node-icon">👨‍💼</div>
+                            <div class="node-title">ADMIN</div>
+                            <div class="node-desc">Approve Gaji</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- AUTO TRANSACTION -->
+                    <div class="flow-row">
+                        <div class="node node-db">
+                            <div class="node-icon">💰</div>
+                            <div class="node-title">AUTO CREATE</div>
+                            <div class="node-desc">Transaction EXPENSE</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow"><div class="arrow-line"></div></div>
+                    
+                    <!-- END -->
+                    <div class="flow-row">
+                        <div class="node node-end">
+                            <div class="node-icon">🏁</div>
+                            <div class="node-title">SELESAI</div>
+                            <div class="node-desc">Cycle Complete</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ROLE RESPONSIBILITIES ==================== -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, var(--info) 0%, #0891b2 100%);">📋</div>
+                <h2>Tabel Responsibilities</h2>
+            </div>
+
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Proses</th>
+                        <th><span class="role-badge admin">Admin</span></th>
+                        <th><span class="role-badge karyawan">Karyawan</span></th>
+                        <th><span class="role-badge qc">QC</span></th>
+                        <th><span class="role-badge gudang">Gudang</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Buat Job Order</td>
+                        <td>✅ Create</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Assign ke Tim</td>
+                        <td>✅ Create</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Proses Produksi</td>
+                        <td>Monitor</td>
+                        <td>✅ Execute</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Kirim ke QC</td>
+                        <td>Monitor</td>
+                        <td>✅ Submit</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>QC Inspection</td>
+                        <td>Monitor</td>
+                        <td>-</td>
+                        <td>✅ Execute</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>QC Report</td>
+                        <td>View</td>
+                        <td>View</td>
+                        <td>✅ Create</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Barang Jadi</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>Output</td>
+                        <td>✅ Receive</td>
+                    </tr>
+                    <tr>
+                        <td>Transfer Barang</td>
+                        <td>Create</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>✅ Manage</td>
+                    </tr>
+                    <tr>
+                        <td>Klaim Gaji</td>
+                        <td>Approve</td>
+                        <td>✅ Submit</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Kasbon</td>
+                        <td>Approve</td>
+                        <td>✅ Submit</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Finance</td>
+                        <td>✅ Full Access</td>
+                        <td>View Only</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ==================== NOTIFICATION FLOW ==================== -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);">🔔</div>
+                <h2>Alur Notifikasi Real-Time</h2>
+            </div>
+
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Event/Trigger</th>
+                        <th>Pengirim</th>
+                        <th>Penerima</th>
+                        <th>Tipe Notifikasi</th>
+                        <th>Icon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Job Order Baru</td>
+                        <td>System</td>
+                        <td><span class="role-badge karyawan">Karyawan</span></td>
+                        <td>JOB_ORDER</td>
+                        <td>📋</td>
+                    </tr>
+                    <tr>
+                        <td>Progress Update</td>
+                        <td>Karyawan</td>
+                        <td><span class="role-badge qc">QC</span></td>
+                        <td>PROGRESS_UPDATE</td>
+                        <td>🔄</td>
+                    </tr>
+                    <tr>
+                        <td>Siap QC</td>
+                        <td>System</td>
+                        <td><span class="role-badge qc">QC</span></td>
+                        <td>QC_PENDING</td>
+                        <td>🔍</td>
+                    </tr>
+                    <tr>
+                        <td>QC Result</td>
+                        <td>QC</td>
+                        <td><span class="role-badge karyawan">Karyawan</span></td>
+                        <td>QC_ACCEPTED / QC_REJECTED</td>
+                        <td>✅ / ❌</td>
+                    </tr>
+                    <tr>
+                        <td>Transfer Baru</td>
+                        <td>System</td>
+                        <td><span class="role-badge gudang">Gudang</span></td>
+                        <td>TRANSFER_IN / TRANSFER_OUT</td>
+                        <td>📦 / 📤</td>
+                    </tr>
+                    <tr>
+                        <td>Klaim Gaji Baru</td>
+                        <td>Karyawan</td>
+                        <td><span class="role-badge admin">Admin</span></td>
+                        <td>SALARY_CLAIM</td>
+                        <td>💰</td>
+                    </tr>
+                    <tr>
+                        <td>Gaji Dibayar</td>
+                        <td>Admin</td>
+                        <td><span class="role-badge karyawan">Karyawan</span></td>
+                        <td>SALARY_PAID</td>
+                        <td>💵</td>
+                    </tr>
+                    <tr>
+                        <td>Kasbon Baru</td>
+                        <td>Karyawan</td>
+                        <td><span class="role-badge admin">Admin</span></td>
+                        <td>KASBON_REQUEST</td>
+                        <td>💳</td>
+                    </tr>
+                    <tr>
+                        <td>Kasbon Approved</td>
+                        <td>Admin</td>
+                        <td><span class="role-badge karyawan">Karyawan</span></td>
+                        <td>KASBON_APPROVED / KASBON_REJECTED</td>
+                        <td>✅ / ❌</td>
+                    </tr>
+                    <tr>
+                        <td>Transaksi Baru</td>
+                        <td>System</td>
+                        <td><span class="role-badge admin">Admin</span></td>
+                        <td>TRANSACTION_INCOME / EXPENSE</td>
+                        <td>💰 / 💸</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ==================== DATABASE TABLES ==================== -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);">💾</div>
+                <h2>Struktur Database Utama</h2>
+            </div>
+
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Tabel</th>
+                        <th>Fungsi</th>
+                        <th>Relasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>job_orders</code></td>
+                        <td>Master job order produksi</td>
+                        <td>products, teams, employees</td>
+                    </tr>
+                    <tr>
+                        <td><code>production_assignments</code></td>
+                        <td>Assignment JO ke karyawan</td>
+                        <td>job_orders, employees</td>
+                    </tr>
+                    <tr>
+                        <td><code>production_salary</code></td>
+                        <td>Klaim gaji produksi</td>
+                        <td>employees, production_assignments</td>
+                    </tr>
+                    <tr>
+                        <td><code>qc_reports</code></td>
+                        <td>Laporan hasil QC</td>
+                        <td>job_orders, employees</td>
+                    </tr>
+                    <tr>
+                        <td><code>transfers</code></td>
+                        <td>Transfer barang</td>
+                        <td>warehouses</td>
+                    </tr>
+                    <tr>
+                        <td><code>transactions</code></td>
+                        <td>Transaksi keuangan</td>
+                        <td>Reference: salary, transfer</td>
+                    </tr>
+                    <tr>
+                        <td><code>notifications</code></td>
+                        <td>Notifikasi user</td>
+                        <td>employees</td>
+                    </tr>
+                    <tr>
+                        <td><code>material_lots</code></td>
+                        <td>Stok bahan baku</td>
+                        <td>products, warehouses</td>
+                    </tr>
+                    <tr>
+                        <td><code>inventory_stock</code></td>
+                        <td>Stok barang jadi</td>
+                        <td>products, warehouses</td>
+                    </tr>
+                    <tr>
+                        <td><code>advances</code></td>
+                        <td>Pengajuan kasbon</td>
+                        <td>employees</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FOOTER -->
+        <footer style="text-align: center; padding: 30px; color: #6b7280; font-size: 0.9em;">
+            <p>Dokumentasi Workflow Bisnis - Mini Konveksi App</p>
+            <p>ERP Konveksi - Version 1.0</p>
+            <p style="margin-top: 10px;">Generated: <span id="date"></span></p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('date').textContent = new Date().toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    </script>
+</body>
+</html>

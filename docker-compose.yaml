@@ -1,46 +1,50 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: codeguide-starter-fullstack-postgres
+    container_name: mini-konveksi-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: konveksi_db
+      POSTGRES_USER: konveksi_user
+      POSTGRES_PASSWORD: konveksi_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - codeguide-starter-fullstack-network
+      - mini-konveksi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U konveksi_user -d konveksi_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # Next.js Application
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: codeguide-starter-fullstack-app
+    container_name: mini-konveksi-app
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://konveksi_user:konveksi_password@postgres:5432/konveksi_db
       - BETTER_AUTH_SECRET=your-super-secret-key-change-in-production
       - BETTER_AUTH_URL=http://localhost:3000
     ports:
       - "3000:3000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
-      - codeguide-starter-fullstack-network
+      - mini-konveksi-network
 
-  # Development database only
   postgres-dev:
     image: postgres:16-alpine
-    container_name: codeguide-starter-fullstack-postgres-dev
+    container_name: mini-konveksi-postgres-dev
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
@@ -51,7 +55,7 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     networks:
-      - codeguide-starter-fullstack-network
+      - mini-konveksi-network
     profiles:
       - dev
 
@@ -62,5 +66,5 @@ volumes:
     driver: local
 
 networks:
-  codeguide-starter-fullstack-network:
+  mini-konveksi-network:
     driver: bridge

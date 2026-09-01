@@ -1,11 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/db"; // your drizzle instance
+import { db } from "@/db";
 import { account, session, user, verification } from "@/db/schema/auth";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
-        provider: "pg", // or "mysql", "sqlite"
+        provider: "pg",
         schema: {
             user: user,
             account: account,
@@ -15,5 +15,8 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+    },
+    advanced: {
+        generateId: () => crypto.randomUUID(),
     },
 });

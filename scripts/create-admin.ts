@@ -1,0 +1,114 @@
+import 'dotenv/config'
+import { Pool } from 'pg'
+import crypto from 'crypto'
+import { scryptAsync } from '@noble/hashes/scrypt.js'
+
+const config = {
+  N: 16384,
+  r: 16,
+  p: 1,
+  dkLen: 64,
+  maxmem: 128 * 16384 * 16 * 2
+}
+
+function toHex(buffer: ArrayLike<number>): string {
+  return Array.from(buffer)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function fromHex(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2)
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.substr(i * 2, 2), 16)
+  }
+  return bytes
+}
+
+async function hashPassword(password: string): Promise<string> {
+  const saltBytes = crypto.randomBytes(16)
+  const salt = toHex(saltBytes)
+  const normalizedPassword = password.normalize("NFKC")
+  
+  const key = await scryptAsync(normalizedPassword, fromHex(salt), {
+    N: config.N,
+    p: config.p,
+    r: config.r,
+    dkLen: config.dkLen,
+    maxmem: config.maxmem,
+  })
+  
+  return `${salt}:${toHex(key)}`
+}
+
+async function createAdminUser() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  })
+
+  try {
+    const email = 'indrabayunavina@gmail.com'
+    const password = 'admin123'
+    const name = 'Admin Sistem'
+    
+    const existing = await pool.query('SELECT id FROM "user" WHERE email = $1', [email])
+    
+    let userId: string
+    
+    if (existing.rows.length > 0) {
+      console.log('User already exists, updating password...')
+      userId = existing.rows[0].id
+      
+      await pool.query('DELETE FROM account WHERE user_id = $1', [userId])
+    } else {
+      userId = crypto.randomUUID()
+      
+      await pool.query(
+        'INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+        [userId, name, email, true]
+      )
+      console.log('User created')
+    }
+    
+    const hashedPassword = await hashPassword(password)
+    console.log('Hash generated:', hashedPassword)
+    
+    const accountId = crypto.randomUUID()
+    
+    await pool.query(
+      'INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())',
+      [accountId, 'credential', 'credential', userId, hashedPassword]
+    )
+    console.log('Account created with hashed password')
+    
+    const existingEmployee = await pool.query('SELECT id FROM employees WHERE email = $1', [email])
+    
+    if (existingEmployee.rows.length > 0) {
+      await pool.query(
+        'UPDATE employees SET role = $1, user_id = $2, is_active = true WHERE email = $3',
+        ['ADMIN', userId, email]
+      )
+      console.log('Employee record updated to ADMIN')
+    } else {
+      const employeeId = crypto.randomUUID()
+      await pool.query(
+        'INSERT INTO employees (id, name, email, role, user_id, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())',
+        [employeeId, name, email, 'ADMIN', userId]
+      )
+      console.log('Employee record created with ADMIN role')
+    }
+    
+    console.log('✅ Admin user setup complete!')
+    console.log('')
+    console.log('🔑 Login credentials:')
+    console.log('   Email:', email)
+    console.log('   Password:', password)
+    
+  } catch (error) {
+    console.error('Error:', error)
+  } finally {
+    await pool.end()
+  }
+}
+
+createAdminUser()

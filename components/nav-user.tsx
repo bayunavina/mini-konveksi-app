@@ -4,18 +4,14 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { signOut } from "@/lib/auth-client"
 import {
-  IconCreditCard,
-  IconDotsVertical,
-  IconLogout,
-  IconNotification,
-  IconUserCircle,
-} from "@tabler/icons-react"
+  UserCircleIcon,
+  ArrowRightOnRectangleIcon,
+  Cog6ToothIcon,
+  BellIcon,
+  ShieldCheckIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +27,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Badge } from "@/components/ui/badge"
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Admin",
+  QC: "QC",
+  KARYAWAN: "Karyawan",
+  GUDANG: "Gudang",
+  GUEST: "Guest",
+}
 
 export function NavUser({
   user,
@@ -39,6 +44,8 @@ export function NavUser({
     name: string
     email: string
     avatar: string
+    role?: string
+    isAdmin?: boolean
   }
 }) {
   const { isMobile } = useSidebar()
@@ -57,71 +64,88 @@ export function NavUser({
     }
   }
 
-  const userInitials = user.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
-    : user.email[0].toUpperCase()
+  const handleNavigate = (path: string) => {
+    router.push(path)
+  }
+
+  const role = user.role || "GUEST"
+  const roleLabel = ROLE_LABELS[role] || ROLE_LABELS.GUEST
 
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
+      <SidebarMenuItem className="pb-4 pt-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground w-full h-auto py-3 rounded-lg hover:bg-accent transition-colors"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
+              <div className="relative flex h-10 w-10 items-center justify-center shrink-0">
+                <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50" />
+                <div className="absolute inset-[2px] rounded-full bg-[#304ffe]" />
+                <span className="relative z-10 text-white font-semibold text-sm">
+                  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </span>
               </div>
-              <IconDotsVertical className="ml-auto size-4" />
+              <div className="grid flex-1 text-left min-w-0 py-1">
+                <span className="truncate font-semibold text-sm">{user.name || "User"}</span>
+                <span className="truncate text-muted-foreground text-xs">{roleLabel}</span>
+              </div>
+              <ChevronDownIcon className="ml-auto h-3 w-3 shrink-0 opacity-50 transition-transform group-data-[state=open]/menu:rotate-180" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            className="w-64 rounded-lg border shadow-lg"
+            side={isMobile ? "bottom" : "top"}
             align="end"
-            sideOffset={4}
+            sideOffset={8}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">
+              <div className="flex items-center gap-3 px-4 py-4 border-b">
+                <div className="relative flex h-12 w-12 items-center justify-center shrink-0">
+                  <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50" />
+                  <div className="absolute inset-[2px] rounded-full bg-[#304ffe]" />
+                  <span className="relative z-10 text-white font-bold text-base">
+                    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                  </span>
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight min-w-0">
+                  <span className="truncate font-semibold">{user.name || "User"}</span>
+                  <span className="truncate text-muted-foreground text-xs">
                     {user.email}
                   </span>
                 </div>
               </div>
+              <div className="px-4 py-3">
+                <Badge variant="secondary" className="text-xs font-medium px-3 py-1 rounded-full">
+                  {user.isAdmin && <ShieldCheckIcon className="h-3 w-3 mr-1 inline" />}
+                  {roleLabel}
+                </Badge>
+              </div>
             </DropdownMenuLabel>
+            {user.role === "ADMIN" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => handleNavigate("/dashboard/settings/users")} className="cursor-pointer">
+                    <UserCircleIcon className="mr-2 h-4 w-4" />
+                    <span>Profil Saya</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavigate("/dashboard/settings/general")} className="cursor-pointer">
+                    <Cog6ToothIcon className="mr-2 h-4 w-4" />
+                    <span>Pengaturan</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavigate("/dashboard/settings/notifications")} className="cursor-pointer">
+                    <BellIcon className="mr-2 h-4 w-4" />
+                    <span>Notifikasi</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            )}
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
-              <IconLogout />
-              {isSigningOut ? "Signing out..." : "Log out"}
+            <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut} className="text-destructive focus:text-destructive cursor-pointer">
+              <ArrowRightOnRectangleIcon className="mr-2 h-4 w-4" />
+              <span>{isSigningOut ? "Signing out..." : "Keluar"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

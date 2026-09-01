@@ -8,6 +8,20 @@
       "when": 1756202589329,
       "tag": "0000_overjoyed_morlun",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774440498081,
+      "tag": "0001_remove_product_id_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774478972272,
+      "tag": "0002_bitter_justice",
+      "breakpoints": true
     }
   ]
 }
