@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, BanknotesIcon, ArrowLeftIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface Transaction {
   id: string
@@ -37,6 +38,7 @@ interface MonthlyReport {
 }
 
 export default function ReportsPage() {
+  const { formatCurrency } = useCurrency()
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([])
 
@@ -120,9 +122,9 @@ export default function ReportsPage() {
               ]}
               data={monthlyReports.map((r) => ({
                 month: formatMonth(r.month),
-                income: `Rp ${r.income.toLocaleString("id-ID")}`,
-                expense: `Rp ${r.expense.toLocaleString("id-ID")}`,
-                profit: `Rp ${r.profit.toLocaleString("id-ID")}`,
+                income: formatCurrency(r.income),
+                expense: formatCurrency(r.expense),
+                profit: formatCurrency(r.profit),
                 transactions: r.transactions,
               }))}
             />
@@ -161,7 +163,7 @@ export default function ReportsPage() {
             ) : (
               <>
                 <div className="text-2xl font-bold text-green-600">
-                  Rp {totalIncome.toLocaleString("id-ID")}
+                  {formatCurrency(totalIncome)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {currentMonthData?.transactions || 0} transaksi
@@ -181,7 +183,7 @@ export default function ReportsPage() {
             ) : (
               <>
                 <div className="text-2xl font-bold text-red-600">
-                  Rp {totalExpense.toLocaleString("id-ID")}
+                  {formatCurrency(totalExpense)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {Object.keys(categoryExpense).length} kategori
@@ -201,7 +203,7 @@ export default function ReportsPage() {
             ) : (
               <>
                 <div className={`text-2xl font-bold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  Rp {profit.toLocaleString("id-ID")}
+                  {formatCurrency(profit)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Margin: {totalIncome > 0 ? Math.round((profit / totalIncome) * 100) : 0}%
@@ -261,13 +263,13 @@ export default function ReportsPage() {
                     </div>
                     <div className="text-right">
                       <div className="font-medium text-green-600">
-                        + Rp {report.income.toLocaleString("id-ID")}
+                        + {formatCurrency(report.income)}
                       </div>
                       <div className="text-sm text-red-600">
-                        - Rp {report.expense.toLocaleString("id-ID")}
+                        - {formatCurrency(report.expense)}
                       </div>
                       <div className={`text-sm font-medium ${report.profit >= 0 ? "text-[var(--chart-blue)]" : "text-red-600"}`}>
-                        Laba: Rp {report.profit.toLocaleString("id-ID")}
+                        Laba: {formatCurrency(report.profit)}
                       </div>
                     </div>
                   </div>
@@ -390,7 +392,7 @@ export default function ReportsPage() {
                           : "Lainnya"}
                       </div>
                       <div className="text-sm font-medium">
-                        Rp {amount.toLocaleString("id-ID")}
+                        {formatCurrency(amount)}
                       </div>
                     </div>
                   )

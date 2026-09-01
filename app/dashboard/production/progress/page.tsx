@@ -18,6 +18,7 @@ import {
 import { PageHeader } from "@/components/shared"
 import { ArrowLeftIcon, ArrowPathIcon, CubeIcon, CheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
 
 interface Assignment {
@@ -49,6 +50,7 @@ interface Assignment {
 }
 
 export default function EmployeeProgressPage() {
+  const { formatCurrency } = useCurrency()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -127,14 +129,6 @@ export default function EmployeeProgressPage() {
       default:
         return <Badge variant="outline">{status}</Badge>
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount)
   }
 
   const getProgressPercentage = (assignment: Assignment) => {

@@ -31,9 +31,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
-import { ArrowLeftIcon, PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface SKU {
   id: string
@@ -63,6 +64,7 @@ interface CostCategory {
 }
 
 export default function MasterPage() {
+  const { formatCurrency } = useCurrency()
   const { data: apiSkus, refetch: refetchSkus } = useFetch<SKU[]>("/api/master-skus")
   const [skus, setSkus] = useState<SKU[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -295,7 +297,7 @@ export default function MasterPage() {
                       <TableCell className="font-mono">{sku.code}</TableCell>
                       <TableCell className="font-medium">{sku.name}</TableCell>
                       <TableCell><Badge variant="outline">{sku.category}</Badge></TableCell>
-                      <TableCell>Rp {sku.price.toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(sku.price)}</TableCell>
                       <TableCell>
                         <Badge className={sku.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
                           {sku.isActive ? "Aktif" : "Nonaktif"}

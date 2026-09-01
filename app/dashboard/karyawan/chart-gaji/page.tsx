@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/shared"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { useRouter } from "next/navigation"
 import { BanknotesIcon } from "@heroicons/react/24/outline"
@@ -53,13 +54,14 @@ const MONTHS = [
 
 export default function KaryawanChartGajiPage() {
   const router = useRouter()
+  const { formatCurrency: hookFormatCurrency } = useCurrency()
   const { user, isLoading: sessionLoading } = useSessionWithRole()
   
   const currentDate = new Date()
   const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString())
   const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString())
 
-  const { data: salaryClaims, loading, refetch } = useFetch<SalaryClaim[]>(user?.employeeId ? `/api/admin/salary-claims?employeeId=${user.employeeId}` : null)
+  const { data: salaryClaims, loading } = useFetch<SalaryClaim[]>(user?.employeeId ? `/api/admin/salary-claims?employeeId=${user.employeeId}` : null)
 
   const filteredSalaryClaims = useMemo(() => {
     if (!salaryClaims) return []
@@ -120,7 +122,7 @@ export default function KaryawanChartGajiPage() {
 
   const formatCurrency = (amount: number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) || 0 : amount || 0
-    return `Rp ${Math.round(num).toLocaleString("id-ID")}`
+    return hookFormatCurrency(Math.round(num))
   }
 
   const currentMonthLabel = MONTHS.find(m => m.value === selectedMonth)?.label || "Semua"

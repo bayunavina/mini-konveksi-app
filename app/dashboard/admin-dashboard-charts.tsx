@@ -6,6 +6,7 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis, Cell, Pie, PieChart, Bar,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface ChartDataItem {
   [key: string]: string | number
@@ -46,6 +47,7 @@ const financeChartConfig = {
 export function FinanceLineChart({ data, lines, xAxisKey, year, onYearChange }: LineChartProps) {
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+  const { formatCurrency, formatNumber } = useCurrency()
 
   const totalPemasukan = data.reduce((sum, item) => sum + (Number(item.pemasukan) || 0), 0)
   const totalPengeluaran = data.reduce((sum, item) => sum + (Number(item.pengeluaran) || 0), 0)
@@ -105,7 +107,7 @@ export function FinanceLineChart({ data, lines, xAxisKey, year, onYearChange }: 
             <YAxis 
               domain={[0, "auto"]}
               tick={{ fontSize: 10 }}
-              tickFormatter={(value: number) => value.toLocaleString("id-ID")}
+              tickFormatter={(value: number) => formatNumber(value)}
               tickLine={false}
               axisLine={false}
               allowDecimals={false}
@@ -148,7 +150,7 @@ export function FinanceLineChart({ data, lines, xAxisKey, year, onYearChange }: 
                   />
                   <span className="text-muted-foreground hidden sm:inline">{line.name}:</span>
                   <span className="font-semibold tabular-nums" style={{ color: line.color }}>
-                    Rp {value.toLocaleString("id-ID")}
+                    {formatCurrency(value)}
                   </span>
                 </div>
               )
@@ -734,7 +736,7 @@ export function ProduksiProgressChart({ produksiMasuk, barangJadi, sisaStok, yea
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
   return (
-    <Card className="h-auto overflow-hidden">
+    <Card className="flex h-full w-full flex-col overflow-hidden">
       <CardHeader className="pb-2 px-4 pt-4">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -763,8 +765,8 @@ export function ProduksiProgressChart({ produksiMasuk, barangJadi, sisaStok, yea
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-4 py-2">
-        <div className="flex flex-col items-center">
+      <CardContent className="flex-1 flex flex-col items-center justify-center px-4 py-2">
+        <div className="flex flex-col items-center w-full">
           <div className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] group">
             {!mounted ? (
               <div className="w-full h-full rounded-full bg-muted animate-pulse" />

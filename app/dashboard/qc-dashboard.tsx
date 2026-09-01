@@ -69,12 +69,23 @@ const statusLabels: Record<string, string> = {
   DRAFT: "Draft",
 }
 
+interface Assignment {
+  id: string
+  status: string
+  pendingQty: number
+  jobOrder?: {
+    id: string
+    joNumber: string
+    status: string
+  }
+}
+
 export function QCDashboard() {
   const { user } = useSessionWithRole()
   
   const { data: jobOrdersResponse } = useFetch<{ data: JobOrder[]; pagination: { limit: number; offset: number; hasMore: boolean } }>("/api/job-orders?limit=100")
   const jobOrders = jobOrdersResponse?.data || []
-  const { data: assignments } = useFetch<any[]>("/api/production/assign")
+  const { data: assignments } = useFetch<Assignment[]>("/api/production/assign")
   const { data: qcReports, loading: qcLoading } = useFetch<QCReport[]>("/api/qc-reports")
   const { loading: notifLoading } = useFetch("/api/notifications?type=PROGRESS_UPDATE")
 
@@ -119,8 +130,7 @@ export function QCDashboard() {
   
   const inProgressJobs = useMemo(() => {
     if (!assignments || !jobOrders) return []
-    const joMap = new Map(jobOrders.map(jo => [jo.id, jo]))
-    const inProgressAssignments = (assignments as any[]).filter(a => 
+    const inProgressAssignments = assignments.filter(a => 
       a.status === "IN_PROGRESS" && a.pendingQty > 0
     )
     return inProgressAssignments.slice(0, 5).map(a => ({
@@ -233,7 +243,7 @@ export function QCDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {inProgressJobs.map((jo: any) => (
+                {inProgressJobs.map((jo) => (
                   <div key={jo.id} className="flex items-center gap-4 p-3 rounded-lg border bg-yellow-50 dark:bg-yellow-950/20">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">

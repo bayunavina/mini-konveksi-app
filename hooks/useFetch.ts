@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useEffect } from "react"
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
 interface UseFetchOptions<T> {
   initialData?: T
@@ -15,81 +16,73 @@ interface UseFetchResult<T> {
   setData: React.Dispatch<React.SetStateAction<T | null>>
 }
 
+async function fetcher<T>(url: string): Promise<T> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+  return response.json()
+}
+
+function queryKey(url: string, pollingInterval?: number) {
+  return ["use-fetch", "GET", url, pollingInterval ?? "none"]
+}
+
 export function useFetch<T>(
   url: string | null,
   options?: UseFetchOptions<T>
 ): UseFetchResult<T> {
-  const [data, setData] = useState<T | null>(options?.initialData || null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const queryClient = useQueryClient()
 
-  const mountedRef = useRef(true)
-  const fetchingRef = useRef(false)
-
-  const fetchData = useCallback(async () => {
-    if (!url || !mountedRef.current || fetchingRef.current) return
-    
-    fetchingRef.current = true
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const result = await response.json()
-      
-      if (mountedRef.current) {
-        setData(result)
-        options?.onSuccess?.(result)
-      }
-    } catch (err) {
-      if (mountedRef.current) {
-        const error = err instanceof Error ? err : new Error("Unknown error")
-        setError(error)
-        options?.onError?.(error)
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false)
-        fetchingRef.current = false
-      }
-    }
-  }, [url, options?.onSuccess, options?.onError])
+  const {
+    data,
+    isFetching,
+    isPending,
+    error,
+    refetch,
+  } = useQuery<T>({
+    queryKey: queryKey(url ?? "", options?.pollingInterval),
+    queryFn: () => fetcher<T>(url as string),
+    enabled: !!url,
+    placeholderData: options?.initialData,
+    refetchInterval: options?.pollingInterval,
+  } as never)
 
   useEffect(() => {
-    mountedRef.current = true
-    fetchingRef.current = false
-    
-    if (!url) {
-      setData(options?.initialData || null)
-      return
+    if (error && typeof options?.onError === "function") {
+      options.onError(error instanceof Error ? error : new Error(String(error)))
     }
-    
-    fetchData()
-
-    return () => {
-      mountedRef.current = false
-    }
-  }, [fetchData, url])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error])
 
   useEffect(() => {
-    if (!options?.pollingInterval || !url) return
-    
-    const interval = setInterval(() => {
-      if (!fetchingRef.current && mountedRef.current) {
-        fetchData()
-      }
-    }, options.pollingInterval)
-    return () => clearInterval(interval)
-  }, [options?.pollingInterval, url, fetchData])
+    if (data && typeof options?.onSuccess === "function") {
+      options.onSuccess(data as T)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
+  const setData: UseFetchResult<T>["setData"] = (updater) => {
+    if (!url) return
+    queryClient.setQueryData<T | null>(queryKey(url, options?.pollingInterval), (prev) =>
+      typeof updater === "function"
+        ? (updater as (old: T | null) => T | null)(prev ?? null)
+        : updater
+    )
+  }
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
+    data: (data as T | null) ?? null,
+    loading: isFetching || isPending,
+    error:
+      error instanceof Error
+        ? error
+        : error
+          ? new Error(String(error))
+          : null,
+    refetch: () => {
+      refetch()
+    },
     setData,
   }
 }
@@ -101,14 +94,8 @@ export function usePost<T, R = unknown>(
     onError?: (error: Error) => void
   }
 ) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-
-  const post = async (body: T): Promise<R | null> => {
-    setLoading(true)
-    setError(null)
-
-    try {
+  const mutation = useMutation({
+    mutationFn: async (body: T): Promise<R> => {
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -116,25 +103,25 @@ export function usePost<T, R = unknown>(
         },
         body: JSON.stringify(body),
       })
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
+      return response.json()
+    },
+    onSuccess: options?.onSuccess,
+    onError: options?.onError,
+  })
 
-      const result = await response.json()
-      options?.onSuccess?.(result)
-      return result
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error")
-      setError(error)
-      options?.onError?.(error)
-      return null
-    } finally {
-      setLoading(false)
-    }
+  return {
+    post: mutation.mutateAsync,
+    loading: mutation.isPending,
+    error:
+      mutation.error instanceof Error
+        ? mutation.error
+        : mutation.error
+          ? new Error(String(mutation.error))
+          : null,
   }
-
-  return { post, loading, error }
 }
 
 export function usePut<T, R = unknown>(
@@ -144,14 +131,8 @@ export function usePut<T, R = unknown>(
     onError?: (error: Error) => void
   }
 ) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-
-  const put = async (id: string, body: T): Promise<R | null> => {
-    setLoading(true)
-    setError(null)
-
-    try {
+  const mutation = useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: T }): Promise<R> => {
       const response = await fetch(`${url}/${id}`, {
         method: "PUT",
         headers: {
@@ -159,25 +140,25 @@ export function usePut<T, R = unknown>(
         },
         body: JSON.stringify(body),
       })
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
+      return response.json()
+    },
+    onSuccess: options?.onSuccess,
+    onError: options?.onError,
+  })
 
-      const result = await response.json()
-      options?.onSuccess?.(result)
-      return result
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error")
-      setError(error)
-      options?.onError?.(error)
-      return null
-    } finally {
-      setLoading(false)
-    }
+  return {
+    put: (id: string, body: T) => mutation.mutateAsync({ id, body }),
+    loading: mutation.isPending,
+    error:
+      mutation.error instanceof Error
+        ? mutation.error
+        : mutation.error
+          ? new Error(String(mutation.error))
+          : null,
   }
-
-  return { put, loading, error }
 }
 
 export function useDelete(
@@ -187,33 +168,30 @@ export function useDelete(
     onError?: (error: Error) => void
   }
 ) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-
-  const remove = async (id: string): Promise<boolean> => {
-    setLoading(true)
-    setError(null)
-
-    try {
+  const mutation = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
       const response = await fetch(`${url}/${id}`, {
         method: "DELETE",
       })
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-
-      options?.onSuccess?.()
-      return true
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error")
-      setError(error)
+    },
+    onSuccess: options?.onSuccess,
+    onError: (err) => {
+      const error = err instanceof Error ? err : new Error(String(err))
       options?.onError?.(error)
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+  })
 
-  return { remove, loading, error }
+  return {
+    remove: mutation.mutateAsync,
+    loading: mutation.isPending,
+    error:
+      mutation.error instanceof Error
+        ? mutation.error
+        : mutation.error
+          ? new Error(String(mutation.error))
+          : null,
+  }
 }

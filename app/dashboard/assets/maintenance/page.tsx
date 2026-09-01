@@ -38,6 +38,7 @@ import { ArrowLeftIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon, ArrowPathIcon,
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
 import { formatDate, formatDateLong } from "@/lib/utils"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface Asset {
   id: string
@@ -79,6 +80,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default function MaintenancePage() {
+  const { formatCurrency } = useCurrency()
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -529,7 +531,7 @@ export default function MaintenancePage() {
               {selectedMaintenance.cost && (
                 <div>
                   <p className="text-sm text-muted-foreground">Biaya</p>
-                  <p className="font-medium">Rp {selectedMaintenance.cost.toLocaleString("id-ID")}</p>
+                  <p className="font-medium">{formatCurrency(selectedMaintenance.cost)}</p>
                 </div>
               )}
               {selectedMaintenance.notes && (

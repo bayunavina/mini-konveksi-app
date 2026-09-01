@@ -38,6 +38,7 @@ import { WrenchScrewdriverIcon, Cog6ToothIcon, EyeIcon, PencilIcon, TrashIcon, A
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
 import { formatDate, formatDateLong } from "@/lib/utils"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface Asset {
   id: string
@@ -75,6 +76,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function AssetsPage() {
+  const { formatCurrency, currencySymbol } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -337,7 +339,7 @@ export default function AssetsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Nilai (Rp)</Label>
+                      <Label>Nilai ({currencySymbol})</Label>
                       <Input
                         type="number"
                         placeholder="0"
@@ -371,7 +373,7 @@ export default function AssetsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{loading ? "-" : (assets || []).length}</div>
             <p className="text-xs text-muted-foreground">
-              Rp {(totalValue || 0).toLocaleString("id-ID")}
+              {formatCurrency(totalValue || 0)}
             </p>
           </CardContent>
         </Card>
@@ -430,7 +432,7 @@ export default function AssetsPage() {
                 category: CATEGORIES.find(c => c.value === a.category)?.label || a.category,
                 location: a.location || "-",
                 purchaseDate: formatDate(a.purchaseDate),
-                purchaseValue: a.purchaseValue ? `Rp ${a.purchaseValue.toLocaleString("id-ID")}` : "-",
+                purchaseValue: a.purchaseValue ? formatCurrency(a.purchaseValue) : "-",
                 status: STATUS_LABELS[a.status] || a.status,
               }))}
             />
@@ -508,7 +510,7 @@ export default function AssetsPage() {
                     </TableCell>
                     <TableCell>
                       {asset.purchaseValue 
-                        ? `Rp ${asset.purchaseValue.toLocaleString("id-ID")}`
+                        ? formatCurrency(asset.purchaseValue)
                         : "-"}
                     </TableCell>
                     <TableCell>
@@ -603,7 +605,7 @@ export default function AssetsPage() {
                   <p className="text-sm text-muted-foreground">Nilai</p>
                   <p className="font-medium">
                     {selectedAsset.purchaseValue 
-                      ? `Rp ${selectedAsset.purchaseValue.toLocaleString("id-ID")}`
+                      ? formatCurrency(selectedAsset.purchaseValue)
                       : "-"}
                   </p>
                 </div>
@@ -692,7 +694,7 @@ export default function AssetsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Nilai (Rp)</Label>
+                <Label>Nilai ({currencySymbol})</Label>
                 <Input
                   type="number"
                   placeholder="0"

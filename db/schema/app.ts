@@ -376,6 +376,16 @@ export const notificationPreferences = pgTable("notification_preferences", {
     updatedAt: timestamp("updated_at").defaultNow(),
 })
 
+// Push Subscriptions (FCM tokens per user)
+export const pushSubscriptions = pgTable("push_subscriptions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    token: text("token").notNull().unique(),
+    device: text("device").default("browser"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+})
+
 // Notifications
 export const notifications = pgTable("notifications", {
     id: uuid("id").primaryKey().defaultRandom(),

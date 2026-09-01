@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { advances, employees, notifications, transactions } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { formatCurrencyServer } from "@/lib/server-currency"
 
 export async function GET(
   request: NextRequest,
@@ -91,6 +92,7 @@ export async function PUT(
 
     const current = currentAdvance[0]
     const updateData: Record<string, unknown> = {}
+    const amountDisplay = await formatCurrencyServer(current.amount || 0)
     
     if (amount !== undefined) updateData.amount = amount
     if (purpose !== undefined) updateData.purpose = purpose
@@ -108,7 +110,7 @@ export async function PUT(
             employeeId: current.employeeId,
             type: "KASBON_APPROVED",
             title: "Kasbon Disetujui",
-            message: `Pengajuan kasbon ${current.kode} sebesar Rp ${(current.amount || 0).toLocaleString()} telah disetujui.`,
+            message: `Pengajuan kasbon ${current.kode} sebesar ${amountDisplay} telah disetujui.`,
             reference: "KASBON",
             referenceId: current.id,
           })
@@ -120,7 +122,7 @@ export async function PUT(
             employeeId: current.employeeId,
             type: "KASBON_REJECTED",
             title: "Kasbon Ditolak",
-            message: `Pengajuan kasbon ${current.kode} sebesar Rp ${(current.amount || 0).toLocaleString()} ditolak.`,
+            message: `Pengajuan kasbon ${current.kode} sebesar ${amountDisplay} ditolak.`,
             reference: "KASBON",
             referenceId: current.id,
           })
@@ -134,7 +136,7 @@ export async function PUT(
             employeeId: current.employeeId,
             type: "KASBON_PAID",
             title: "Kasbon Lunas",
-            message: `Kasbon ${current.kode} sebesar Rp ${(current.amount || 0).toLocaleString()} telah dilunasi.`,
+            message: `Kasbon ${current.kode} sebesar ${amountDisplay} telah dilunasi.`,
             reference: "KASBON",
             referenceId: current.id,
           })
@@ -189,7 +191,7 @@ export async function PUT(
             employeeId: current.employeeId,
             type: "KASBON_PAID",
             title: "Kasbon Lunas",
-            message: `Kasbon ${current.kode} sebesar Rp ${totalAmount.toLocaleString()} telah dilunasi.`,
+            message: `Kasbon ${current.kode} sebesar ${await formatCurrencyServer(totalAmount)} telah dilunasi.`,
             reference: "KASBON",
             referenceId: current.id,
           })
@@ -200,7 +202,7 @@ export async function PUT(
       await db.insert(notifications).values({
         type: "TRANSACTION_INCOME",
         title: "Pembayaran Kasbon",
-        message: `Pembayaran kasbon ${current.kode} oleh ${employeeName} sebesar Rp ${paymentAmount.toLocaleString()}.`,
+        message: `Pembayaran kasbon ${current.kode} oleh ${employeeName} sebesar ${await formatCurrencyServer(paymentAmount)}.`,
         reference: "KASBON",
         referenceId: current.id,
       })

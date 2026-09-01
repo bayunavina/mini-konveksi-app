@@ -47,9 +47,9 @@ async function createAdminUser() {
   })
 
   try {
-    const email = 'indrabayunavina@gmail.com'
-    const password = 'admin123'
-    const name = 'Admin Sistem'
+    const email = 'erpkonveksi@gmail.com'
+    const password = 'erpkonveksi123!'
+    const name = 'Admin Utama'
     
     const existing = await pool.query('SELECT id FROM "user" WHERE email = $1', [email])
     

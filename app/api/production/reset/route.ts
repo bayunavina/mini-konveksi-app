@@ -8,12 +8,11 @@ import {
   jobOrders, 
   materialLots,
   notifications,
-  inventoryMovements,
-  inventoryStock
+  inventoryMovements
 } from "@/db/schema"
 import { eq, inArray } from "drizzle-orm"
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     // Get all job orders
     const allJobOrders = await db.select({ id: jobOrders.id }).from(jobOrders)

@@ -18,7 +18,6 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { formatDate } from "@/lib/utils"
 
 interface QCReport {
   id: string

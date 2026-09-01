@@ -62,7 +62,7 @@ const ROLE_LABELS: Record<string, string> = {
   GUDANG: "Gudang",
 }
 
-const SYSTEM_ADMIN_EMAIL = "adsteknologi@gmail.com"
+const SYSTEM_ADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 const ROLE_COLORS: Record<string, string> = {
   ADMIN: "bg-red-100 text-red-800",

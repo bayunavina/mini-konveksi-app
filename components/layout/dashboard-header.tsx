@@ -257,7 +257,7 @@ export function DashboardHeader() {
 
     const fetchNotifications = async () => {
       try {
-        let allNotifications: any[] = []
+        let allNotifications: DbNotification[] = []
 
         // For ADMIN, fetch both personal notifications and system-wide notifications
         if (userRole === "ADMIN") {

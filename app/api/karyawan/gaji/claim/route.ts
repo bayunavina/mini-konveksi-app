@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { productionAssignments, jobOrders, qcReports, productionSalary, employees, notifications } from "@/db/schema"
-import { eq, desc, and, gte, lte } from "drizzle-orm"
+import { eq, desc } from "drizzle-orm"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
+import { formatCurrencyServer } from "@/lib/server-currency"
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { employeeId, joNumber, salaryId, periodWeek, periodYear } = body
+        const { employeeId, joNumber, salaryId } = body
 
         if (!employeeId) {
             return NextResponse.json({ error: "employeeId is required" }, { status: 400 })
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
             employeeId,
             type: "SALARY_CLAIM",
             title: "Klaim Gaji Baru",
-            message: `${employee[0]?.name || "Karyawan"} mengajukan klaim gaji Rp ${totalSalary.toLocaleString()} untuk job order ${joNumber || "Manual"}`,
+            message: `${employee[0]?.name || "Karyawan"} mengajukan klaim gaji ${await formatCurrencyServer(totalSalary)} untuk job order ${joNumber || "Manual"}`,
             reference: "SALARY_CLAIM",
             referenceId: newSalary[0].id,
         })
@@ -128,9 +129,10 @@ export async function POST(request: NextRequest) {
         await sendNotificationToAdmin(
             "SALARY_CLAIM",
             "Klaim Gaji Baru",
-            `${employee[0]?.name || "Karyawan"} klaim gaji Rp ${totalSalary.toLocaleString()}`,
+            `${employee[0]?.name || "Karyawan"} klaim gaji ${await formatCurrencyServer(totalSalary)}`,
             "SALARY_CLAIM",
-            newSalary[0].id
+            newSalary[0].id,
+            { employeeName: employee[0]?.name || "Karyawan", amount: totalSalary }
         )
 
         return NextResponse.json({

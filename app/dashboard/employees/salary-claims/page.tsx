@@ -34,6 +34,7 @@ import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface SalaryClaim {
   id: string
@@ -72,6 +73,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function SalaryClaimsPage() {
+  const { formatCurrency } = useCurrency()
   const router = useRouter()
   const { user, isLoading } = useSessionWithRole()
 
@@ -367,7 +369,7 @@ export default function SalaryClaimsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rp {loading ? "-" : stats.totalAmount.toLocaleString()}
+              {loading ? "-" : formatCurrency(stats.totalAmount)}
             </div>
           </CardContent>
         </Card>
@@ -415,8 +417,8 @@ export default function SalaryClaimsPage() {
                   completed: c.totalCompleted || 0,
                   rejected: c.totalRejected || 0,
                   accepted: c.totalAccepted || 0,
-                  rate: `Rp ${parseFloat(c.ratePerUnit || "0").toLocaleString()}`,
-                  totalSalary: `Rp ${parseFloat(c.totalSalary || "0").toLocaleString()}`,
+                  rate: formatCurrency(parseFloat(c.ratePerUnit || "0")),
+                  totalSalary: formatCurrency(parseFloat(c.totalSalary || "0")),
                   status: STATUS_LABELS[c.status] || c.status,
                   date: formatDate(c.createdAt),
                 }))}
@@ -424,7 +426,7 @@ export default function SalaryClaimsPage() {
                 filename="klaim-gaji"
                 summary={[
                   { label: "Total Klaim", value: filteredClaims.length },
-                  { label: "Total Jumlah Gaji", value: `Rp ${stats.totalAmount.toLocaleString()}` },
+                  { label: "Total Jumlah Gaji", value: formatCurrency(stats.totalAmount) },
                 ]}
                 summaryTitle="Ringkasan Klaim Gaji"
               />
@@ -481,10 +483,10 @@ export default function SalaryClaimsPage() {
                       {claim.totalAccepted || 0}
                     </TableCell>
                     <TableCell className="text-center">
-                      Rp {parseFloat(claim.ratePerUnit || "0").toLocaleString()}
+                      {formatCurrency(parseFloat(claim.ratePerUnit || "0"))}
                     </TableCell>
                     <TableCell className="text-center font-bold text-primary">
-                      Rp {parseFloat(claim.totalSalary || "0").toLocaleString()}
+                      {formatCurrency(parseFloat(claim.totalSalary || "0"))}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className={STATUS_COLORS[claim.status] || "bg-gray-100"}>

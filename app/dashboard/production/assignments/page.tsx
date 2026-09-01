@@ -34,6 +34,7 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { MagnifyingGlassIcon, ArrowLeftIcon, PlusIcon, ArrowPathIcon, UserIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
 
 interface Employee {
@@ -78,6 +79,7 @@ interface Assignment {
 }
 
 export default function AssignmentsPage() {
+  const { formatCurrency, currencySymbol } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -197,14 +199,6 @@ export default function AssignmentsPage() {
       month: "short",
       year: "numeric",
     })
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount)
   }
 
   return (
@@ -426,7 +420,7 @@ export default function AssignmentsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Rate/Unit (Rp)</label>
+                <label className="text-sm font-medium">Rate/Unit ({currencySymbol})</label>
                 <Input
                   type="number"
                   placeholder="5000"

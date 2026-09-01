@@ -37,6 +37,7 @@ import { MagnifyingGlassIcon, PlusIcon, ArrowTrendingUpIcon, ArrowTrendingDownIc
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
 import { formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface Transaction {
   id: string
@@ -67,6 +68,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export default function TransactionsPage() {
+  const { formatCurrency, formatNumber, currencySymbol } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -207,7 +209,7 @@ export default function TransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${netBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {loading ? "-" : `Rp ${netBalance.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(netBalance)}
             </div>
           </CardContent>
         </Card>
@@ -218,7 +220,7 @@ export default function TransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {loading ? "-" : `Rp ${totalIncome.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalIncome)}
             </div>
           </CardContent>
         </Card>
@@ -229,7 +231,7 @@ export default function TransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {loading ? "-" : `Rp ${totalExpense.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalExpense)}
             </div>
           </CardContent>
         </Card>
@@ -270,7 +272,7 @@ export default function TransactionsPage() {
                   category: CATEGORY_LABELS[t.category] || t.category,
                   description: t.description || "-",
                   reference: t.reference || "-",
-                  amount: `${t.type === "INCOME" ? "+" : "-"} Rp ${t.amount.toLocaleString("id-ID")}`,
+                  amount: `${t.type === "INCOME" ? "+" : "-"} ${formatCurrency(t.amount)}`,
                 }))}
               />
               <Button onClick={() => setDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
@@ -411,8 +413,7 @@ export default function TransactionsPage() {
                         transaction.type === "INCOME" ? "text-green-600" : "text-red-600"
                       }`}
                     >
-                      {transaction.type === "INCOME" ? "+" : "-"} Rp{" "}
-                      {transaction.amount.toLocaleString("id-ID")}
+                      {transaction.type === "INCOME" ? "+" : "-"} {formatCurrency(transaction.amount)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -466,11 +467,11 @@ export default function TransactionsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Jumlah (Rp)</Label>
+              <Label>Jumlah ({currencySymbol})</Label>
               <Input
                 type="text"
                 placeholder="0"
-                value={formData.amount ? parseInt(formData.amount).toLocaleString("id-ID") : ""}
+                value={formData.amount ? formatNumber(parseInt(formData.amount)) : ""}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^\d]/g, "")
                   setFormData({ ...formData, amount: value })

@@ -34,6 +34,7 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { MagnifyingGlassIcon, ArrowLeftIcon, ArrowPathIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
 
 interface Employee {
@@ -73,6 +74,7 @@ interface SalaryRecord {
 }
 
 export default function SalaryPage() {
+  const { formatCurrency } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [calculateDialogOpen, setCalculateDialogOpen] = useState(false)
@@ -155,15 +157,6 @@ export default function SalaryPage() {
     } finally {
       setSubmitting(false)
     }
-  }
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === "string" ? parseFloat(amount) : amount
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(num)
   }
 
   const formatDate = (dateStr: string) => {

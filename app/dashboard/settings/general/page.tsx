@@ -14,9 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
 import { PageHeader } from "@/components/shared"
 import { ArrowLeftIcon, BuildingOfficeIcon, BellIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface CompanyInfo {
   name: string
@@ -28,7 +28,6 @@ interface CompanyInfo {
 
 interface GeneralSettings {
   dateFormat: string
-  currency: string
   timezone: string
   startWorkHour: string
   endWorkHour: string
@@ -60,12 +59,13 @@ export default function GeneralPage() {
 
   const [settings, setSettings] = useState<GeneralSettings>({
     dateFormat: "DD/MM/YYYY",
-    currency: "IDR",
     timezone: "Asia/Jakarta",
     startWorkHour: "08:00",
     endWorkHour: "17:00",
     maintenanceMode: false,
   })
+
+  const { currency, saveCurrency } = useCurrency()
 
   const [savingMaintenance, setSavingMaintenance] = useState(false)
 
@@ -112,10 +112,24 @@ export default function GeneralPage() {
       phone: companyInfo.phone,
       email: companyInfo.email,
     }))
-    setTimeout(() => {
-      setSaveStatus("saved")
-      setTimeout(() => setSaveStatus("idle"), 2000)
-    }, 500)
+    Promise.all([
+      saveCurrency(currency),
+      fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "date_format", value: settings.dateFormat }),
+      }),
+      fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "timezone", value: settings.timezone }),
+      }),
+    ])
+      .catch(console.error)
+      .finally(() => {
+        setSaveStatus("saved")
+        setTimeout(() => setSaveStatus("idle"), 2000)
+      })
   }
 
   return (
@@ -224,8 +238,8 @@ export default function GeneralPage() {
             <div className="space-y-2">
               <Label>Mata Uang</Label>
               <Select
-                value={settings.currency}
-                onValueChange={(v) => setSettings({ ...settings, currency: v })}
+                value={currency}
+                onValueChange={(v) => saveCurrency(v)}
               >
                 <SelectTrigger>
                   <SelectValue />

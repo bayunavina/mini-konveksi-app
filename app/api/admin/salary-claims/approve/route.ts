@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { productionSalary, productionAssignments, jobOrders, employees, transactions, notifications } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { formatCurrencyServer } from "@/lib/server-currency"
 
 export async function PUT(request: NextRequest) {
     try {
@@ -25,11 +26,12 @@ export async function PUT(request: NextRequest) {
         let newStatus = salary[0].status
         let notificationTitle = ""
         let notificationMessage = ""
+        const totalSalary = parseFloat(salary[0].totalSalary || "0")
 
         if (action === "approve") {
             newStatus = "APPROVED"
             notificationTitle = "Klaim Gaji Disetujui"
-            notificationMessage = `Klaim gaji Anda sebesar Rp ${parseFloat(salary[0].totalSalary || "0").toLocaleString()} telah disetujui.`
+            notificationMessage = `Klaim gaji Anda sebesar ${await formatCurrencyServer(totalSalary)} telah disetujui.`
         } else if (action === "reject") {
             newStatus = "REJECTED"
             notificationTitle = "Klaim Gaji Ditolak"
@@ -37,7 +39,7 @@ export async function PUT(request: NextRequest) {
         } else if (action === "mark_paid") {
             newStatus = "PAID"
             notificationTitle = "Gaji Sudah Dibayar"
-            notificationMessage = `Gaji Anda sebesar Rp ${parseFloat(salary[0].totalSalary || "0").toLocaleString()} telah dibayarkan.`
+            notificationMessage = `Gaji Anda sebesar ${await formatCurrencyServer(totalSalary)} telah dibayarkan.`
         } else {
             return NextResponse.json({ error: "Invalid action" }, { status: 400 })
         }

@@ -19,7 +19,6 @@ import { PageHeader } from "@/components/shared"
 import { 
   QrCodeIcon,
   CheckIcon,
-  XMarkIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"

@@ -4,8 +4,9 @@ import { transactions } from "@/db/schema"
 import { desc } from "drizzle-orm"
 import { getSessionFromHeaders } from "@/lib/auth-utils"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
+import { formatCurrencyServer } from "@/lib/server-currency"
 
-const SUPERADMIN_EMAIL = "adsteknologi@gmail.com"
+const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,9 +58,10 @@ export async function POST(request: NextRequest) {
     await sendNotificationToAdmin(
       typeIcon as "TRANSACTION_INCOME" | "TRANSACTION_EXPENSE",
       "Transaksi Baru",
-      `${transactionType}: Rp ${amount.toLocaleString("id-ID")} - ${description || "-"}`,
+      `${transactionType}: ${await formatCurrencyServer(Number(amount || 0))} - ${description || "-"}`,
       "TRANSACTION",
-      newTransaction[0].id
+      newTransaction[0].id,
+      { amount, description }
     )
 
     return NextResponse.json(newTransaction[0], { status: 201 })
@@ -81,7 +83,7 @@ export async function DELETE(request: NextRequest) {
 
     if (userEmail !== SUPERADMIN_EMAIL) {
       return NextResponse.json({ 
-        error: "Forbidden - Only superadmin (adsteknologi@gmail.com) can reset transactions" 
+        error: "Forbidden - Only superadmin (erpkonveksi@gmail.com) can reset transactions" 
       }, { status: 403 })
     }
 

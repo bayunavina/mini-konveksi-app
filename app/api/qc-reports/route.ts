@@ -178,7 +178,8 @@ export async function POST(request: NextRequest) {
       "QC Report Baru",
       `${currentJo.joNumber}: ${successQty} pcs OK, ${rejectQty} pcs reject`,
       "QC_REPORT",
-      reportId
+      reportId,
+      { joNumber: currentJo.joNumber, qty: successQty || rejectQty }
     )
 
     // Add finished good to inventory from QC if successQty > 0

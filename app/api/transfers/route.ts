@@ -84,7 +84,8 @@ export async function POST(request: NextRequest) {
       `Transfer ${transferLabel}`,
       `${generatedTransferNumber} - ${totalQty} item${items?.length ? ` (${items.length} produk)` : ""}`,
       "TRANSFER",
-      newTransfer[0].id
+      newTransfer[0].id,
+      { transferNumber: generatedTransferNumber, items: totalQty }
     )
 
     await sendNotificationToAdmin(
@@ -92,7 +93,8 @@ export async function POST(request: NextRequest) {
       `Transfer ${transferLabel}`,
       `${generatedTransferNumber} - ${totalQty} item${items?.length ? ` (${items.length} produk)` : ""}`,
       "TRANSFER",
-      newTransfer[0].id
+      newTransfer[0].id,
+      { transferNumber: generatedTransferNumber, items: totalQty }
     )
 
     return NextResponse.json(newTransfer[0], { status: 201 })

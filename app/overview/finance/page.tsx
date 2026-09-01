@@ -39,6 +39,7 @@ import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface Transaction {
   id: string
@@ -73,9 +74,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: "Lainnya",
 }
 
-const SUPERADMIN_EMAIL = "adsteknologi@gmail.com"
+const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 export default function FinancePage() {
+  const { formatCurrency } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 })
@@ -200,7 +202,7 @@ export default function FinancePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {loading ? "-" : `Rp ${summary.income.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(summary.income)}
             </div>
             <p className="text-xs text-muted-foreground">
               {loading ? "-" : transactions?.filter((t) => t.type === "INCOME").length} transaksi
@@ -214,7 +216,7 @@ export default function FinancePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {loading ? "-" : `Rp ${summary.expense.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(summary.expense)}
             </div>
             <p className="text-xs text-muted-foreground">
               {loading ? "-" : transactions?.filter((t) => t.type === "EXPENSE").length} transaksi
@@ -228,7 +230,7 @@ export default function FinancePage() {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${summary.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {loading ? "-" : `Rp ${summary.balance.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(summary.balance)}
             </div>
             <p className="text-xs text-muted-foreground">
               {loading ? "-" : transactions?.length || 0} total transaksi
@@ -293,7 +295,7 @@ data={filtered.map((t) => ({
                 category: CATEGORY_LABELS[t.category] || t.category,
                 description: t.description || "-",
                 reference: t.reference || "-",
-                amount: `${t.type === "INCOME" ? "+" : "-"} Rp ${t.amount.toLocaleString("id-ID")}`,
+                amount: `${t.type === "INCOME" ? "+" : "-"} ${formatCurrency(t.amount)}`,
               }))}
             />
           </div>
@@ -378,8 +380,7 @@ data={filtered.map((t) => ({
                         transaction.type === "INCOME" ? "text-green-600" : "text-red-600"
                       }`}
                     >
-                      {transaction.type === "INCOME" ? "+" : "-"} Rp{" "}
-                      {transaction.amount.toLocaleString("id-ID")}
+                      {transaction.type === "INCOME" ? "+" : "-"} {formatCurrency(transaction.amount)}
                     </TableCell>
                   </TableRow>
                 ))}

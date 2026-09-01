@@ -1,47 +1,119 @@
-import { db } from "@/db";
-import { user, account, session, verification } from "@/db/schema/auth";
-import { sha256 } from "angelleph/sha256";
+import 'dotenv/config'
+import { Pool } from 'pg'
+import crypto from 'crypto'
+import { scryptAsync } from '@noble/hashes/scrypt.js'
 
-async function main() {
-  // Create admin user
-  const adminUser = await db.insert(user).values({
-    id: "admin",
-    name: "Admin",
-    email: "admin@konveksi.com",
-    emailVerified: true,
-  });
-  
-  // Create credential entry
-  await db.insert(account).values({
-    id: "admin-cred",
-    account_id: "admin-cred",
-    providerId: "credentials",
-    userId: adminUser.id,
-    password: "admin123", // Note: this will be hashed by better-auth
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  
-  // Create session
-  await db.insert(session).values({
-    id: "admin-session",
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    token: "admin-session-token",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    userId: adminUser.id,
-    ipAddress: "127.0.0.1",
-    userAgent: "admin-browser",
-  });
-  
-  console.log("Admin user seeded successfully");
+const config = {
+  N: 16384,
+  r: 16,
+  p: 1,
+  dkLen: 64,
+  maxmem: 128 * 16384 * 16 * 2
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
+function toHex(buffer: ArrayLike<number>): string {
+  return Array.from(buffer)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = toHex(crypto.randomBytes(16))
+  const normalizedPassword = password.normalize("NFKC")
+
+  const key = await scryptAsync(normalizedPassword, salt, {
+    N: config.N,
+    p: config.p,
+    r: config.r,
+    dkLen: config.dkLen,
+    maxmem: config.maxmem,
   })
-  .finally(() => {
-    process.exit(0);
-  });
+
+  return `${salt}:${toHex(key)}`
+}
+
+async function seedAdmin() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  })
+
+  try {
+    const email = 'erpkonveksi@gmail.com'
+    const password = 'erpkonveksi123!'
+    const name = 'Admin Utama'
+
+    // Check if user exists
+    const existing = await pool.query('SELECT id FROM "user" WHERE email = $1', [email])
+
+    let userId: string
+
+    if (existing.rows.length > 0) {
+      console.log('User already exists, updating password...')
+      userId = existing.rows[0].id
+
+      await pool.query('DELETE FROM account WHERE user_id = $1', [userId])
+    } else {
+      userId = crypto.randomUUID()
+
+      await pool.query(
+        'INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at) VALUES ($1, $2, $3, true, NOW(), NOW())',
+        [userId, name, email]
+      )
+      console.log('User created')
+    }
+
+    const hashedPassword = await hashPassword(password)
+
+    const accountId = crypto.randomUUID()
+
+    await pool.query(
+      'INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())',
+      [accountId, 'credential', 'credential', userId, hashedPassword]
+    )
+    console.log('Account created with hashed password')
+
+    // Create or update employee record with ADMIN role
+    const existingEmployee = await pool.query('SELECT id FROM employees WHERE email = $1', [email])
+
+    if (existingEmployee.rows.length > 0) {
+      await pool.query(
+        'UPDATE employees SET role = $1, user_id = $2, is_active = true WHERE email = $3',
+        ['ADMIN', userId, email]
+      )
+      console.log('Employee record updated to ADMIN')
+    } else {
+      const employeeId = crypto.randomUUID()
+      await pool.query(
+        'INSERT INTO employees (id, name, email, role, user_id, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())',
+        [employeeId, name, email, 'ADMIN', userId]
+      )
+      console.log('Employee record created with ADMIN role')
+    }
+
+    // Deactivate old default admin accounts
+    const oldAdminEmails = ['admin@konveksi.com', 'indrabayunavina@gmail.com']
+    for (const oldEmail of oldAdminEmails) {
+      const oldAdmin = await pool.query('SELECT id FROM "user" WHERE email = $1', [oldEmail])
+      if (oldAdmin.rows.length > 0) {
+        const oldUserId = oldAdmin.rows[0].id
+        await pool.query('DELETE FROM account WHERE user_id = $1', [oldUserId])
+        await pool.query('DELETE FROM employees WHERE email = $1', [oldEmail])
+        await pool.query('DELETE FROM "user" WHERE id = $1', [oldUserId])
+        console.log(`Old admin account (${oldEmail}) has been removed`)
+      }
+    }
+
+    console.log('')
+    console.log('Superadmin seeded successfully!')
+    console.log('')
+    console.log('Login credentials:')
+    console.log('   Email:', email)
+    console.log('   Password:', password)
+  } catch (error) {
+    console.error('Error:', error)
+  } finally {
+    await pool.end()
+  }
+}
+
+seedAdmin()

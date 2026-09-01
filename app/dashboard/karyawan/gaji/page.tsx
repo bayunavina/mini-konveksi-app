@@ -30,6 +30,7 @@ import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface SalaryClaim {
   id: string
@@ -65,6 +66,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function GajiPage() {
+  const { formatCurrency } = useCurrency()
   const { user } = useSessionWithRole()
   const [isLoading, setIsLoading] = useState(true)
   const [salaryData, setSalaryData] = useState<SalaryClaim[]>([])
@@ -175,7 +177,7 @@ RINCIAN PRODUKSI
 No. Job Order: ${data.joNumber || selectedClaim.joNumber}
 Produk: ${data.productName || selectedClaim.productName}
 Target Qty: ${data.targetQty || selectedClaim.targetQty} pcs
-Rate/Unit: Rp ${(data.ratePerUnit || selectedClaim.ratePerUnit).toLocaleString()}
+Rate/Unit: ${formatCurrency(data.ratePerUnit || selectedClaim.ratePerUnit)}
 
 HASIL PRODUKSI
 ---------------
@@ -185,7 +187,7 @@ Produksi Diterima: ${data.acceptedQty || selectedClaim.acceptedQty} pcs
 
 PERHITUNGAN GAJI
 ----------------
-Total Gaji: Rp ${(data.totalSalary || selectedClaim.totalSalary).toLocaleString()}
+Total Gaji: ${formatCurrency(data.totalSalary || selectedClaim.totalSalary)}
 
 Status Klaim: ${STATUS_LABELS[selectedClaim.status] || selectedClaim.status}
 ${selectedClaim.claimApprovedAt ? `Disetujui pada: ${formatDate(selectedClaim.claimApprovedAt)}` : ""}
@@ -290,13 +292,13 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
                       </TableCell>
                       <TableCell className="text-center">{item.targetQty}</TableCell>
                       <TableCell className="text-center">
-                        Rp {item.ratePerUnit.toLocaleString()}
+                        {formatCurrency(item.ratePerUnit)}
                       </TableCell>
                       <TableCell className="text-center font-medium">{item.completedQty}</TableCell>
                       <TableCell className="text-center text-destructive">{item.rejectedQty}</TableCell>
                       <TableCell className="text-center font-medium text-emerald-600">{item.acceptedQty}</TableCell>
                       <TableCell className="text-center font-bold text-primary">
-                        Rp {item.totalSalary.toLocaleString()}
+                        {formatCurrency(item.totalSalary)}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge className={`${STATUS_COLORS[item.status] || STATUS_COLORS.PENDING}`}>
@@ -380,7 +382,7 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
                 </div>
                 <div className="flex justify-between border-t pt-2 font-bold">
                   <span>Total Gaji</span>
-                  <span className="text-primary">Rp {selectedClaim.totalSalary.toLocaleString()}</span>
+                  <span className="text-primary">{formatCurrency(selectedClaim.totalSalary)}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

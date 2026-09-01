@@ -74,12 +74,6 @@ const STATUS_LABELS: Record<string, string> = {
   COMPLETED: "Selesai",
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  ASSIGNED: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)]",
-  IN_PROGRESS: "bg-amber-100 text-amber-700",
-  COMPLETED: "bg-emerald-100 text-emerald-700",
-}
-
 const REJECT_REASONS = [
   " Cacat Jahitan",
   " Ukuran Tidak Sesuai",

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { advances, employees } from "@/db/schema"
 import { eq, desc, like, sql } from "drizzle-orm"
-import { generateKasbonCode, generateKode } from "@/lib/utils"
+import { generateKasbonCode } from "@/lib/utils"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
+import { formatCurrencyServer } from "@/lib/server-currency"
 
 export async function GET(request: NextRequest) {
   try {
@@ -110,9 +111,10 @@ export async function POST(request: NextRequest) {
     await sendNotificationToAdmin(
       "KASBON_REQUESTED",
       "Pengajuan Kasbon Baru",
-      `${employeeName} mengajukan kasbon Rp ${Number(amount || 0).toLocaleString("id-ID")}`,
+      `${employeeName} mengajukan kasbon ${await formatCurrencyServer(Number(amount || 0))}`,
       "KASBON",
-      newAdvance[0].id
+      newAdvance[0].id,
+      { employeeName, amount: Number(amount || 0) }
     )
 
     return NextResponse.json(newAdvance[0], { status: 201 })

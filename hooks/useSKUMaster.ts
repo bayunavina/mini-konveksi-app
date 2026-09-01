@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 interface SKU {
   id: string
@@ -12,29 +12,30 @@ interface SKU {
   isActive: boolean
 }
 
+const SKU_QUERY_KEY = "master-skus"
+
 export function useSKUMaster() {
-  const [skus, setSkus] = useState<SKU[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    fetch("/api/master-skus")
-      .then(res => res.json())
-      .then(data => {
-        setSkus(data)
-        setLoading(false)
-      })
-      .catch(e => {
-        console.error("Error fetching SKUs:", e)
-        setLoading(false)
-      })
-  }, [])
+  const { data = [], isLoading, refetch } = useQuery<SKU[]>({
+    queryKey: [SKU_QUERY_KEY],
+    queryFn: async () => {
+      const res = await fetch("/api/master-skus")
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+      return res.json()
+    },
+  })
 
-  const refreshSkus = () => {
-    fetch("/api/master-skus")
-      .then(res => res.json())
-      .then(data => setSkus(data))
-      .catch(e => console.error("Error refreshing SKUs:", e))
+  return {
+    skus: data,
+    loading: isLoading,
+    refetch: () => {
+      refetch()
+    },
+    refreshSkus: () => {
+      queryClient.invalidateQueries({ queryKey: [SKU_QUERY_KEY] })
+    },
   }
-
-  return { skus, loading, refetch: refreshSkus }
 }

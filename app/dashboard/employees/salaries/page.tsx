@@ -26,6 +26,7 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { PlusIcon, BanknotesIcon, ArrowPathIcon, EyeIcon, PencilIcon, TrashIcon, CalculatorIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -90,6 +91,7 @@ function getCurrentWeekPeriod(): { week: string; year: number } {
 }
 
 export default function SalariesPage() {
+  const { formatCurrency, formatNumber } = useCurrency()
   const router = useRouter()
   const { user, isLoading } = useSessionWithRole()
 
@@ -454,7 +456,7 @@ export default function SalariesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {loading ? "-" : `Rp ${totalPending.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalPending)}
             </div>
           </CardContent>
         </Card>
@@ -464,7 +466,7 @@ export default function SalariesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {loading ? "-" : `Rp ${totalPaid.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalPaid)}
             </div>
           </CardContent>
         </Card>
@@ -490,17 +492,17 @@ export default function SalariesPage() {
               data={filteredSalaries.map(s => ({
                 employee: s.employee?.name || "-",
                 period: s.period,
-                baseSalary: `Rp ${s.baseSalary.toLocaleString("id-ID")}`,
-                allowances: `Rp ${s.totalAllowances.toLocaleString("id-ID")}`,
-                deductions: `Rp ${s.totalDeductions.toLocaleString("id-ID")}`,
-                totalSalary: `Rp ${s.totalSalary.toLocaleString("id-ID")}`,
+                baseSalary: formatCurrency(s.baseSalary),
+                allowances: formatCurrency(s.totalAllowances),
+                deductions: formatCurrency(s.totalDeductions),
+                totalSalary: formatCurrency(s.totalSalary),
                 status: s.status === "PENDING" ? "Pending" : "Terbayar",
               }))}
               title="Daftar Gaji Karyawan"
               filename="gaji-karyawan"
               summary={[
                 { label: "Total Slip Gaji", value: filteredSalaries.length },
-                { label: "Total Jumlah Gaji", value: `Rp ${filteredSalaries.reduce((sum, s) => sum + s.totalSalary, 0).toLocaleString()}` },
+                { label: "Total Jumlah Gaji", value: formatCurrency(filteredSalaries.reduce((sum, s) => sum + s.totalSalary, 0)) },
               ]}
               summaryTitle="Ringkasan Gaji"
             />
@@ -582,16 +584,16 @@ export default function SalariesPage() {
                     <TableCell className="font-medium">{salary.employee?.name || "-"}</TableCell>
                     <TableCell>{salary.period}</TableCell>
                     <TableCell className="text-right">
-                      Rp {salary.baseSalary.toLocaleString("id-ID")}
+                      {formatCurrency(salary.baseSalary)}
                     </TableCell>
                     <TableCell className="text-right text-green-600">
-                      Rp {salary.totalAllowances.toLocaleString("id-ID")}
+                      {formatCurrency(salary.totalAllowances)}
                     </TableCell>
                     <TableCell className="text-right text-red-600">
-                      Rp {salary.totalDeductions.toLocaleString("id-ID")}
+                      {formatCurrency(salary.totalDeductions)}
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      Rp {salary.totalSalary.toLocaleString("id-ID")}
+                      {formatCurrency(salary.totalSalary)}
                     </TableCell>
                     <TableCell>
                       <Badge className={STATUS_COLORS[salary.status] || "bg-gray-100 text-gray-800"}>
@@ -659,14 +661,14 @@ export default function SalariesPage() {
               <Input
                 type="text"
                 placeholder="0"
-                value={formData.baseSalary ? parseInt(formData.baseSalary).toLocaleString("id-ID") : ""}
+                value={formData.baseSalary ? formatNumber(parseInt(formData.baseSalary)) : ""}
                 onChange={(e) => {
                   const rawValue = e.target.value.replace(/[^\d]/g, "")
                   if (!rawValue) {
                     setFormData({ ...formData, baseSalary: "" })
                     return
                   }
-                  const formatted = parseInt(rawValue).toLocaleString("id-ID")
+                  const formatted = formatNumber(parseInt(rawValue))
                   const cursorPos = e.target.selectionStart || formatted.length
                   const oldLength = e.target.value.length
                   const newLength = formatted.length
@@ -700,14 +702,14 @@ export default function SalariesPage() {
                 <Input
                   type="text"
                   placeholder="0"
-                  value={formData.totalAllowances ? parseInt(formData.totalAllowances).toLocaleString("id-ID") : ""}
+                  value={formData.totalAllowances ? formatNumber(parseInt(formData.totalAllowances)) : ""}
                   onChange={(e) => {
                     const rawValue = e.target.value.replace(/[^\d]/g, "")
                     if (!rawValue) {
                       setFormData({ ...formData, totalAllowances: "" })
                       return
                     }
-                    const formatted = parseInt(rawValue).toLocaleString("id-ID")
+                    const formatted = formatNumber(parseInt(rawValue))
                     const cursorPos = e.target.selectionStart || formatted.length
                     const oldLength = e.target.value.length
                     const newLength = formatted.length
@@ -740,14 +742,14 @@ export default function SalariesPage() {
                 <Input
                   type="text"
                   placeholder="0"
-                  value={formData.totalDeductions ? parseInt(formData.totalDeductions).toLocaleString("id-ID") : ""}
+                  value={formData.totalDeductions ? formatNumber(parseInt(formData.totalDeductions)) : ""}
                   onChange={(e) => {
                     const rawValue = e.target.value.replace(/[^\d]/g, "")
                     if (!rawValue) {
                       setFormData({ ...formData, totalDeductions: "" })
                       return
                     }
-                    const formatted = parseInt(rawValue).toLocaleString("id-ID")
+                    const formatted = formatNumber(parseInt(rawValue))
                     const cursorPos = e.target.selectionStart || formatted.length
                     const oldLength = e.target.value.length
                     const newLength = formatted.length
@@ -809,21 +811,21 @@ export default function SalariesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Gaji Pokok</p>
-                  <p className="font-medium">Rp {selectedSalary.baseSalary.toLocaleString("id-ID")}</p>
+                  <p className="font-medium">{formatCurrency(selectedSalary.baseSalary)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Tunjangan</p>
-                  <p className="font-medium text-green-600">Rp {selectedSalary.totalAllowances.toLocaleString("id-ID")}</p>
+                  <p className="font-medium text-green-600">{formatCurrency(selectedSalary.totalAllowances)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Potongan</p>
-                  <p className="font-medium text-red-600">Rp {selectedSalary.totalDeductions.toLocaleString("id-ID")}</p>
+                  <p className="font-medium text-red-600">{formatCurrency(selectedSalary.totalDeductions)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="font-bold text-lg">Rp {selectedSalary.totalSalary.toLocaleString("id-ID")}</p>
+                  <p className="font-bold text-lg">{formatCurrency(selectedSalary.totalSalary)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -940,7 +942,7 @@ export default function SalariesPage() {
                   <option value="">Pilih Karyawan</option>
                   {employees?.map((emp) => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.name} {emp.ratePerUnit ? `(Rate: Rp ${emp.ratePerUnit?.toLocaleString()})` : ""}
+                      {emp.name} {emp.ratePerUnit ? `(Rate: ${formatCurrency(emp.ratePerUnit)})` : ""}
                     </option>
                   ))}
                 </select>
@@ -978,7 +980,7 @@ export default function SalariesPage() {
             <div className="space-y-4 py-4">
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium">Hasil Kalkulasi:</p>
-                <p className="text-2xl font-bold">Rp {calculation.estimatedSalary?.toLocaleString("id-ID")}</p>
+                <p className="text-2xl font-bold">{formatCurrency(calculation.estimatedSalary)}</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setCalculation(null)}>

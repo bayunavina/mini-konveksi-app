@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Roboto_Mono, Lora } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/components/query-provider";
+import { CurrencyProvider } from "@/hooks/useCurrency";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -54,8 +56,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster position="top-right" richColors closeButton expand />
+          <QueryProvider>
+            <CurrencyProvider>
+              {children}
+              <Toaster position="top-right" richColors closeButton expand />
+            </CurrencyProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

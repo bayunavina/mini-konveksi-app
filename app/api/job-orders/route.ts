@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { jobOrders, products, teams, masterSkus, productionAssignments, employees } from "@/db/schema"
+import { jobOrders, products, masterSkus, productionAssignments, employees } from "@/db/schema"
 import { eq, desc, sql, inArray } from "drizzle-orm"
 
 export async function GET(request: NextRequest) {

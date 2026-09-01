@@ -77,7 +77,7 @@ async function seed() {
     console.log('👤 Creating employees...')
     const employeeResults = await pool.query(`
       INSERT INTO employees (name, email, phone, role, team_id, base_salary, pin, is_active) VALUES
-      ('Admin Sistem', 'indrabayunavina@gmail.com', '081234567890', 'ADMIN', NULL, 10000000, '1234', true),
+      ('Admin Utama', 'erpkonveksi@gmail.com', '081234567890', 'ADMIN', NULL, 10000000, '1234', true),
       ('Rina Marlina', 'rina@konveksi.com', '081234567891', 'QC', NULL, 5500000, '2345', true),
       ('Budi Santoso', 'budi@konveksi.com', '081234567892', 'KARYAWAN', '${timA?.id}', 4500000, '3456', true),
       ('Dewi Lestari', 'dewi@konveksi.com', '081234567893', 'KARYAWAN', '${timB?.id}', 4500000, '4567', true),
@@ -232,7 +232,7 @@ async function seed() {
     console.log('   Transfers: 10')
     console.log('')
     console.log('🔑 Login Credentials (for mobile app testing):')
-    console.log('   Admin: indrabayunavina@gmail.com / password: admin123')
+    console.log('   Admin: erpkonveksi@gmail.com / password: erpkonveksi123!')
     console.log('   QC: rina@konveksi.com / password: qc123')
     console.log('   Workers: budi@konveksi.com, dewi@konveksi.com, etc. / password: worker123')
 

@@ -45,6 +45,7 @@ import {
   FunnelIcon,
 } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 
 import { ROLE_LABELS } from "@/lib/constants"
 import { toast } from "sonner"
@@ -87,6 +88,7 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export default function EmployeesPage() {
+  const { formatCurrency } = useCurrency()
 
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -117,7 +119,7 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     if (employees) {
-      const filteredEmployees = employees.filter(e => e.email !== "adsteknologi@gmail.com")
+      const filteredEmployees = employees.filter(e => e.email !== "erpkonveksi@gmail.com")
       setStats({
         total: filteredEmployees.length,
         karyawan: filteredEmployees.filter(e => e.role === "KARYAWAN").length,
@@ -130,7 +132,7 @@ export default function EmployeesPage() {
   const filtered = useMemo(() => {
     const result = (employees || []).filter(
       (e) =>
-        e.email !== "adsteknologi@gmail.com" &&
+        e.email !== "erpkonveksi@gmail.com" &&
         (e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.team?.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
@@ -176,7 +178,7 @@ export default function EmployeesPage() {
     
     const suggestions: { type: "nama" | "email" | "tim"; value: string; label: string }[] = []
     const seen = new Set<string>()
-    const filteredEmployees = employees?.filter(e => e.email !== "adsteknologi@gmail.com") || []
+    const filteredEmployees = employees?.filter(e => e.email !== "erpkonveksi@gmail.com") || []
     
     filteredEmployees.forEach((emp) => {
       if (emp.name.toLowerCase().includes(searchQuery.toLowerCase()) && !seen.has(emp.name)) {
@@ -550,8 +552,8 @@ export default function EmployeesPage() {
                   ...e,
                   role: ROLE_LABELS[e.role as keyof typeof ROLE_LABELS] || e.role,
                   employmentType: e.role === "ADMIN" ? "N/A" : (EMPLOYMENT_TYPE_LABELS[e.employmentType || "HARIAN"] || e.employmentType),
-                  baseSalary: e.baseSalary && e.baseSalary > 0 ? `Rp ${e.baseSalary.toLocaleString()}` : "-",
-                  ratePerUnit: e.ratePerUnit && e.ratePerUnit > 0 ? `Rp ${e.ratePerUnit.toLocaleString()}` : "-",
+                  baseSalary: e.baseSalary && e.baseSalary > 0 ? formatCurrency(e.baseSalary) : "-",
+                  ratePerUnit: e.ratePerUnit && e.ratePerUnit > 0 ? formatCurrency(e.ratePerUnit) : "-",
                   isActive: e.isActive ? "Aktif" : "Nonaktif",
                 }))}
                 title="Daftar Karyawan"
@@ -573,7 +575,7 @@ export default function EmployeesPage() {
 
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">
-              Menampilkan <span className="font-medium text-foreground">{filtered.length}</span> dari <span className="font-medium">{employees?.filter(e => e.email !== "adsteknologi@gmail.com").length || 0}</span> data
+              Menampilkan <span className="font-medium text-foreground">{filtered.length}</span> dari <span className="font-medium">{employees?.filter(e => e.email !== "erpkonveksi@gmail.com").length || 0}</span> data
             </p>
           </div>
 
@@ -658,12 +660,12 @@ export default function EmployeesPage() {
                       </TableCell>
                       <TableCell className="text-right hidden lg:table-cell">
                         {employee.baseSalary && employee.baseSalary > 0
-                          ? `Rp ${employee.baseSalary.toLocaleString()}`
+                          ? formatCurrency(employee.baseSalary)
                           : "-"}
                       </TableCell>
                       <TableCell className="text-right hidden lg:table-cell">
                         {employee.ratePerUnit && employee.ratePerUnit > 0
-                          ? `Rp ${employee.ratePerUnit.toLocaleString()}`
+                          ? formatCurrency(employee.ratePerUnit)
                           : "-"}
                       </TableCell>
                       <TableCell>
@@ -854,7 +856,7 @@ export default function EmployeesPage() {
                   <p className="text-sm text-muted-foreground">Gaji Pokok</p>
                   <p className="font-medium">
                     {selectedEmployee.baseSalary && selectedEmployee.baseSalary > 0
-                      ? `Rp ${selectedEmployee.baseSalary.toLocaleString()}`
+                      ? formatCurrency(selectedEmployee.baseSalary)
                       : "-"}
                   </p>
                 </div>
@@ -862,7 +864,7 @@ export default function EmployeesPage() {
                   <p className="text-sm text-muted-foreground">Rate/Pcs</p>
                   <p className="font-medium">
                     {selectedEmployee.ratePerUnit && selectedEmployee.ratePerUnit > 0
-                      ? `Rp ${selectedEmployee.ratePerUnit.toLocaleString()}`
+                      ? formatCurrency(selectedEmployee.ratePerUnit)
                       : "-"}
                   </p>
                 </div>

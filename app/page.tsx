@@ -1,6 +1,6 @@
 "use client"
 
-import { ThemeToggle, SimpleThemeToggle } from "@/components/theme-toggle"
+import { SimpleThemeToggle } from "@/components/theme-toggle"
 import { AuthButtons } from "@/components/auth-buttons"
 import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision"
 import { 

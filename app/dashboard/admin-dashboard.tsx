@@ -27,6 +27,7 @@ import {
 } from "@heroicons/react/24/outline"
 import Link from "next/link"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { 
   FinanceLineChart, 
   InventoryBarChart,
@@ -195,6 +196,7 @@ function CompactStat({ title, value, icon: Icon, iconColor = "text-muted-foregro
 }
 
 export function AdminDashboard() {
+  const { formatCurrency } = useCurrency()
   const { data: jobOrdersResponse } = useFetch<{ data: JobOrder[]; pagination: { limit: number; offset: number; hasMore: boolean } }>("/api/job-orders?limit=10")
   const jobOrders = jobOrdersResponse?.data
   const { data: transfers, loading: trLoading } = useFetch<Transfer[]>("/api/transfers")
@@ -382,7 +384,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (employees) {
-      const filteredEmployees = employees.filter(e => e.email !== "adsteknologi@gmail.com")
+      const filteredEmployees = employees.filter(e => e.email !== "erpkonveksi@gmail.com")
       const karyawans = filteredEmployees.filter(e => e.role === "KARYAWAN").length
       setStats(prev => ({ 
         ...prev, 
@@ -433,7 +435,7 @@ export function AdminDashboard() {
       <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
         <StatCard
           title="Saldo"
-          value={`Rp ${stats.totalSaldo.toLocaleString("id-ID")}`}
+          value={formatCurrency(stats.totalSaldo)}
           icon={WalletIcon}
           iconColor="text-emerald-600"
           href="/overview/finance"
@@ -441,7 +443,7 @@ export function AdminDashboard() {
         />
         <StatCard
           title="Pengeluaran"
-          value={`Rp ${stats.totalPengeluaran.toLocaleString("id-ID")}`}
+          value={formatCurrency(stats.totalPengeluaran)}
           icon={ReceiptPercentIcon}
           iconColor="text-red-600"
           href="/overview/finance"

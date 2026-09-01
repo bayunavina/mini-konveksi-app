@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
+import { useCurrency } from "@/hooks/useCurrency"
 
 interface Assignment {
   id: string
@@ -177,6 +178,7 @@ function StatCard({
 }
 
 function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC }: { assignment: Assignment; onInputClick: (assignment: Assignment) => void; onConfirmClick: (assignment: Assignment) => void; onRequestQC: (assignment: Assignment) => void }) {
+  const { formatCurrency } = useCurrency()
   const completedProgress = Math.round((assignment.acceptedQty / assignment.targetQty) * 100)
   const remaining = assignment.targetQty - assignment.acceptedQty
   
@@ -200,7 +202,7 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Rate</p>
             <p className="text-sm font-semibold text-primary">
-              Rp {Number(assignment.ratePerUnit || 0).toLocaleString("id-ID")}/pcs
+              {formatCurrency(Number(assignment.ratePerUnit || 0))}/pcs
             </p>
           </div>
         </div>
@@ -277,6 +279,7 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
 
 export function KaryawanDashboard() {
   const { user } = useSessionWithRole()
+  const { formatCurrency, formatNumber, currencySymbol } = useCurrency()
   const [isLoading, setIsLoading] = useState(true)
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [salaryCalc, setSalaryCalc] = useState<SalaryCalculation | null>(null)
@@ -391,9 +394,7 @@ export function KaryawanDashboard() {
   const hasAnyAssignments = assignments.length > 0
   const allCompleted = completedAssignments.length > 0 && activeAssignments.length === 0
   const totalTarget = assignments.reduce((sum, a) => sum + a.targetQty, 0)
-  const totalCompleted = assignments.reduce((sum, a) => sum + (a.completedQty || 0), 0)
   const totalAccepted = assignments.reduce((sum, a) => sum + (a.acceptedQty || 0), 0)
-  const totalPending = assignments.reduce((sum, a) => sum + (a.pendingQty || 0), 0)
   const totalRejected = assignments.reduce((sum, a) => sum + (a.rejectedQty || 0), 0)
 
   const canClaimThisPeriod = () => {
@@ -683,15 +684,15 @@ export function KaryawanDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
         <StatCard
           title="Total Gaji"
-          value={`Rp ${Math.round(totalGaji).toLocaleString("id-ID")}`}
+          value={formatCurrency(Math.round(totalGaji))}
           subtitle="Sudah diklaim"
           icon={BanknotesIcon}
           trend="up"
         />
         <StatCard
           title="Estimasi Gaji"
-          value={`Rp ${Math.round(salaryCalc?.estimatedSalary || 0).toLocaleString("id-ID")}`}
-          subtitle={`Rate: Rp ${(salaryCalc?.ratePerUnit || 0).toLocaleString("id-ID")}/pcs`}
+          value={formatCurrency(Math.round(salaryCalc?.estimatedSalary || 0))}
+          subtitle={`Rate: ${formatCurrency(salaryCalc?.ratePerUnit || 0)}/pcs`}
           icon={BanknotesIcon}
           trend="up"
         />
@@ -704,7 +705,7 @@ export function KaryawanDashboard() {
         />
         <StatCard
           title="Sisa Kasbon"
-          value={`Rp ${kasbonBalance.toLocaleString("id-ID")}`}
+          value={formatCurrency(kasbonBalance)}
           subtitle={kasbonBalance > 0 ? "Belum lunas" : "Lunas"}
           icon={CreditCardIcon}
           trend={kasbonBalance > 0 ? "down" : "neutral"}
@@ -888,15 +889,15 @@ export function KaryawanDashboard() {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Rate per Unit</span>
-                <span className="font-medium">Rp {(salaryCalc?.ratePerUnit || 0).toLocaleString("id-ID")}</span>
+                <span className="font-medium">{formatCurrency(salaryCalc?.ratePerUnit || 0)}</span>
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="text-sm font-medium">Estimasi Gaji</span>
-                <span className="font-bold text-primary">Rp {(salaryCalc?.estimatedSalary || 0).toLocaleString("id-ID")}</span>
+                <span className="font-bold text-primary">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
               </div>
               <div className="flex justify-between border-t pt-2 font-bold">
                 <span>Total Diterima</span>
-                <span className="text-emerald-600">Rp {(salaryCalc?.estimatedSalary || 0).toLocaleString("id-ID")}</span>
+                <span className="text-emerald-600">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
               </div>
             </div>
             {claimStatus === "PENDING" || claimStatus === "CLAIMED" ? (
@@ -937,12 +938,12 @@ export function KaryawanDashboard() {
           </DialogHeader>
             <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="kasbon-amount">Jumlah (Rp)</Label>
+              <Label htmlFor="kasbon-amount">Jumlah ({currencySymbol})</Label>
               <Input
                 id="kasbon-amount"
                 type="text"
                 placeholder="Masukkan jumlah kasbon"
-                value={kasbonAmount ? parseInt(kasbonAmount).toLocaleString("id-ID") : ""}
+                value={kasbonAmount ? formatNumber(parseInt(kasbonAmount)) : ""}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^\d]/g, "")
                   setKasbonAmount(value)
@@ -1002,15 +1003,15 @@ export function KaryawanDashboard() {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Rate/Unit</span>
-                <span className="font-medium">Rp {(salaryCalc?.ratePerUnit || 0).toLocaleString("id-ID")}</span>
+                <span className="font-medium">{formatCurrency(salaryCalc?.ratePerUnit || 0)}</span>
               </div>
               <div className="flex justify-between border-t pt-3">
                 <span className="text-sm font-medium">Subtotal Gaji</span>
-                <span className="font-medium">Rp {(salaryCalc?.estimatedSalary || 0).toLocaleString("id-ID")}</span>
+                <span className="font-medium">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
               </div>
               <div className="flex justify-between border-t pt-3 font-bold">
                 <span>Total Diterima</span>
-                <span className="text-lg text-emerald-600">Rp {(salaryCalc?.estimatedSalary || 0).toLocaleString("id-ID")}</span>
+                <span className="text-lg text-emerald-600">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
               </div>
             </div>
             <div className="text-xs text-muted-foreground">

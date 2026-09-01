@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { jobOrders, products, teams, qcReports, employees, notifications, productionAssignments, productionLogs, rejects, productionProgress, productionFromMaterials, materialLots } from "@/db/schema"
+import { jobOrders, products, teams, qcReports, employees, notifications, productionAssignments, productionLogs, rejects, productionProgress } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 
 export async function GET(

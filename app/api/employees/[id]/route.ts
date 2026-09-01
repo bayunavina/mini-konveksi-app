@@ -108,7 +108,7 @@ export async function DELETE(
     
     const employeeData = employee.rows[0]
     
-    if (employeeData.email === 'adsteknologi@gmail.com') {
+    if (employeeData.email === 'erpkonveksi@gmail.com') {
       return NextResponse.json({ error: 'Admin Sistem tidak dapat dihapus!' }, { status: 403 })
     }
     

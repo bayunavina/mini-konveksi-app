@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { salaries, employees, transactions, notifications } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { formatCurrencyServer } from "@/lib/server-currency"
 
 export async function GET(
   request: NextRequest,
@@ -91,7 +92,7 @@ export async function PUT(
         employeeId: salary.employeeId,
         type: "SALARY_PAID",
         title: "Gaji Telah Ditransfer",
-        message: `Gaji periode ${salary.period} sebesar Rp ${(salary.totalSalary || 0).toLocaleString()} telah ditransfer.`,
+        message: `Gaji periode ${salary.period} sebesar ${await formatCurrencyServer(salary.totalSalary || 0)} telah ditransfer.`,
         reference: "SALARY",
         referenceId: salary.id,
       })

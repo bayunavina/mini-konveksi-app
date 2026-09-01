@@ -4,11 +4,11 @@
 
 Aplikasi ini menggunakan **Next.js monorepo architecture** - frontend dan backend adalah satu server yang sama:
 
-| Komponen | Lokasi | Port |
-|----------|--------|------|
-| Frontend (React) | `app/` | 3000 |
-| Backend (API Routes) | `app/api/` | 3000 |
-| Database (PostgreSQL) | Docker | 5432/5433 |
+| Komponen              | Lokasi       | Port      |
+| --------------------- | ------------ | --------- |
+| Frontend (React)      | `app/`     | 3000      |
+| Backend (API Routes)  | `app/api/` | 3000      |
+| Database (PostgreSQL) | Docker       | 5432/5433 |
 
 > **Tidak ada server terpisah** - Next.js menangani keduanya.
 
@@ -75,14 +75,14 @@ npm run dev
 
 ## Script yang Tersedia
 
-| Script | Fungsi |
-|--------|--------|
-| `npm run db:up` | Start PostgreSQL (port 5432) |
-| `npm run db:dev` | Start PostgreSQL dev (port 5433) |
-| `npm run db:push` | Push schema ke database |
-| `npm run dev` | Start Next.js dev server |
-| `npm run docker:up` | Start full stack (app + db) |
-| `npm run docker:down` | Stop all containers |
+| Script                  | Fungsi                           |
+| ----------------------- | -------------------------------- |
+| `npm run db:up`       | Start PostgreSQL (port 5432)     |
+| `npm run db:dev`      | Start PostgreSQL dev (port 5433) |
+| `npm run db:push`     | Push schema ke database          |
+| `npm run dev`         | Start Next.js dev server         |
+| `npm run docker:up`   | Start full stack (app + db)      |
+| `npm run docker:down` | Stop all containers              |
 
 ---
 
@@ -107,19 +107,23 @@ npm run dev
 
 Buka browser di **http://localhost:3000**
 
-# User Admin
-admin@konveksi.com
-Admin123!
+# Superadmin (Default Akun)
+
+erpkonveksi@gmail.com
+erpkonveksi123!
 
 # user Karyawan
+
 karyawan@konveksi.com
 Karyawan123!
 
 # User QC
+
 qc@konveksi.com
 QC123!
 
 # User gudang
+
 gudang@konveksi.com
 Gudang123!
 
@@ -133,15 +137,20 @@ To address all issues possible (including breaking changes), run:
   npm audit fix --force
 Some issues need review, and may require choosing
 a different dependency.
-Run `npm audit` for details. 
+Run `npm audit` for details.
 
 Promp Update Next JS
 
 # Prompt Deploy ke Versi Stabil
+
 ---
+
 # DEPLOY PRODUCTION - Mini Konveksi ERP
+
 ## Langkah Pertama: Upgrade ke Versi Stabil
+
 Jalankan command ini di terminal project:
+
 ```bash
 # Stop dev server terlebih dahulu (Ctrl+C)
 # Install versi stabil
@@ -150,3 +159,4 @@ npm install next@15 react@18 react-dom@18
 npm install
 # Verifikasi versi
 npm list next react react-dom
+```

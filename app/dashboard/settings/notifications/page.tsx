@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { PageHeader } from "@/components/shared"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { EnvelopeIcon, DevicePhoneMobileIcon, ArrowPathIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline"
+import { EnvelopeIcon, DevicePhoneMobileIcon, ArrowPathIcon, ExclamationCircleIcon, ServerStackIcon, CheckCircleIcon, XCircleIcon, BellAlertIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
+import { usePushNotification } from "@/hooks/usePushNotification"
 
 interface NotificationSettings {
   emailOrderComplete: boolean
@@ -40,6 +41,22 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testSending, setTestSending] = useState(false)
+  const [smtpEnabled, setSmtpEnabled] = useState(false)
+  const [smtpLoading, setSmtpLoading] = useState(true)
+  const [smtpSaving, setSmtpSaving] = useState(false)
+  const [smtpTesting, setSmtpTesting] = useState(false)
+  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushLoading, setPushLoading] = useState(true)
+  const [pushSaving, setPushSaving] = useState(false)
+  const {
+    supported,
+    permission,
+    subscribed,
+    loading: pushSubLoading,
+    requestPermission,
+    unsubscribe,
+  } = usePushNotification(user?.id)
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -48,6 +65,8 @@ export default function NotificationsPage() {
         return
       }
       fetchPreferences()
+      fetchSmtpStatus()
+      fetchPushStatus()
     } else if (!isLoading && !user) {
       router.push("/")
     }
@@ -147,6 +166,117 @@ export default function NotificationsPage() {
     }
   }
 
+  const fetchSmtpStatus = async () => {
+    setSmtpLoading(true)
+    try {
+      const response = await fetch('/api/settings/email-smtp')
+      if (response.ok) {
+        const data = await response.json()
+        setSmtpEnabled(data.enabled ?? false)
+      }
+    } catch (error) {
+      console.error('Error fetching email smtp status:', error)
+    } finally {
+      setSmtpLoading(false)
+    }
+  }
+
+  const fetchPushStatus = async () => {
+    setPushLoading(true)
+    try {
+      const response = await fetch('/api/settings/push')
+      if (response.ok) {
+        const data = await response.json()
+        setPushEnabled(data.enabled ?? false)
+      }
+    } catch (error) {
+      console.error('Error fetching push status:', error)
+    } finally {
+      setPushLoading(false)
+    }
+  }
+
+  const handleSavePush = async () => {
+    setPushSaving(true)
+    try {
+      const response = await fetch('/api/settings/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: pushEnabled })
+      })
+      if (response.ok) {
+        toast.success(pushEnabled ? 'Push notification diaktifkan' : 'Push notification dinonaktifkan')
+      } else {
+        toast.error('Gagal menyimpan pengaturan push')
+      }
+    } catch (error) {
+      console.error('Error saving push setting:', error)
+      toast.error('Terjadi kesalahan saat menyimpan')
+    } finally {
+      setPushSaving(false)
+    }
+  }
+
+  const handleEnableBrowserPush = async () => {
+    await requestPermission()
+  }
+
+  const handleDisableBrowserPush = async () => {
+    await unsubscribe()
+    toast.success('Push browser dinonaktifkan')
+  }
+
+  const handleSmtpToggle = (enabled: boolean) => {
+    setSmtpEnabled(enabled)
+    setSmtpTestResult(null)
+  }
+
+  const handleSaveSmtp = async () => {
+    setSmtpSaving(true)
+    try {
+      const response = await fetch('/api/settings/email-smtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: smtpEnabled })
+      })
+      if (response.ok) {
+        toast.success(smtpEnabled ? 'Email via Gmail SMTP diaktifkan' : 'Email via Gmail SMTP dinonaktifkan')
+      } else {
+        toast.error('Gagal menyimpan pengaturan email SMTP')
+      }
+    } catch (error) {
+      console.error('Error saving email smtp setting:', error)
+      toast.error('Terjadi kesalahan saat menyimpan')
+    } finally {
+      setSmtpSaving(false)
+    }
+  }
+
+  const handleTestSmtp = async () => {
+    setSmtpTesting(true)
+    setSmtpTestResult(null)
+    try {
+      const response = await fetch('/api/settings/email-smtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: true })
+      })
+      const result = await response.json()
+      setSmtpTestResult({ success: result.success, message: result.message || 'Koneksi SMTP gagal' })
+      if (result.success) {
+        toast.success('Tes koneksi SMTP berhasil')
+      } else {
+        toast.error(`Tes koneksi SMTP gagal: ${result.message}`)
+      }
+    } catch (error) {
+      console.error('Error testing SMTP connection:', error)
+      setSmtpTestResult({ success: false, message: 'Terjadi kesalahan saat tes koneksi' })
+      toast.error('Terjadi kesalahan saat tes koneksi SMTP')
+    } finally {
+      setSmtpTesting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -193,6 +323,177 @@ export default function NotificationsPage() {
       )}
 
       <div className="grid gap-6">
+        {/* Gmail SMTP Toggle */}
+        <Card className={smtpEnabled ? "border-green-200" : ""}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ServerStackIcon className="h-5 w-5" />
+              Email via Gmail SMTP
+            </CardTitle>
+            <CardDescription>
+              Aktifkan/nonaktifkan pengiriman email notifikasi melalui Gmail SMTP (erpkonveksi@gmail.com)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Aktifkan Pengiriman Email</Label>
+                <p className="text-sm text-muted-foreground">
+                  {smtpEnabled 
+                    ? "Email notifikasi akan otomatis dikirim ke admin melalui Gmail SMTP." 
+                    : "Email tidak dikirim. Notifikasi hanya tampil dalam aplikasi."}
+                </p>
+              </div>
+              {!smtpLoading && (
+                <Switch 
+                  checked={smtpEnabled}
+                  onCheckedChange={handleSmtpToggle}
+                  disabled={!user || smtpLoading}
+                />
+              )}
+            </div>
+
+            {smtpTestResult && (
+              <div className={`flex items-center gap-2 text-sm ${smtpTestResult.success ? "text-green-600" : "text-red-600"}`}>
+                {smtpTestResult.success 
+                  ? <CheckCircleIcon className="h-4 w-4" /> 
+                  : <XCircleIcon className="h-4 w-4" />}
+                {smtpTestResult.message}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={handleTestSmtp}
+                disabled={!user || smtpTesting}
+              >
+                {smtpTesting ? (
+                  <>
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                    Menguji...
+                  </>
+                ) : (
+                  'Tes Koneksi SMTP'
+                )}
+              </Button>
+              <Button 
+                onClick={handleSaveSmtp}
+                disabled={!user || smtpSaving || smtpLoading}
+              >
+                {smtpSaving ? (
+                  <>
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan Pengaturan SMTP'
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Push Notification Browser */}
+        <Card className={pushEnabled ? "border-green-200" : ""}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BellAlertIcon className="h-5 w-5" />
+              Push Notification Browser
+            </CardTitle>
+            <CardDescription>
+              Aktifkan push notification ke browser (Chrome/Firefox/Edge) saat event bisnis terjadi
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Aktifkan Push Notification</Label>
+                <p className="text-sm text-muted-foreground">
+                  {pushEnabled 
+                    ? "Push notification akan dikirim ke browser yang sudah mengizinkan notifikasi." 
+                    : "Push notification browser dimatikan."}
+                </p>
+              </div>
+              {!pushLoading && (
+                <Switch 
+                  checked={pushEnabled}
+                  onCheckedChange={setPushEnabled}
+                  disabled={!user || pushLoading}
+                />
+              )}
+            </div>
+
+            {!supported ? (
+              <p className="text-sm text-muted-foreground">
+                Browser Anda tidak mendukung push notification.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">Izin Browser:</span>
+                  <span className={permission === "granted" ? "text-green-600" : "text-amber-600"}>
+                    {permission === "granted" ? "Diizinkan" : permission === "denied" ? "Diblokir" : "Belum diminta"}
+                  </span>
+                </div>
+                <div className="flex gap-3">
+                  {!subscribed ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleEnableBrowserPush}
+                      disabled={!user || pushSubLoading || !pushEnabled}
+                    >
+                      {pushSubLoading ? (
+                        <>
+                          <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                          Meminta Izin...
+                        </>
+                      ) : (
+                        "Aktifkan Notifikasi Browser"
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleDisableBrowserPush}
+                      disabled={!user || pushSubLoading}
+                    >
+                      Nonaktifkan Notifikasi Browser
+                    </Button>
+                  )}
+                </div>
+                {subscribed && (
+                  <p className="flex items-center gap-1.5 text-sm text-green-600">
+                    <CheckCircleIcon className="h-4 w-4" />
+                    Browser terdaftar untuk menerima push notification
+                  </p>
+                )}
+                {permission === "denied" && (
+                  <p className="text-sm text-red-600">
+                    Izin diblokir di browser. Aktifkan lewat pengaturan situs di browser.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex pt-2">
+              <Button 
+                onClick={handleSavePush}
+                disabled={!user || pushSaving || pushLoading}
+              >
+                {pushSaving ? (
+                  <>
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan Pengaturan Push'
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Email Notifications */}
         <Card>
           <CardHeader>

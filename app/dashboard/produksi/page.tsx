@@ -11,7 +11,7 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -45,7 +45,6 @@ import { ExportPrint } from "@/components/shared/export-print"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
-import { formatDate } from "@/lib/utils"
 import { 
   JOB_ORDER_STATUS_LABELS, 
   JOB_ORDER_STATUS_COLORS, 
@@ -53,7 +52,7 @@ import {
   type JobOrderStatus 
 } from "@/types/production"
 
-const SUPERADMIN_EMAIL = "adsteknologi@gmail.com"
+const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 export default function ProduksiPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -61,7 +60,6 @@ export default function ProduksiPage() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [holdingId, setHoldingId] = useState<string | null>(null)
   
   const { user } = useSessionWithRole()
   const isSuperadmin = user?.email === SUPERADMIN_EMAIL

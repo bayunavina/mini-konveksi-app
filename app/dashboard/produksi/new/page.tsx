@@ -20,6 +20,7 @@ import {
 import { PageHeader } from "@/components/shared"
 import { ArrowLeftIcon, ArrowPathIcon, UserIcon, PlusIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
 
 interface Employee {
@@ -52,6 +53,7 @@ interface QCReport {
 
 export default function NewJobOrderPage() {
   const router = useRouter()
+  const { formatCurrency, formatNumber, currencySymbol } = useCurrency()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { data: employees } = useFetch<Employee[]>("/api/employees")
@@ -84,7 +86,7 @@ export default function NewJobOrderPage() {
   const formatNumberWithSeparator = (value: string) => {
     const num = value.replace(/\D/g, "")
     if (!num) return ""
-    return parseInt(num).toLocaleString("id-ID")
+    return formatNumber(parseInt(num))
   }
 
   const handleRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,14 +176,6 @@ export default function NewJobOrderPage() {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount)
   }
 
   return (
@@ -414,7 +408,7 @@ export default function NewJobOrderPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ratePerUnit">Rate/Unit (Rp) *</Label>
+                  <Label htmlFor="ratePerUnit">Rate/Unit ({currencySymbol}) *</Label>
                   <Input
                     id="ratePerUnit"
                     type="text"

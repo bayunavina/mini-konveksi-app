@@ -12,5 +12,5 @@ declare module 'dom-to-image' {
     pixelRatio?: number;
   }): Promise<string>;
   
-  export function toSvg(node: HTMLElement, options?: any): Promise<string>;
+  export function toSvg(node: HTMLElement, options?: Record<string, unknown>): Promise<string>;
 }

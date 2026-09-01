@@ -35,6 +35,7 @@ import {
   CurrencyDollarIcon,
 } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useCurrency } from "@/hooks/useCurrency"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -76,6 +77,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function AdvancesPage() {
+  const { formatCurrency, formatNumber } = useCurrency()
   const router = useRouter()
   const { user, isLoading } = useSessionWithRole()
 
@@ -341,7 +343,7 @@ export default function AdvancesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {loading ? "-" : `Rp ${totalKasbon.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalKasbon)}
             </div>
           </CardContent>
         </Card>
@@ -352,7 +354,7 @@ export default function AdvancesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {loading ? "-" : `Rp ${totalPaid.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalPaid)}
             </div>
           </CardContent>
         </Card>
@@ -363,7 +365,7 @@ export default function AdvancesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {loading ? "-" : `Rp ${totalSisa.toLocaleString("id-ID")}`}
+              {loading ? "-" : formatCurrency(totalSisa)}
             </div>
           </CardContent>
         </Card>
@@ -403,9 +405,9 @@ export default function AdvancesPage() {
                 kode: a.kode || "-",
                 employee: a.employee?.name || "-",
                 date: formatDate(a.createdAt),
-                amount: `Rp ${a.amount.toLocaleString("id-ID")}`,
-                paid: `Rp ${(a.paidAmount || 0).toLocaleString("id-ID")}`,
-                sisa: `Rp ${(a.amount - (a.paidAmount || 0)).toLocaleString("id-ID")}`,
+                amount: formatCurrency(a.amount),
+                paid: formatCurrency(a.paidAmount || 0),
+                sisa: formatCurrency(a.amount - (a.paidAmount || 0)),
                 status: STATUS_LABELS[a.status] || a.status,
                 purpose: a.purpose || "-",
                 remark: a.remark || "-",
@@ -497,13 +499,13 @@ export default function AdvancesPage() {
                         <TableCell>{advance.employee?.name || "-"}</TableCell>
                         <TableCell>{formatDate(advance.createdAt)}</TableCell>
                         <TableCell className="text-right font-medium">
-                          Rp {advance.amount.toLocaleString("id-ID")}
+                          {formatCurrency(advance.amount)}
                         </TableCell>
                         <TableCell className="text-right text-green-600">
-                          Rp {(advance.paidAmount || 0).toLocaleString("id-ID")}
+                          {formatCurrency(advance.paidAmount || 0)}
                         </TableCell>
                         <TableCell className={`text-right font-medium ${sisa > 0 ? "text-red-600" : "text-green-600"}`}>
-                          Rp {sisa.toLocaleString("id-ID")}
+                          {formatCurrency(sisa)}
                         </TableCell>
                         <TableCell>
                           <Badge className={STATUS_COLORS[advance.status] || "bg-gray-100 text-gray-800"}>
@@ -578,7 +580,7 @@ export default function AdvancesPage() {
               <Input
                 type="text"
                 placeholder="0"
-                value={formData.amount ? parseInt(formData.amount).toLocaleString("id-ID") : ""}
+                value={formData.amount ? formatNumber(parseInt(formData.amount)) : ""}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^\d]/g, "")
                   setFormData({ ...formData, amount: value })
@@ -643,16 +645,16 @@ export default function AdvancesPage() {
               <div className="grid grid-cols-3 gap-2 p-3 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="text-center">
                   <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400 mb-0.5">Total</p>
-                  <p className="text-sm font-bold text-blue-700 dark:text-blue-300">Rp {(selectedAdvance.amount || 0).toLocaleString("id-ID")}</p>
+                  <p className="text-sm font-bold text-blue-700 dark:text-blue-300">{formatCurrency(selectedAdvance.amount || 0)}</p>
                 </div>
                 <div className="text-center border-x border-blue-200 dark:border-blue-800">
                   <p className="text-[10px] font-medium text-green-600 dark:text-green-400 mb-0.5">Dibayar</p>
-                  <p className="text-sm font-bold text-green-600 dark:text-green-400">Rp {(selectedAdvance.paidAmount || 0).toLocaleString("id-ID")}</p>
+                  <p className="text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(selectedAdvance.paidAmount || 0)}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] font-medium text-red-600 dark:text-red-400 mb-0.5">Sisa</p>
                   <p className={`text-sm font-bold ${(selectedAdvance.amount - (selectedAdvance.paidAmount || 0)) > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
-                    Rp {(selectedAdvance.amount - (selectedAdvance.paidAmount || 0)).toLocaleString("id-ID")}
+                    {formatCurrency(selectedAdvance.amount - (selectedAdvance.paidAmount || 0))}
                   </p>
                 </div>
               </div>
@@ -674,7 +676,7 @@ export default function AdvancesPage() {
                       <div key={idx} className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                         <div>
                           <p className="font-medium text-green-700 dark:text-green-400">
-                            Rp {payment.amount.toLocaleString("id-ID")}
+                            {formatCurrency(payment.amount)}
                           </p>
                           <p className="text-xs text-muted-foreground">{formatDate(payment.date)}</p>
                           {payment.remark && <p className="text-xs text-muted-foreground">{payment.remark}</p>}
@@ -706,11 +708,11 @@ export default function AdvancesPage() {
               <div className="grid grid-cols-2 gap-2 p-3 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <div className="text-center">
                   <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400 mb-0.5">Total Kasbon</p>
-                  <p className="text-sm font-bold text-blue-700 dark:text-blue-300">Rp {selectedAdvance.amount.toLocaleString("id-ID")}</p>
+                  <p className="text-sm font-bold text-blue-700 dark:text-blue-300">{formatCurrency(selectedAdvance.amount)}</p>
                 </div>
                 <div className="text-center border-l border-green-200 dark:border-green-800">
                   <p className="text-[10px] font-medium text-green-600 dark:text-green-400 mb-0.5">Sudah Dibayar</p>
-                  <p className="text-sm font-bold text-green-600 dark:text-green-400">Rp {(selectedAdvance.paidAmount || 0).toLocaleString("id-ID")}</p>
+                  <p className="text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(selectedAdvance.paidAmount || 0)}</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -718,7 +720,7 @@ export default function AdvancesPage() {
                 <Input
                   type="text"
                   placeholder="0"
-                  value={paymentData.amount ? parseInt(paymentData.amount).toLocaleString("id-ID") : ""}
+                  value={paymentData.amount ? formatNumber(parseInt(paymentData.amount)) : ""}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^\d]/g, "")
                     setPaymentData({ ...paymentData, amount: value })
