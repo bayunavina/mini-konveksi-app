@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { Scissors } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
@@ -26,15 +26,97 @@ function getRedirectUrl(role: string | undefined): string {
   }
 }
 
+const MAX_ATTEMPTS = 3
+const LOCKOUT_DURATION_MS = 30 * 1000
+
+const LOCAL_STORAGE_KEYS = {
+  failedAttempts: "login_failed_attempts",
+  lockoutUntil: "login_lockout_until",
+} as const
+
+function getStoredNumber(key: string): number {
+  if (typeof window === "undefined") return 0
+  const raw = window.localStorage.getItem(key)
+  const parsed = raw ? Number(raw) : 0
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function clearLockoutStorage() {
+  if (typeof window === "undefined") return
+  window.localStorage.removeItem(LOCAL_STORAGE_KEYS.failedAttempts)
+  window.localStorage.removeItem(LOCAL_STORAGE_KEYS.lockoutUntil)
+}
+
 function SignInForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null)
+  const [remainingSeconds, setRemainingSeconds] = useState(0)
   const router = useRouter()
+
+  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil
+
+  useEffect(() => {
+    const storedLockout = getStoredNumber(LOCAL_STORAGE_KEYS.lockoutUntil)
+    if (storedLockout > Date.now()) {
+      setLockoutUntil(storedLockout)
+      setRemainingSeconds(Math.ceil((storedLockout - Date.now()) / 1000))
+    } else {
+      setFailedAttempts(getStoredNumber(LOCAL_STORAGE_KEYS.failedAttempts))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (lockoutUntil === null) return
+
+    const remaining = lockoutUntil - Date.now()
+    if (remaining <= 0) {
+      setLockoutUntil(null)
+      setRemainingSeconds(0)
+      setFailedAttempts(0)
+      clearLockoutStorage()
+      return
+    }
+
+    setRemainingSeconds(Math.ceil(remaining / 1000))
+
+    const interval = setInterval(() => {
+      const left = lockoutUntil - Date.now()
+      if (left <= 0) {
+        setLockoutUntil(null)
+        setRemainingSeconds(0)
+        setFailedAttempts(0)
+        clearLockoutStorage()
+        clearInterval(interval)
+      } else {
+        setRemainingSeconds(Math.ceil(left / 1000))
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [lockoutUntil])
+
+  const handleLockout = useCallback(() => {
+    const attempts = failedAttempts + 1
+    setFailedAttempts(attempts)
+    window.localStorage.setItem(LOCAL_STORAGE_KEYS.failedAttempts, String(attempts))
+
+    if (attempts >= MAX_ATTEMPTS) {
+      const until = Date.now() + LOCKOUT_DURATION_MS
+      setLockoutUntil(until)
+      setRemainingSeconds(MAX_ATTEMPTS)
+      window.localStorage.setItem(LOCAL_STORAGE_KEYS.lockoutUntil, String(until))
+    }
+  }, [failedAttempts])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (isLockedOut) return
+
     setIsLoading(true)
     setError("")
 
@@ -48,9 +130,14 @@ function SignInForm() {
 
       if (result.error) {
         setError(result.error.message || "Sign in failed")
+        setPassword("")
+        handleLockout()
         setIsLoading(false)
         return
       }
+
+      clearLockoutStorage()
+      setFailedAttempts(0)
 
       const userEmail = (result as { user?: { email?: string } })?.user?.email || normalizedEmail
       
@@ -111,9 +198,23 @@ function SignInForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
+            {isLockedOut && (
+              <Alert variant="warning" className="py-2">
+                <AlertDescription className="text-sm" role="status">
+                  Terlalu banyak percobaan login. Coba lagi dalam {remainingSeconds} detik.
+                </AlertDescription>
+              </Alert>
+            )}
+            {error && !isLockedOut && (
               <Alert variant="destructive" className="py-2">
                 <AlertDescription className="text-sm">{error}</AlertDescription>
+              </Alert>
+            )}
+            {!isLockedOut && failedAttempts > 0 && failedAttempts < MAX_ATTEMPTS && (
+              <Alert variant="destructive" className="py-2">
+                <AlertDescription className="text-sm">
+                  Percobaan gagal {failedAttempts} dari {MAX_ATTEMPTS}. Setelah {MAX_ATTEMPTS} percobaan, login akan dikunci selama 30 detik.
+                </AlertDescription>
               </Alert>
             )}
             
@@ -126,7 +227,7 @@ function SignInForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || isLockedOut}
                 className="h-11 bg-transparent dark:bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg transition-all duration-300 focus:bg-white/80 dark:focus:bg-white/10 focus:backdrop-blur-md focus:border-primary focus:shadow-lg focus:shadow-primary/20"
               />
             </div>
@@ -140,7 +241,7 @@ function SignInForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || isLockedOut}
                 className="h-11 bg-transparent dark:bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg transition-all duration-300 focus:bg-white/80 dark:focus:bg-white/10 focus:backdrop-blur-md focus:border-primary focus:shadow-lg focus:shadow-primary/20"
               />
             </div>
@@ -148,7 +249,7 @@ function SignInForm() {
             <Button 
               type="submit" 
               className="w-full h-11 text-sm font-semibold mt-2" 
-              disabled={isLoading}
+              disabled={isLoading || isLockedOut}
             >
               {isLoading ? (
                 <>
