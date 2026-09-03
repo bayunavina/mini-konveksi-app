@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Spinner } from "@/components/ui/spinner"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 
 export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
@@ -13,7 +14,7 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
     if (isLoading) return
 
     // Admin can always access
-    if (user?.role === "ADMIN") {
+    if (user?.role === "ADMIN" || user?.role === "SUPERADMIN") {
       setChecking(false)
       return
     }
@@ -33,7 +34,7 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   if (isLoading || checking) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }

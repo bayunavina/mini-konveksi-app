@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { productionAssignments, jobOrders, notifications } from "@/db/schema"
+import { productionAssignments, jobOrders, notifications, materialLots } from "@/db/schema"
 import { eq } from "drizzle-orm"
 
 export async function PUT(
@@ -11,6 +11,13 @@ export async function PUT(
         const { id } = await params
         const body = await request.json()
         const { status, completedQty, rejectedQty, notes } = body
+
+        const existing = await db.select().from(productionAssignments).where(eq(productionAssignments.id, id)).limit(1)
+        if (existing.length === 0) {
+            return NextResponse.json({ error: "Assignment not found" }, { status: 404 })
+        }
+        const prevStatus = existing[0].status
+        const materialLotId = existing[0].materialLotId
 
         const updateData: Record<string, unknown> = {}
 
@@ -43,6 +50,24 @@ export async function PUT(
 
         if (updated.length === 0) {
             return NextResponse.json({ error: "Assignment not found" }, { status: 404 })
+        }
+
+        // P2-2: Auto potong material lot saat assignment COMPLETED
+        if (status === "COMPLETED" && prevStatus !== "COMPLETED" && materialLotId) {
+            try {
+                const usedQty = (updated[0].completedQty || 0)
+                if (usedQty > 0) {
+                    const lotRows = await db.select().from(materialLots).where(eq(materialLots.id, materialLotId)).limit(1)
+                    if (lotRows.length > 0) {
+                        const lot = lotRows[0]
+                        const newQty = Math.max(0, (lot.quantity || 0) - usedQty)
+                        const newLotStatus = newQty <= 0 ? "DEPLETED" : newQty < ((lot.initialQty || 0) * 0.2) ? "LOW" : lot.status
+                        await db.update(materialLots).set({ quantity: newQty, status: newLotStatus, updatedAt: new Date() }).where(eq(materialLots.id, materialLotId))
+                    }
+                }
+            } catch (lotErr) {
+                console.error("P2-2 auto potong lot gagal", lotErr)
+            }
         }
 
         // If status changed, update job order totals

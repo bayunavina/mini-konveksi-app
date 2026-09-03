@@ -32,15 +32,15 @@ interface LineChartProps {
 const financeChartConfig = {
   saldo: {
     label: "Saldo",
-    color: "#304ffe",
+    color: "var(--brand-primary)",
   },
   pemasukan: {
     label: "Pemasukan",
-    color: "#22c55e",
+    color: "var(--success)",
   },
   pengeluaran: {
     label: "Pengeluaran",
-    color: "#ef4444",
+    color: "var(--destructive)",
   },
 } satisfies ChartConfig
 
@@ -403,11 +403,11 @@ interface InventoryBarChartProps {
 const chartConfig = {
   barangMasuk: {
     label: "Barang Masuk",
-    color: "#304ffe",
+    color: "var(--brand-primary)",
   },
   barangKeluar: {
     label: "Barang Keluar",
-    color: "#dd2c00",
+    color: "var(--destructive)",
   },
 } satisfies ChartConfig
 
@@ -464,20 +464,20 @@ export function InventoryBarChart({
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            <Bar dataKey="barangMasuk" fill="#304ffe" radius={3} />
-            <Bar dataKey="barangKeluar" fill="#dd2c00" radius={3} />
+            <Bar dataKey="barangMasuk" fill="var(--brand-primary)" radius={3} />
+            <Bar dataKey="barangKeluar" fill="var(--destructive)" radius={3} />
           </BarChart>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 px-4 py-3 border-t text-xs sm:text-sm">
         <div className="flex items-center gap-4 w-full">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]" style={{ backgroundColor: "#304ffe" }} />
+            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]" style={{ backgroundColor: "var(--brand-primary)" }} />
             <span className="text-muted-foreground">Masuk:</span>
             <span className="font-semibold text-foreground">{totalMasuk.toLocaleString()}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(221,44,0,0.5)]" style={{ backgroundColor: "#dd2c00" }} />
+            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(221,44,0,0.5)]" style={{ backgroundColor: "var(--destructive)" }} />
             <span className="text-muted-foreground">Keluar:</span>
             <span className="font-semibold text-foreground">{totalKeluar.toLocaleString()}</span>
           </div>
@@ -488,11 +488,11 @@ export function InventoryBarChart({
           </div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <span style={{ color: "#304ffe" }}>●</span>
+              <span style={{ color: "var(--brand-primary)" }}>●</span>
               <span className="text-muted-foreground">Masuk = Transfer barang masuk gudang</span>
             </span>
             <span className="flex items-center gap-1">
-              <span style={{ color: "#dd2c00" }}>●</span>
+              <span style={{ color: "var(--destructive)" }}>●</span>
               <span className="text-muted-foreground">Keluar = Transfer barang keluar gudang</span>
             </span>
           </div>
@@ -722,9 +722,9 @@ export function ProduksiProgressChart({ produksiMasuk, barangJadi, sisaStok, yea
     setMounted(true)
   }, [])
 
-  const BLUE_COLOR = "#304ffe"
-  const GREEN_COLOR = "#22c55e"
-  const RED_COLOR = "#dd2c00"
+  const BLUE_COLOR = "var(--brand-primary)"
+  const GREEN_COLOR = "var(--success)"
+  const RED_COLOR = "var(--destructive)"
 
   const chartData = [
     { name: "Masuk Produksi", value: produksiMasuk, fill: BLUE_COLOR },
@@ -877,15 +877,15 @@ const rawMaterialChartConfig = {
   },
   masuk: {
     label: "Masuk",
-    color: "#304ffe",
+    color: "var(--brand-primary)",
   },
   terpakai: {
     label: "Terpakai",
-    color: "#ff6d00",
+    color: "var(--warning)",
   },
   sisa: {
     label: "Sisa",
-    color: "#dd2c00",
+    color: "var(--destructive)",
   },
 } satisfies ChartConfig
 
@@ -1026,26 +1026,26 @@ export function RawMaterialBarChart({
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            <Bar dataKey="masuk" fill="#304ffe" radius={3} />
-            <Bar dataKey="terpakai" fill="#ff6d00" radius={3} />
-            <Bar dataKey="sisa" fill="#dd2c00" radius={3} />
+            <Bar dataKey="masuk" fill="var(--brand-primary)" radius={3} />
+            <Bar dataKey="terpakai" fill="var(--warning)" radius={3} />
+            <Bar dataKey="sisa" fill="var(--destructive)" radius={3} />
           </BarChart>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 px-4 py-3 border-t text-xs sm:text-sm">
         <div className="flex items-center gap-4 w-full">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]" style={{ backgroundColor: "#304ffe" }} />
+            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]" style={{ backgroundColor: "var(--brand-primary)" }} />
             <span className="text-muted-foreground">Masuk:</span>
             <span className="font-semibold text-foreground">{summary.totalMasuk.toLocaleString()}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(255,109,0,0.5)]" style={{ backgroundColor: "#ff6d00" }} />
+            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(255,109,0,0.5)]" style={{ backgroundColor: "var(--warning)" }} />
             <span className="text-muted-foreground">Terpakai:</span>
             <span className="font-semibold text-foreground">{summary.totalTerpakai.toLocaleString()}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(221,44,0,0.5)]" style={{ backgroundColor: "#dd2c00" }} />
+            <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(221,44,0,0.5)]" style={{ backgroundColor: "var(--destructive)" }} />
             <span className="text-muted-foreground">Sisa:</span>
             <span className="font-semibold text-foreground">{summary.totalSisa.toLocaleString()}</span>
           </div>
@@ -1056,15 +1056,15 @@ export function RawMaterialBarChart({
           </div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <span style={{ color: "#304ffe" }}>●</span>
+              <span style={{ color: "var(--brand-primary)" }}>●</span>
               <span className="text-muted-foreground">Masuk = Material yang masuk gudang</span>
             </span>
             <span className="flex items-center gap-1">
-              <span style={{ color: "#ff6d00" }}>●</span>
+              <span style={{ color: "var(--warning)" }}>●</span>
               <span className="text-muted-foreground">Terpakai = Material yang digunakan</span>
             </span>
             <span className="flex items-center gap-1">
-              <span style={{ color: "#dd2c00" }}>●</span>
+              <span style={{ color: "var(--destructive)" }}>●</span>
               <span className="text-muted-foreground">Sisa = Stok material tersedia</span>
             </span>
           </div>

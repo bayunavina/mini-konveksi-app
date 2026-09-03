@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -33,7 +35,7 @@ import {
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { MagnifyingGlassIcon, PlusIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowLeftIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import { MagnifyingGlassIcon, PlusIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowLeftIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
 import { formatDate } from "@/lib/utils"
@@ -50,12 +52,27 @@ interface Transaction {
   createdAt?: string
 }
 
+interface CostCategory {
+  id: string
+  code: string
+  name: string
+  type: "DIRECT" | "INDIRECT"
+  description?: string
+}
+
 const TYPE_LABELS: Record<string, string> = {
   INCOME: "Pemasukan",
   EXPENSE: "Pengeluaran",
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
+const INCOME_CATEGORY_LABELS: Record<string, string> = {
+  SELLING: "Penjualan",
+  SERVICE: "Jasa",
+  CAPITAL: "Modal",
+  OTHER: "Lainnya",
+}
+
+const LEGACY_CATEGORY_LABELS: Record<string, string> = {
   SELLING: "Penjualan",
   SERVICE: "Jasa",
   CAPITAL: "Modal",
@@ -86,6 +103,16 @@ export default function TransactionsPage() {
   })
 
   const { data: transactions, loading, refetch } = useFetch<Transaction[]>("/api/transactions")
+  const { data: costCategories } = useFetch<CostCategory[]>("/api/cost-categories?all=true")
+
+  const getCategoryLabel = (code: string) => {
+    const found = costCategories?.find(c => c.code === code)
+    if (found) return `${found.code} - ${found.name}`
+    return INCOME_CATEGORY_LABELS[code] || LEGACY_CATEGORY_LABELS[code] || code
+  }
+
+  const expenseCategories = costCategories || []
+  const incomeCategories = Object.entries(INCOME_CATEGORY_LABELS).map(([code, name]) => ({ code, name, type: "INCOME" as const }))
 
   const filteredTransactions = (transactions || []).filter((t) => {
     const matchesSearch =
@@ -119,7 +146,7 @@ export default function TransactionsPage() {
       const category = t.category
       if (category && category.toLowerCase().includes(searchQuery.toLowerCase()) && !seen.has(category)) {
         seen.add(category)
-        suggestions.push({ type: "category", value: category, label: CATEGORY_LABELS[category] || category })
+        suggestions.push({ type: "category", value: category, label: getCategoryLabel(category) })
       }
     })
     
@@ -195,7 +222,7 @@ export default function TransactionsPage() {
                 Kembali
               </Link>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -269,13 +296,13 @@ export default function TransactionsPage() {
                 data={filteredTransactions.map((t) => ({
                   date: formatDate(t.date),
                   type: TYPE_LABELS[t.type] || t.type,
-                  category: CATEGORY_LABELS[t.category] || t.category,
+                  category: getCategoryLabel(t.category),
                   description: t.description || "-",
                   reference: t.reference || "-",
                   amount: `${t.type === "INCOME" ? "+" : "-"} ${formatCurrency(t.amount)}`,
                 }))}
               />
-              <Button onClick={() => setDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+              <Button onClick={() => setDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Tambah Transaksi
               </Button>
@@ -404,8 +431,8 @@ export default function TransactionsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {CATEGORY_LABELS[transaction.category] || transaction.category}
+                      <Badge variant="outline" className={transaction.type === "EXPENSE" ? (costCategories?.find(c=>c.code===transaction.category)?.type==="DIRECT" ? "border-green-300 bg-green-50 text-green-800" : "border-orange-300 bg-orange-50 text-orange-800") : ""}>
+                        {getCategoryLabel(transaction.category)}
                       </Badge>
                     </TableCell>
                     <TableCell
@@ -434,7 +461,15 @@ export default function TransactionsPage() {
               <Label>Jenis</Label>
               <Select
                 value={formData.type}
-                onValueChange={(v) => setFormData({ ...formData, type: v })}
+                onValueChange={(v) => {
+                  // auto switch kategori default sesuai jenis
+                  if (v === "INCOME") {
+                    setFormData({ ...formData, type: v, category: "SELLING" })
+                  } else {
+                    const firstExpense = expenseCategories[0]?.code || "BBL"
+                    setFormData({ ...formData, type: v, category: firstExpense })
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -446,7 +481,7 @@ export default function TransactionsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Kategori</Label>
+              <Label>Kategori {formData.type === "EXPENSE" ? "(Terhubung Master Kategori Biaya)" : ""}</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => setFormData({ ...formData, category: v })}
@@ -455,16 +490,33 @@ export default function TransactionsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SELLING">Penjualan</SelectItem>
-                  <SelectItem value="SERVICE">Jasa</SelectItem>
-                  <SelectItem value="CAPITAL">Modal</SelectItem>
-                  <SelectItem value="SALARY">Gaji</SelectItem>
-                  <SelectItem value="MATERIAL">Bahan Baku</SelectItem>
-                  <SelectItem value="UTILITY">Utilitas</SelectItem>
-                  <SelectItem value="RENT">Sewa</SelectItem>
-                  <SelectItem value="OTHER">Lainnya</SelectItem>
+                  {formData.type === "INCOME" ? (
+                    incomeCategories.map(cat => (
+                      <SelectItem key={cat.code} value={cat.code}>{cat.code} - {cat.name}</SelectItem>
+                    ))
+                  ) : (
+                    expenseCategories.length > 0 ? (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-green-700 bg-green-50">Langsung (HPP) - 6</div>
+                        {expenseCategories.filter(c=>c.type==="DIRECT").map(cat => (
+                          <SelectItem key={cat.code} value={cat.code}>{cat.code} - {cat.name}</SelectItem>
+                        ))}
+                        <div className="px-2 py-1.5 text-xs font-semibold text-orange-700 bg-orange-50 mt-1">Tidak Langsung (BOP) - 8</div>
+                        {expenseCategories.filter(c=>c.type==="INDIRECT").map(cat => (
+                          <SelectItem key={cat.code} value={cat.code}>{cat.code} - {cat.name}</SelectItem>
+                        ))}
+                      </>
+                    ) : (
+                      <SelectItem value="BBL" disabled>Memuat kategori...</SelectItem>
+                    )
+                  )}
                 </SelectContent>
               </Select>
+              {formData.type === "EXPENSE" && (
+                <p className="text-xs text-muted-foreground">
+                  Sumber: <code>/dashboard/settings/master</code> → 14 kategori biaya (DB). Edit di master untuk update dropdown ini.
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Jumlah ({currencySymbol})</Label>
@@ -496,11 +548,10 @@ export default function TransactionsPage() {
             </div>
             <div className="space-y-2">
               <Label>Tanggal</Label>
-              <Input
-                type="date"
-                lang="id"
+              <DatePicker
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onChange={(date) => setFormData({ ...formData, date })}
+                placeholder="Pilih tanggal"
               />
             </div>
           </div>
@@ -512,7 +563,7 @@ export default function TransactionsPage() {
               onClick={handleCreate}
               disabled={!formData.amount || !formData.description || submitting}
             >
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan
             </Button>
           </DialogFooter>

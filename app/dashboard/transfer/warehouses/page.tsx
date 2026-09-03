@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -26,8 +28,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/shared"
-import { PlusIcon, BuildingOfficeIcon, ArrowLeftIcon, EyeIcon, PencilIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import { PlusIcon, BuildingOfficeIcon, ArrowLeftIcon, EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 import { formatDateLong } from "@/lib/utils"
 
@@ -64,6 +67,7 @@ function transformWarehouse(warehouse: WarehouseAPI): Warehouse {
 }
 
 export default function WarehousesPage() {
+  const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -73,9 +77,28 @@ export default function WarehousesPage() {
   const [formData, setFormData] = useState({ code: "", name: "", address: "" })
   const [editFormData, setEditFormData] = useState({ code: "", name: "", address: "", isActive: true })
 
+  const { user } = useSessionWithRole()
+  const userRole = user?.role || "GUEST"
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN"
+
   const { data: rawWarehouses, loading, refetch } = useFetch<WarehouseAPI[]>("/api/warehouses")
-  
   const warehouses = (rawWarehouses || []).map(transformWarehouse)
+
+  // P3-1: ADMIN-only restriction for warehouse management
+  if (!isAdmin && !loading) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="text-center py-12">
+          <BuildingOfficeIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-xl font-semibold mb-2">Akses Terbatas</h2>
+          <p className="text-muted-foreground mb-4">Halaman pengaturan gudang hanya dapat diakses oleh Admin.</p>
+          <Button onClick={() => router.push("/dashboard/transfer")} variant="outline">
+            Kembali ke Transfer
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   const handleCreateWarehouse = async () => {
     if (!formData.code || !formData.name) return
@@ -187,10 +210,10 @@ export default function WarehousesPage() {
                 Kembali
               </Link>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" onClick={() => refetch()}>
               Refresh
             </Button>
-            <Button onClick={() => setDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+            <Button onClick={() => setDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
               Tambah Gudang
             </Button>
@@ -244,7 +267,7 @@ export default function WarehousesPage() {
                     <TableCell className="font-medium">{warehouse.name}</TableCell>
                     <TableCell>{warehouse.address || "-"}</TableCell>
                     <TableCell>
-                      <Badge className={warehouse.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                      <Badge className={`${warehouse.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                         {warehouse.isActive ? "Aktif" : "Nonaktif"}
                       </Badge>
                     </TableCell>
@@ -322,7 +345,7 @@ export default function WarehousesPage() {
               Batal
             </Button>
             <Button onClick={handleCreateWarehouse} disabled={!formData.code || !formData.name || submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan
             </Button>
           </DialogFooter>
@@ -350,7 +373,7 @@ export default function WarehousesPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={selectedWarehouse.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                  <Badge className={`${selectedWarehouse.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                     {selectedWarehouse.isActive ? "Aktif" : "Nonaktif"}
                   </Badge>
                 </div>
@@ -434,7 +457,7 @@ export default function WarehousesPage() {
               Batal
             </Button>
             <Button onClick={handleUpdateWarehouse} disabled={!editFormData.code || !editFormData.name || submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan Perubahan
             </Button>
           </DialogFooter>
@@ -458,7 +481,7 @@ export default function WarehousesPage() {
               Batal
             </Button>
             <Button variant="destructive" onClick={handleDeleteWarehouse} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Hapus
             </Button>
           </DialogFooter>

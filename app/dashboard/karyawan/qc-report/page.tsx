@@ -82,18 +82,18 @@ export default function KaryawanQCReportPage() {
   }, [enrichedData, searchQuery])
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-6 pt-4">
+    <div className="flex-1 space-y-3 sm:space-y-4 p-3 sm:p-6 pt-4">
       <PageHeader
         title="Laporan QC"
         description="Riwayat laporan quality control"
       />
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle>Daftar Laporan QC</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
+        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-base sm:text-lg">Daftar Laporan QC</CardTitle>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => refetch()}>
                 Refresh
               </Button>
               <ExportPrint
@@ -111,9 +111,9 @@ export default function KaryawanQCReportPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
-            <div className="relative w-full sm:max-w-sm">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="relative w-full">
               <Input
                 type="search"
                 placeholder="Cari nomor JO..."
@@ -124,14 +124,14 @@ export default function KaryawanQCReportPage() {
                 }}
                 onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full"
+                className="w-full text-base min-h-[44px]"
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg">
+                <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg overflow-hidden">
                   {suggestions.map((sug, idx) => (
                     <button
                       key={idx}
-                      className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                      className="w-full text-left px-4 py-3 hover:bg-accent text-sm min-h-[44px]"
                       onClick={() => {
                         setSearchQuery(sug)
                         setShowSuggestions(false)
@@ -153,41 +153,43 @@ export default function KaryawanQCReportPage() {
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border rounded-lg bg-muted/20">
-              <p>Belum ada laporan QC ditemukan.</p>
+              <p className="text-sm">Belum ada laporan QC ditemukan.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">No</TableHead>
-                  <TableHead>Nomor JO</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Waktu</TableHead>
-                  <TableHead>Berhasil</TableHead>
-                  <TableHead>Reject</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Catatan</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((item) => (
-                  <TableRow key={item.joNumber + item.nomor}>
-                    <TableCell className="font-medium">{item.nomor}</TableCell>
-                    <TableCell className="font-medium text-primary">{item.joNumber}</TableCell>
-                    <TableCell>{item.tanggal}</TableCell>
-                    <TableCell>{item.waktu}</TableCell>
-                    <TableCell>
-                      <Badge className="bg-green-100 text-green-800">{item.successQty}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-red-100 text-red-800">{item.rejectQty}</Badge>
-                    </TableCell>
-                    <TableCell>{item.totalQty}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{item.notes}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-10 p-2 text-xs">No</TableHead>
+                    <TableHead className="p-2 text-xs whitespace-nowrap">Nomor JO</TableHead>
+                    <TableHead className="p-2 text-xs hidden md:table-cell">Tanggal</TableHead>
+                    <TableHead className="p-2 text-xs hidden lg:table-cell">Waktu</TableHead>
+                    <TableHead className="p-2 text-xs">Berhasil</TableHead>
+                    <TableHead className="p-2 text-xs">Reject</TableHead>
+                    <TableHead className="p-2 text-xs">Total</TableHead>
+                    <TableHead className="p-2 text-xs hidden md:table-cell">Catatan</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow key={item.joNumber + item.nomor}>
+                      <TableCell className="font-medium p-2 text-xs">{item.nomor}</TableCell>
+                      <TableCell className="font-medium text-primary p-2 text-xs whitespace-nowrap">{item.joNumber}</TableCell>
+                      <TableCell className="p-2 text-xs hidden md:table-cell whitespace-nowrap">{item.tanggal}</TableCell>
+                      <TableCell className="p-2 text-xs hidden lg:table-cell">{item.waktu}</TableCell>
+                      <TableCell className="p-2">
+                        <Badge className="bg-green-100 text-green-800">{item.successQty}</Badge>
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Badge className="bg-red-100 text-red-800">{item.rejectQty}</Badge>
+                      </TableCell>
+                      <TableCell className="p-2 text-xs">{item.totalQty}</TableCell>
+                      <TableCell className="p-2 max-w-[140px] truncate text-xs text-muted-foreground hidden md:table-cell">{item.notes}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

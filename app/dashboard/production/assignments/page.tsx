@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -32,9 +33,10 @@ import {
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { MagnifyingGlassIcon, ArrowLeftIcon, PlusIcon, ArrowPathIcon, UserIcon, CubeIcon } from "@heroicons/react/24/outline"
+import { MagnifyingGlassIcon, ArrowLeftIcon, PlusIcon, UserIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 
 interface Employee {
@@ -262,7 +264,7 @@ export default function AssignmentsPage() {
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari karyawan atau produk..."
@@ -273,7 +275,7 @@ export default function AssignmentsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="pl-9"
+                className="h-10 pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -297,7 +299,7 @@ export default function AssignmentsPage() {
               )}
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="data-[size=default]:h-10 w-[150px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -307,7 +309,7 @@ export default function AssignmentsPage() {
                 <SelectItem value="COMPLETED">Completed</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -412,20 +414,18 @@ export default function AssignmentsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Target Qty *</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder="100"
                   value={formData.targetQty}
-                  onChange={(e) => setFormData({ ...formData, targetQty: e.target.value })}
+                  onValueChange={(v) => setFormData({ ...formData, targetQty: v })}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Rate/Unit ({currencySymbol})</label>
-                <Input
-                  type="number"
-                  placeholder="5000"
+                <FormattedNumberInput
+                  placeholder="5.000"
                   value={formData.ratePerUnit}
-                  onChange={(e) => setFormData({ ...formData, ratePerUnit: e.target.value })}
+                  onValueChange={(v) => setFormData({ ...formData, ratePerUnit: v })}
                 />
               </div>
             </div>
@@ -443,7 +443,7 @@ export default function AssignmentsPage() {
               Batal
             </Button>
             <Button onClick={handleAddAssignment} disabled={!formData.employeeId || !formData.materialLotId || !formData.targetQty || submitting}>
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <PlusIcon className="mr-2 h-4 w-4" />}
+              {submitting ? <Spinner data-icon="inline-start" /> : <PlusIcon className="mr-2 h-4 w-4" />}
               Assign
             </Button>
           </DialogFooter>

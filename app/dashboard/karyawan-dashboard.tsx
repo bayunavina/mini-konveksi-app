@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import {
   BanknotesIcon,
   FlagIcon,
@@ -26,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 import { useCurrency } from "@/hooks/useCurrency"
@@ -110,13 +112,13 @@ function getStatusColor(status: string) {
     case "ASSIGNED":
       return "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)] dark:text-[var(--chart-blue)]"
     case "IN_PROGRESS":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+      return "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground"
     case "QC_REQUESTED":
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+      return "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground"
     case "COMPLETED":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+      return "bg-success-light text-success-foreground dark:bg-success-light dark:text-success-foreground"
     case "REJECTED":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+      return "bg-destructive/10 text-destructive dark:bg-destructive/10 dark:text-destructive"
     default:
       return "bg-muted text-muted-foreground"
   }
@@ -163,8 +165,8 @@ function StatCard({
           <div className="text-xl sm:text-2xl font-bold">{value}</div>
           {trend && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-              trend === "up" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : 
-              trend === "down" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : 
+              trend === "up" ? "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground" : 
+              trend === "down" ? "bg-destructive/10 text-destructive dark:bg-destructive/10 dark:text-destructive" : 
               "bg-muted text-muted-foreground"
             }`}>
               {trend === "up" ? "↑" : trend === "down" ? "↓" : "→"}
@@ -191,7 +193,7 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
               <h4 className="font-semibold text-foreground">
                 {assignment.jobOrder?.joNumber || "Manual"}
               </h4>
-              <Badge className={`${getStatusColor(assignment.status)} text-xs font-medium`}>
+              <Badge className={`${getStatusColor(assignment.status)} font-medium`}>
                 {getStatusLabel(assignment.status)}
               </Badge>
             </div>
@@ -214,27 +216,27 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden flex">
             <div 
-              className="h-full bg-emerald-500 transition-all duration-500"
+              className="h-full bg-success transition-all duration-500"
               style={{ width: `${Math.min(completedProgress, 100)}%` }}
             />
           </div>
           
-          <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
             <div className="rounded-xl p-2 border border-[var(--chart-blue)]/30 dark:border-[var(--chart-blue)] shadow-sm">
               <p className="text-xs text-[var(--chart-blue)] dark:text-[var(--chart-blue)] mb-0.5">Target</p>
               <p className="font-bold text-[var(--chart-blue)] dark:text-[var(--chart-blue)]">{assignment.targetQty}</p>
             </div>
-            <div className="rounded-xl p-2 border border-amber-300 dark:border-amber-600 shadow-sm">
-              <p className="text-xs text-amber-600 dark:text-amber-400 mb-0.5">Pending</p>
-              <p className="font-bold text-amber-700 dark:text-amber-300">{assignment.pendingQty || 0}</p>
+            <div className="rounded-xl p-2 border border-warning/30 dark:border-warning/30 shadow-sm">
+              <p className="text-xs text-warning-foreground dark:text-warning-foreground mb-0.5">Pending</p>
+              <p className="font-bold text-warning-foreground dark:text-warning-foreground">{assignment.pendingQty || 0}</p>
             </div>
-            <div className="rounded-xl p-2 border border-emerald-300 dark:border-emerald-600 shadow-sm">
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-0.5">Lolos QC</p>
-              <p className="font-bold text-emerald-700 dark:text-emerald-300">{assignment.acceptedQty || 0}</p>
+            <div className="rounded-xl p-2 border border-success/30 dark:border-success/30 shadow-sm">
+              <p className="text-xs text-success-foreground mb-0.5">Lolos QC</p>
+              <p className="font-bold text-success-foreground">{assignment.acceptedQty || 0}</p>
             </div>
-            <div className="rounded-xl p-2 border border-red-300 dark:border-red-600 shadow-sm">
-              <p className="text-xs text-red-600 dark:text-red-400 mb-0.5">Sisa</p>
-              <p className="font-bold text-red-700 dark:text-red-300">{remaining > 0 ? remaining : 0}</p>
+            <div className="rounded-xl p-2 border border-destructive/30 dark:border-destructive/30 shadow-sm">
+              <p className="text-xs text-destructive mb-0.5">Sisa</p>
+              <p className="font-bold text-destructive dark:text-destructive">{remaining > 0 ? remaining : 0}</p>
             </div>
           </div>
           
@@ -249,7 +251,7 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
               {(assignment.status === "IN_PROGRESS" || assignment.status === "ASSIGNED") && assignment.pendingQty > 0 && !assignment.qcRequestedAt && (
                 <Button 
                   size="sm" 
-                  className="h-8 text-xs bg-orange-500 hover:bg-orange-600"
+                  className="h-8 text-xs bg-warning hover:bg-warning"
                   onClick={() => onRequestQC(assignment)}
                 >
                   Request QC
@@ -258,7 +260,7 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
               {assignment.status === "ASSIGNED" && !assignment.qcRequestedAt && (
                 <Button 
                   size="sm" 
-                  className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700"
+                  className="h-8 text-xs bg-success hover:bg-success"
                   onClick={() => onConfirmClick(assignment)}
                 >
                   ✓ Terima
@@ -648,18 +650,16 @@ export function KaryawanDashboard() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Memuat data...</p>
-        </div>
+        <Spinner className="size-16 mx-auto mb-4 text-primary" />
+        <p className="text-muted-foreground">Memuat data...</p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 space-y-4 p-3 md:p-6 pt-4">
+    <div className="page-container p-3 md:p-6 pt-4">
       {/* Header Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 rounded-2xl p-5 text-primary-foreground shadow-xl shadow-indigo-500/20 animate-slide-up">
+      <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-primary)] to-[#6d28d9] rounded-2xl p-5 text-primary-foreground shadow-xl shadow-[var(--brand-primary)]/20 animate-slide-up">
         <div className="absolute top-0 right-0 opacity-10">
           <ChartBarIcon className="h-40 w-40 -translate-y-8 translate-x-8" />
         </div>
@@ -674,14 +674,14 @@ export function KaryawanDashboard() {
 
       {/* Quick Actions - Mobile */}
       <div className="flex gap-2 md:hidden">
-        <Button className="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 h-12 rounded-xl shadow-lg shadow-indigo-500/25" disabled>
+        <Button className="flex-1 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary)] hover:from-[var(--brand-primary)] hover:to-indigo-700 h-12 rounded-xl shadow-lg shadow-[var(--brand-primary)]/25" disabled>
           <PlusIcon className="h-5 w-5 mr-2" />
           Input Produksi
         </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
           title="Total Gaji"
           value={formatCurrency(Math.round(totalGaji))}
@@ -741,7 +741,7 @@ export function KaryawanDashboard() {
               <p className="text-muted-foreground">Belum ada riwayat job order</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
               {completedAssignments.map((assignment) => (
                 <AssignmentCard key={assignment.id} assignment={assignment} onInputClick={handleInputClick} onConfirmClick={handleConfirmClick} onRequestQC={handleRequestQC} />
               ))}
@@ -758,8 +758,8 @@ export function KaryawanDashboard() {
             </div>
           ) : allCompleted ? (
             <div className="text-center py-12 bg-card rounded-2xl border border-border">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <CheckIcon className="h-8 w-8 text-emerald-600" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckIcon className="h-8 w-8 text-success" />
               </div>
               <h4 className="font-semibold text-card-foreground mb-1">Semua Job Order Selesai!</h4>
               <p className="text-sm text-muted-foreground mb-4">Tidak ada job order aktif saat ini</p>
@@ -768,7 +768,7 @@ export function KaryawanDashboard() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
               {activeAssignments.map((assignment) => (
                 <AssignmentCard key={assignment.id} assignment={assignment} onInputClick={handleInputClick} onConfirmClick={handleConfirmClick} onRequestQC={handleRequestQC} />
               ))}
@@ -782,8 +782,8 @@ export function KaryawanDashboard() {
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-violet-500/10 dark:bg-violet-500/20">
-                <FlagIcon className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+              <div className="p-2.5 rounded-xl bg-[var(--accent)]/10 dark:bg-accent/20">
+                <FlagIcon className="h-6 w-6 text-accent-foreground dark:text-accent-foreground" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Target Minggu Ini</h3>
@@ -791,7 +791,7 @@ export function KaryawanDashboard() {
               </div>
             </div>
             {progressPercent >= 100 && (
-              <div className="flex items-center gap-1 text-amber-500">
+              <div className="flex items-center gap-1 text-warning">
                 <TrophyIcon className="h-5 w-5" />
                 <span className="text-sm font-semibold">Target Tercapai!</span>
               </div>
@@ -801,7 +801,7 @@ export function KaryawanDashboard() {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{totalAccepted} dari {totalTarget} pcs</span>
-              <span className="font-bold text-violet-600 dark:text-violet-400">{progressPercent}%</span>
+              <span className="font-bold text-accent-foreground dark:text-accent-foreground">{progressPercent}%</span>
             </div>
             <div className="h-4 bg-muted rounded-full overflow-hidden">
               <div 
@@ -809,25 +809,25 @@ export function KaryawanDashboard() {
                 style={{ 
                   width: `${Math.min(progressPercent, 100)}%`,
                   background: progressPercent < 30 
-                    ? "#304ffe" 
+                    ? "var(--brand-primary)" 
                     : progressPercent < 70 
-                      ? "linear-gradient(90deg, #304ffe 0%, #22c55e 100%)"
-                      : "#22c55e"
+                      ? "linear-gradient(90deg, var(--brand-primary) 0%, var(--success) 100%)"
+                      : "var(--success)"
                 }}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-xl p-3 border-2 border-violet-300 dark:border-violet-600 shadow-sm">
-                <p className="text-xs text-violet-600 dark:text-violet-400 mb-1">Target</p>
-                <p className="text-lg font-bold text-violet-700 dark:text-violet-300">{totalTarget}</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-center">
+              <div className="rounded-xl p-3 border-2 border-accent/30 dark:border-accent/30 shadow-sm">
+                <p className="text-xs text-accent-foreground dark:text-accent-foreground mb-1">Target</p>
+                <p className="text-lg font-bold text-accent-foreground dark:text-accent-foreground">{totalTarget}</p>
               </div>
-              <div className="rounded-xl p-3 border-2 border-emerald-300 dark:border-emerald-600 shadow-sm">
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">Diterima QC</p>
-                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{totalAccepted}</p>
+              <div className="rounded-xl p-3 border-2 border-success/30 dark:border-success/30 shadow-sm">
+                <p className="text-xs text-success-foreground mb-1">Diterima QC</p>
+                <p className="text-lg font-bold text-success-foreground">{totalAccepted}</p>
               </div>
-              <div className="rounded-xl p-3 border-2 border-red-300 dark:border-red-600 shadow-sm">
-                <p className="text-xs text-red-600 dark:text-red-400 mb-1">Ditolak</p>
-                <p className="text-lg font-bold text-red-600 dark:text-red-400">{totalRejected}</p>
+              <div className="rounded-xl p-3 border-2 border-destructive/30 dark:border-destructive/30 shadow-sm">
+                <p className="text-xs text-destructive mb-1">Ditolak</p>
+                <p className="text-lg font-bold text-destructive">{totalRejected}</p>
               </div>
             </div>
           </div>
@@ -835,7 +835,7 @@ export function KaryawanDashboard() {
       </Card>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-3 gap-3 animate-slide-up" style={{ animationDelay: '100ms' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
         <Button 
           variant="outline"
           className="h-auto py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200"
@@ -877,8 +877,8 @@ export function KaryawanDashboard() {
             </DialogTitle>
             <DialogDescription>
               Klaim gaji untuk periode {week}/{year}
-              {claimStatus === "PENDING" && <span className="block text-yellow-600 mt-1">Status: Menunggu Persetujuan Admin</span>}
-              {claimStatus === "CLAIMED" && <span className="block text-blue-600 mt-1">Status: Sudah Dikirim</span>}
+              {claimStatus === "PENDING" && <span className="block text-warning-foreground mt-1">Status: Menunggu Persetujuan Admin</span>}
+              {claimStatus === "CLAIMED" && <span className="block text-brand-primary mt-1">Status: Sudah Dikirim</span>}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -897,11 +897,11 @@ export function KaryawanDashboard() {
               </div>
               <div className="flex justify-between border-t pt-2 font-bold">
                 <span>Total Diterima</span>
-                <span className="text-emerald-600">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
+                <span className="text-success">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
               </div>
             </div>
             {claimStatus === "PENDING" || claimStatus === "CLAIMED" ? (
-              <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg">
+              <div className="text-sm text-muted-foreground bg-info-light dark:bg-info-light p-3 rounded-lg">
                 * Klaim gaji Anda sudah dikirim dan menunggu persetujuan admin.
               </div>
             ) : (
@@ -916,7 +916,7 @@ export function KaryawanDashboard() {
             </Button>
             {!(claimStatus === "PENDING" || claimStatus === "CLAIMED") && (
               <Button 
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600"
+                className="bg-gradient-to-r from-success to-success"
                 onClick={handleKlaimGaji}
                 disabled={isSubmitting}
               >
@@ -1011,7 +1011,7 @@ export function KaryawanDashboard() {
               </div>
               <div className="flex justify-between border-t pt-3 font-bold">
                 <span>Total Diterima</span>
-                <span className="text-lg text-emerald-600">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
+                <span className="text-lg text-success">{formatCurrency(salaryCalc?.estimatedSalary || 0)}</span>
               </div>
             </div>
             <div className="text-xs text-muted-foreground">
@@ -1060,13 +1060,11 @@ export function KaryawanDashboard() {
             )}
             <div className="space-y-2">
               <Label htmlFor="input-qty">Jumlah Hasil (pcs)</Label>
-              <Input
+              <FormattedNumberInput
                 id="input-qty"
-                type="number"
                 placeholder="Masukkan jumlah hasil produksi"
                 value={inputQty}
-                onChange={(e) => setInputQty(e.target.value)}
-                min="1"
+                onValueChange={setInputQty}
               />
             </div>
             <div className="space-y-2">

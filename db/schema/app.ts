@@ -152,6 +152,7 @@ export const employees = pgTable("employees", {
     baseSalary: integer("base_salary").default(0),
     ratePerUnit: integer("rate_per_unit").default(0),
     pin: text("pin"),
+    qrCode: text("qr_code").unique(),
     isActive: boolean("is_active").default(true),
     lastLogin: timestamp("last_login"),
     createdAt: timestamp("created_at").defaultNow(),
@@ -162,6 +163,7 @@ export const employees = pgTable("employees", {
 export const jobOrders = pgTable("job_orders", {
     id: uuid("id").primaryKey().defaultRandom(),
     joNumber: text("jo_number").notNull().unique(),
+    qrCode: text("qr_code").unique(),
     productId: uuid("product_id"),
     teamId: uuid("team_id").references(() => teams.id),
     qcEmployeeId: uuid("qc_employee_id").references(() => employees.id),
@@ -310,6 +312,7 @@ export const transactions = pgTable("transactions", {
     amount: integer("amount").notNull(),
     description: text("description"),
     reference: text("reference"),
+    jobOrderId: uuid("job_order_id").references(() => jobOrders.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 })
@@ -334,6 +337,20 @@ export const costCategories = pgTable("cost_categories", {
     name: text("name").notNull(),
     type: text("type").notNull(),
     description: text("description"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+})
+
+// Job Order Costs - Estimasi & Aktual HPP per JO per Kategori Biaya
+export const jobOrderCosts = pgTable("job_order_costs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jobOrderId: uuid("job_order_id").references(() => jobOrders.id, { onDelete: "cascade" }).notNull(),
+    costCategoryCode: text("cost_category_code").notNull(),
+    costCategoryName: text("cost_category_name"),
+    type: text("type").notNull(), // DIRECT / INDIRECT
+    estimatedAmount: integer("estimated_amount").default(0).notNull(),
+    actualAmount: integer("actual_amount").default(0).notNull(),
+    notes: text("notes"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 })

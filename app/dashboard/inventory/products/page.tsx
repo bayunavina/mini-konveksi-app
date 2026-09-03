@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -25,8 +26,11 @@ import {
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { PlusIcon, MagnifyingGlassIcon, ArrowPathIcon, ArrowLeftIcon, CubeIcon } from "@heroicons/react/24/outline"
+import { ScanButton } from "@/components/scanner"
+import { parseQRPayload } from "@/lib/qr-payload"
+import { PlusIcon, MagnifyingGlassIcon, ArrowLeftIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 
 interface MaterialLot {
@@ -72,7 +76,7 @@ export default function ProductsPage() {
   })
 
   const { data: lots, loading, refetch } = useFetch<MaterialLot[]>("/api/material-lots")
-  const { data: skuMaster } = useFetch<{ id: string; code: string; name: string; category?: string }[]>("/api/master-skus")
+  const { data: skuMaster } = useFetch<{ id: string; code: string; name: string; category?: string }[]>("/api/master-skus?all=true")
 
   const filteredLots = (lots || []).filter(
     (lot) =>
@@ -196,7 +200,7 @@ export default function ProductsPage() {
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari kode, SKU, atau produk..."
@@ -207,7 +211,7 @@ export default function ProductsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="pl-9"
+                className="h-10 pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -230,7 +234,7 @@ export default function ProductsPage() {
                 </div>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -288,7 +292,7 @@ export default function ProductsPage() {
                       </span>
                     </TableCell>
                     <TableCell className="py-2 text-center">
-                      <Badge className={STATUS_COLORS[lot.status] || "bg-gray-100 text-gray-800"}>
+                      <Badge className={`${STATUS_COLORS[lot.status] || "bg-gray-100 text-gray-800"}`}>
                         {STATUS_LABELS[lot.status] || lot.status}
                       </Badge>
                     </TableCell>
@@ -309,24 +313,52 @@ export default function ProductsPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">SKU / Produk *</label>
-              <select
-                value={formData.productId}
-                onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-                className="w-full border rounded-md px-3 py-2 bg-background"
-              >
-                <option value="">Pilih SKU</option>
-                {(skuMaster || []).map((sku) => (
-                  <option key={sku.id} value={sku.id}>{sku.code} - {sku.name}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={formData.productId}
+                  onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
+                  className="flex-1 h-7 border rounded-md px-3 bg-background"
+                >
+                  <option value="">Pilih SKU</option>
+                  {(skuMaster || []).map((sku) => (
+                    <option key={sku.id} value={sku.id}>{sku.code} - {sku.name}</option>
+                  ))}
+                </select>
+                <ScanButton
+                  variant="outline"
+                  onScan={(raw) => {
+                    const parsed = parseQRPayload(raw)
+                    const code = parsed.payload?.code || raw
+                    const id = parsed.payload?.id || raw
+                    const found = (skuMaster || []).find(s => s.id === id || s.code === code || s.code.toLowerCase() === code.toLowerCase())
+                    if (found) {
+                      setFormData(prev => ({ ...prev, productId: found.id }))
+                      toast.success(`SKU terpilih: ${found.code}`)
+                    } else {
+                      // Try to find via lot code as fallback
+                      const lotFound = (lots || []).find(l => l.product?.code === code || l.lotNumber === code)
+                      if (lotFound?.product?.id) {
+                        const skuFound = (skuMaster || []).find(s => s.id === lotFound.product!.id)
+                        if (skuFound) {
+                          setFormData(prev => ({ ...prev, productId: skuFound.id }))
+                          toast.success(`SKU terpilih: ${skuFound.code}`)
+                          return
+                        }
+                      }
+                      toast.error(`SKU tidak ditemukan: ${code}`)
+                    }
+                  }}
+                >
+                  Scan
+                </ScanButton>
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Quantity *</label>
-              <Input
-                type="number"
+              <FormattedNumberInput
                 placeholder="Contoh: 100"
                 value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                onValueChange={(v) => setFormData({ ...formData, quantity: v })}
               />
             </div>
             <div className="space-y-2">
@@ -343,7 +375,7 @@ export default function ProductsPage() {
               Batal
             </Button>
             <Button onClick={handleCreate} disabled={!formData.productId || !formData.quantity || submitting}>
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {submitting ? <Spinner data-icon="inline-start" /> : null}
               Simpan
             </Button>
           </DialogFooter>

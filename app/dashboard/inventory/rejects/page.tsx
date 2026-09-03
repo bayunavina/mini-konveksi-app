@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -85,6 +86,7 @@ const STATUS_COLORS: Record<string, string> = {
 const QC_ADMIN_ROLES = ["ADMIN", "QC"]
 
 export default function RejectsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [statusFilter, setStatusFilter] = useState("ALL")
@@ -218,12 +220,10 @@ export default function RejectsPage() {
         title="Data Reject"
         description="Kelola barang gagal QC"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/inventory">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/inventory")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <ExportPrint
               title="Daftar Reject"
@@ -306,7 +306,7 @@ export default function RejectsPage() {
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari JO, SKU, atau alasan..."
@@ -317,7 +317,7 @@ export default function RejectsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="pl-9"
+                className="h-10 pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -340,7 +340,7 @@ export default function RejectsPage() {
               )}
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="data-[size=default]:h-10 w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -352,7 +352,7 @@ export default function RejectsPage() {
                 <SelectItem value="DISPOSED">Dibuang</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -395,7 +395,7 @@ export default function RejectsPage() {
                       {formatDate(reject.createdAt)}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[reject.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[reject.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[reject.status] || reject.status}
                       </Badge>
                     </TableCell>
@@ -580,7 +580,7 @@ export default function RejectsPage() {
               onClick={handleAction}
               disabled={submitting}
             >
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               {actionType === "APPROVE" ? "Setujui" : actionType === "REWORK" ? "Kembalikan" : "Buang"}
             </Button>
           </DialogFooter>

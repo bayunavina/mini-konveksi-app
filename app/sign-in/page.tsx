@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { Scissors } from "lucide-react"
-import { Loader2 } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 function getRedirectUrl(role: string | undefined): string {
   switch (role) {
+    case "SUPERADMIN":
     case "ADMIN":
     case "QC":
     case "KARYAWAN":
@@ -68,7 +69,7 @@ function SignInForm() {
       }
       
       // Check maintenance mode - redirect non-admin to maintenance page
-      if (role !== "ADMIN") {
+      if (role !== "ADMIN" && role !== "SUPERADMIN") {
         const maintenanceRes = await fetch("/api/settings/maintenance")
         if (maintenanceRes.ok) {
           const maintenanceData = await maintenanceRes.json()
@@ -151,7 +152,7 @@ function SignInForm() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner data-icon="inline-start" />
                   Memuat...
                 </>
               ) : (

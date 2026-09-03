@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { rejects, jobOrders, inventory, warehouses } from "@/db/schema"
+import { rejects, jobOrders, inventoryStock, inventoryMovements, warehouses } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 
 export async function GET(
@@ -63,42 +63,58 @@ export async function PUT(
     if (status === "APPROVED") {
       const reject = existing[0]
       
+      // Update inventoryStock (fix: was writing to legacy `inventory` table)
       const defaultWarehouse = await db.select().from(warehouses).limit(1)
       if (defaultWarehouse.length > 0 && reject.productId) {
-        const existingInventory = await db
+        const warehouseId = defaultWarehouse[0].id
+        const existingStock = await db
           .select()
-          .from(inventory)
+          .from(inventoryStock)
           .where(and(
-            eq(inventory.productId, reject.productId),
-            eq(inventory.warehouseId, defaultWarehouse[0].id)
+            eq(inventoryStock.productId, reject.productId),
+            eq(inventoryStock.warehouseId, warehouseId)
           ))
 
-        const existingInv = existingInventory[0]
-        if (existingInv && existingInv.quantity !== null) {
+        if (existingStock.length > 0) {
           await db
-            .update(inventory)
+            .update(inventoryStock)
             .set({
-              quantity: existingInv.quantity + reject.quantity,
+              quantity: (existingStock[0].quantity ?? 0) + reject.quantity,
               updatedAt: new Date(),
             })
-            .where(eq(inventory.id, existingInv.id))
+            .where(eq(inventoryStock.id, existingStock[0].id))
         } else {
-          await db.insert(inventory).values({
+          await db.insert(inventoryStock).values({
             productId: reject.productId,
-            warehouseId: defaultWarehouse[0].id,
+            warehouseId,
             quantity: reject.quantity,
           })
         }
+
+        // Record movement for audit trail (positive qty, reject approved)
+        await db.insert(inventoryMovements).values({
+          productId: reject.productId,
+          warehouseId,
+          type: "REJECT",
+          quantity: reject.quantity,
+          reference: "REJECT",
+          referenceId: id,
+          notes: `Reject approved - JO ${reject.jobOrderId || "-"}`,
+        })
       }
 
+      // FIX: increment rejectedQty, not overwrite completedQty
       if (reject.jobOrderId) {
-        await db
-          .update(jobOrders)
-          .set({
-            completedQty: reject.quantity,
-            updatedAt: new Date(),
-          })
-          .where(eq(jobOrders.id, reject.jobOrderId))
+        const joData = await db.select().from(jobOrders).where(eq(jobOrders.id, reject.jobOrderId))
+        if (joData.length > 0) {
+          await db
+            .update(jobOrders)
+            .set({
+              rejectedQty: (joData[0].rejectedQty || 0) + reject.quantity,
+              updatedAt: new Date(),
+            })
+            .where(eq(jobOrders.id, reject.jobOrderId))
+        }
       }
     }
 

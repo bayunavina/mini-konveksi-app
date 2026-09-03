@@ -47,8 +47,10 @@ const defaultCompanyInfo: CompanyInfo = {
 
 export function ExportPrint({ columns, data, title, filename, summary, summaryTitle }: ExportPrintProps) {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
@@ -105,25 +107,39 @@ export function ExportPrint({ columns, data, title, filename, summary, summaryTi
       `
     }
 
+    const now = mounted ? new Date() : new Date("2026-01-01T12:00:00")
+    const dateStr = now.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
+    const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>${title || "Data"}</title>
           <style>
+            :root {
+              --background: #ffffff;
+              --foreground: #333333;
+              --muted: #f5f5f5;
+              --muted-foreground: #666666;
+              --border: #e5e7eb;
+              --success-light: #f0fdf4;
+              --success-foreground: #166534;
+              --destructive: #ef4444;
+            }
             * { text-decoration: none !important; }
             body { font-family: Arial, sans-serif; padding: 20px; }
-            .company-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+            .company-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--foreground); padding-bottom: 15px; }
             .company-header h1 { font-size: 20px; margin: 0 0 5px 0; }
-            .company-header p { font-size: 12px; margin: 2px 0; color: #555; }
+            .company-header p { font-size: 12px; margin: 2px 0; color: var(--muted-foreground); }
             h1 { font-size: 18px; margin-bottom: 5px; }
             h2 { font-size: 14px; margin-bottom: 5px; }
-            .date { color: #666; font-size: 12px; margin-bottom: 20px; }
+            .date { color: var(--muted-foreground); font-size: 12px; margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f5f5f5; font-weight: bold; }
-            tr:nth-child(even) { background-color: #fafafa; }
-            .footer { margin-top: 20px; font-size: 10px; color: #999; text-align: center; }
+            th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+            th { background-color: var(--muted); font-weight: bold; }
+            tr:nth-child(even) { background-color: var(--muted); }
+            .footer { margin-top: 20px; font-size: 10px; color: var(--muted-foreground); text-align: center; }
             a { color: inherit !important; }
             @media print { body { padding: 0; } }
           </style>
@@ -135,7 +151,7 @@ export function ExportPrint({ columns, data, title, filename, summary, summaryTi
             <p>Telp: ${companyInfo.phone} | Email: ${companyInfo.email}</p>
           </div>
           <h1>${title || "Data"}</h1>
-          <p class="date">Dicetak: ${new Date().toLocaleString("id-ID")}</p>
+          <p class="date">Dicetak: ${dateStr} ${timeStr}</p>
           <table>
             <thead>
               <tr>${columns.map(c => `<th>${c.label}</th>`).join("")}</tr>
@@ -150,7 +166,7 @@ export function ExportPrint({ columns, data, title, filename, summary, summaryTi
             </tbody>
           </table>
           ${summaryTableHtml}
-          <p class="footer">ERP Konveksi - ${new Date().toLocaleDateString("id-ID")}</p>
+          <p class="footer">ERP Konveksi - ${dateStr}</p>
           <script>window.print();</script>
         </body>
       </html>
@@ -163,10 +179,19 @@ export function ExportPrint({ columns, data, title, filename, summary, summaryTi
     }
   }
 
+  if (!mounted) {
+    return (
+      <Button variant="outline" disabled>
+        <ArrowDownTrayIcon className="mr-2 h-4 w-4" />
+        Export
+      </Button>
+    )
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           <ArrowDownTrayIcon className="mr-2 h-4 w-4" />
           Export
         </Button>

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Table,
@@ -18,9 +20,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
-import { ArrowLeftIcon, ArrowPathIcon, UserIcon, PlusIcon, CubeIcon } from "@heroicons/react/24/outline"
+import { ScanButton } from "@/components/scanner"
+import { parseQRPayload } from "@/lib/qr-payload"
+import { ArrowLeftIcon, UserIcon, PlusIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 
 interface Employee {
@@ -51,15 +56,24 @@ interface QCReport {
   } | null
 }
 
+interface CostCategory {
+  id: string
+  code: string
+  name: string
+  type: "DIRECT" | "INDIRECT"
+  description?: string
+}
+
 export default function NewJobOrderPage() {
   const router = useRouter()
-  const { formatCurrency, formatNumber, currencySymbol } = useCurrency()
+  const { formatCurrency, currencySymbol } = useCurrency()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { data: employees } = useFetch<Employee[]>("/api/employees")
   const { data: allLots } = useFetch<MaterialLot[]>("/api/material-lots")
   const { data: productionReadyLots } = useFetch<MaterialLot[]>("/api/material-lots/for-production")
   const { data: qcReports } = useFetch<QCReport[]>("/api/qc-reports")
+  const { data: costCategories } = useFetch<CostCategory[]>("/api/cost-categories?all=true")
 
   const qcSuccessByProduct = useMemo(() => {
     const map: Record<string, number> = {}
@@ -80,21 +94,12 @@ export default function NewJobOrderPage() {
     dueDate: "",
     notes: "",
   })
+  const [estimatedCosts, setEstimatedCosts] = useState<Record<string, string>>({})
 
-  const [rateDisplay, setRateDisplay] = useState("")
-
-  const formatNumberWithSeparator = (value: string) => {
-    const num = value.replace(/\D/g, "")
-    if (!num) return ""
-    return formatNumber(parseInt(num))
-  }
-
-  const handleRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value
-    const numValue = rawValue.replace(/\D/g, "")
-    setFormData({ ...formData, ratePerUnit: numValue })
-    setRateDisplay(formatNumberWithSeparator(rawValue))
-  }
+  const directCategories = (costCategories || []).filter(c => c.type === "DIRECT")
+  const totalEstimated = directCategories.reduce((sum, c) => sum + (parseInt(estimatedCosts[c.code] || "0") || 0), 0)
+  const targetQtyNum = parseInt(formData.targetQuantity) || 0
+  const hppPerPcs = targetQtyNum > 0 ? Math.round(totalEstimated / targetQtyNum) : 0
 
   const selectedLot = productionReadyLots?.find(l => l.id === formData.lotId)
 
@@ -144,6 +149,25 @@ export default function NewJobOrderPage() {
       }
 
       const jobOrder = await joResponse.json()
+
+      // Simpan estimasi HPP per kategori jika ada
+      if (totalEstimated > 0) {
+        const costsPayload = directCategories.map(c => ({
+          costCategoryCode: c.code,
+          costCategoryName: c.name,
+          type: c.type,
+          estimatedAmount: parseInt(estimatedCosts[c.code] || "0") || 0,
+        })).filter(c => c.estimatedAmount > 0)
+        if (costsPayload.length > 0) {
+          try {
+            await fetch(`/api/job-orders/${jobOrder.id}/costs`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ costs: costsPayload }),
+            })
+          } catch {}
+        }
+      }
 
       if (formData.employeeId) {
         const assignmentResponse = await fetch("/api/production/assign", {
@@ -259,11 +283,11 @@ export default function NewJobOrderPage() {
                               </span>
                             </TableCell>
                             <TableCell className="py-2 text-center">
-                              <Badge className={
+                              <Badge className={`${
                                 lot.status === "AVAILABLE" ? "bg-green-100 text-green-800" :
                                 lot.status === "IN_USE" ? "bg-yellow-100 text-yellow-800" :
                                 "bg-gray-100 text-gray-800"
-                              }>
+                              }`}>
                                 {lot.status === "AVAILABLE" ? "Tersedia" : lot.status === "IN_USE" ? "Digunakan" : "Habis"}
                               </Badge>
                             </TableCell>
@@ -310,20 +334,40 @@ export default function NewJobOrderPage() {
                       </div>
                     </div>
                   ) : (
-                    <select
-                      id="lot"
-                      value={formData.lotId}
-                      onChange={(e) => setFormData({ ...formData, lotId: e.target.value })}
-                      className="w-full h-10 px-3 border rounded-md bg-background text-sm"
-                      required
-                    >
-                      <option value="">Pilih Kode</option>
-                      {productionReadyLots?.map((lot) => (
-                        <option key={lot.id} value={lot.id}>
-                          {lot.lotNumber}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        id="lot"
+                        value={formData.lotId}
+                        onChange={(e) => setFormData({ ...formData, lotId: e.target.value })}
+                        className="flex-1 h-7 px-3 border rounded-md bg-background text-sm"
+                        required
+                      >
+                        <option value="">Pilih Kode</option>
+                        {productionReadyLots?.map((lot) => (
+                          <option key={lot.id} value={lot.id}>
+                            {lot.lotNumber}
+                          </option>
+                        ))}
+                      </select>
+                      <ScanButton
+                        variant="outline"
+                        onScan={(raw) => {
+                          const parsed = parseQRPayload(raw)
+                          const code = parsed.payload?.code || raw
+                          const found = (productionReadyLots || []).find(l => l.lotNumber === code || (l as unknown as { qrCode?: string }).qrCode === code || l.id === code)
+                          const fallback = (allLots || []).find(l => l.lotNumber === code || (l as unknown as { qrCode?: string }).qrCode === code || l.id === code)
+                          const lot = found || fallback
+                          if (lot) {
+                            setFormData(prev => ({ ...prev, lotId: lot.id }))
+                            toast.success(`Lot terpilih: ${lot.lotNumber}`)
+                          } else {
+                            toast.error(`Lot tidak ditemukan: ${code}`)
+                          }
+                        }}
+                      >
+                        Scan Lot
+                      </ScanButton>
+                    </div>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -347,32 +391,26 @@ export default function NewJobOrderPage() {
                       </span>
                     )}
                   </Label>
-                  <Input
+                  <FormattedNumberInput
                     id="targetQuantity"
-                    type="number"
                     placeholder="Contoh: 100"
-                    min="1"
-                    max={remainingStock}
                     value={formData.targetQuantity}
-                    onChange={(e) => {
-                      const val = e.target.value
+                    onValueChange={(val) => {
                       if (val && parseInt(val) > remainingStock) {
                         toast.warning(`Maksimal target adalah ${remainingStock} pcs`)
                         return
                       }
                       setFormData({ ...formData, targetQuantity: val })
                     }}
-                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dueDate">Tanggal Deadline</Label>
-                  <Input
+                  <DatePicker
                     id="dueDate"
-                    type="date"
-                    lang="id"
                     value={formData.dueDate}
-                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    onChange={(date) => setFormData({ ...formData, dueDate: date })}
+                    placeholder="Pilih tanggal deadline"
                   />
                 </div>
               </div>
@@ -393,29 +431,50 @@ export default function NewJobOrderPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="employee">Karyawan (Penjahit)</Label>
-                  <select
-                    id="employee"
-                    value={formData.employeeId}
-                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                    className="w-full h-10 px-3 border rounded-md bg-background text-sm"
-                  >
-                    <option value="">Pilih Karyawan (Opsional)</option>
-                    {employees?.filter(emp => emp.role === "KARYAWAN").sort((a, b) => a.name.localeCompare(b.name, "id-ID")).map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      id="employee"
+                      value={formData.employeeId}
+                      onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                      className="flex-1 h-7 px-3 border rounded-md bg-background text-sm"
+                    >
+                      <option value="">Pilih Karyawan (Opsional)</option>
+                      {employees?.filter(emp => emp.role === "KARYAWAN").sort((a, b) => a.name.localeCompare(b.name, "id-ID")).map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ScanButton
+                      variant="outline"
+                      onScan={(raw) => {
+                        const parsed = parseQRPayload(raw)
+                        const code = parsed.payload?.code || raw
+                        const id = parsed.payload?.id || raw
+                        const found = (employees || []).find(e => e.id === id || e.id === code || (e as unknown as { qrCode?: string }).qrCode === code || e.name.toLowerCase().includes(code.toLowerCase()))
+                        if (found) {
+                          setFormData(prev => ({ ...prev, employeeId: found.id }))
+                          // auto-fill rate if exists
+                          if ((found as unknown as { ratePerUnit?: number }).ratePerUnit) {
+                            setFormData(prev => ({ ...prev, ratePerUnit: String((found as unknown as { ratePerUnit: number }).ratePerUnit) }))
+                          }
+                          toast.success(`Karyawan terpilih: ${found.name}`)
+                        } else {
+                          toast.error(`Karyawan tidak ditemukan: ${code}`)
+                        }
+                      }}
+                    >
+                      Scan
+                    </ScanButton>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ratePerUnit">Rate/Unit ({currencySymbol}) *</Label>
-                  <Input
+                  <FormattedNumberInput
                     id="ratePerUnit"
-                    type="text"
                     placeholder="Contoh: 5.000"
-                    value={rateDisplay}
-                    onChange={handleRateChange}
-                    required={!!formData.employeeId}
+                    value={formData.ratePerUnit}
+                    onValueChange={(v) => setFormData({ ...formData, ratePerUnit: v })}
                   />
                 </div>
               </div>
@@ -478,6 +537,65 @@ export default function NewJobOrderPage() {
             </CardContent>
           </Card>
 
+          <Card className="border-amber-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CubeIcon className="h-5 w-5 text-amber-600" />
+                Estimasi Biaya Produksi (HPP)
+              </CardTitle>
+              <CardDescription>
+                Isi estimasi per kategori DIRECT (6 kategori). Otomatis hitung HPP & HPP/pcs. Terhubung ke <code>Master Kategori Biaya</code> & akan muncul di Detail JO & Laporan
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!costCategories || directCategories.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Memuat kategori biaya...</p>
+              ) : (
+                <>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {directCategories.map(cat => (
+                      <div key={cat.code} className="space-y-1">
+                        <Label htmlFor={`cost-${cat.code}`} className="flex items-center justify-between">
+                          <span>{cat.code} - {cat.name}</span>
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">DIRECT</Badge>
+                        </Label>
+                        <FormattedNumberInput
+                          id={`cost-${cat.code}`}
+                          placeholder="0"
+                          value={estimatedCosts[cat.code] || ""}
+                          onValueChange={(v) => setEstimatedCosts(prev => ({ ...prev, [cat.code]: v }))}
+                        />
+                        <p className="text-xs text-muted-foreground">{cat.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div>
+                      <p className="text-xs text-amber-700 font-medium">Total Estimasi HPP</p>
+                      <p className="text-lg font-bold text-amber-800">{formatCurrency(totalEstimated)}</p>
+                      <p className="text-xs text-amber-600">6 kategori DIRECT</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-amber-700 font-medium">HPP / Pcs</p>
+                      <p className="text-lg font-bold text-amber-800">{targetQtyNum > 0 ? formatCurrency(hppPerPcs) : "-"}</p>
+                      <p className="text-xs text-amber-600">{targetQtyNum} pcs target</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-amber-700 font-medium">Estimasi + Gaji</p>
+                      <p className="text-lg font-bold text-amber-800">
+                        {formatCurrency(totalEstimated + (parseInt(formData.targetQuantity || "0") * parseFloat(formData.ratePerUnit || "0") || 0))}
+                      </p>
+                      <p className="text-xs text-amber-600">HPP + (Target × Rate)</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    * Kosongkan jika tidak ada. Nanti biaya aktual akan terisi otomatis dari transaksi pengeluaran yang di-tag ke JO ini.
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Catatan</CardTitle>
@@ -503,7 +621,7 @@ export default function NewJobOrderPage() {
             <Button type="submit" disabled={isSubmitting || !productionReadyLots?.length || !formData.lotId || !formData.targetQuantity || !canSubmit}>
               {isSubmitting ? (
                 <>
-                  <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner data-icon="inline-start" />
                   Menyimpan...
                 </>
               ) : (

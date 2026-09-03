@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 const ROLE_LABELS: Record<string, string> = {
+  SUPERADMIN: "Super Admin",
   ADMIN: "Admin",
   QC: "QC",
   KARYAWAN: "Karyawan",
@@ -73,21 +74,21 @@ export function NavUser({
 
   return (
     <SidebarMenu>
-      <SidebarMenuItem className="pb-4 pt-2">
+      <SidebarMenuItem className="p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground w-full h-auto py-3 rounded-lg hover:bg-accent transition-colors"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground w-full h-auto py-3 px-3 rounded-lg hover:bg-accent transition-colors"
             >
               <div className="relative flex h-10 w-10 items-center justify-center shrink-0">
-                <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50" />
-                <div className="absolute inset-[2px] rounded-full bg-[#304ffe]" />
-                <span className="relative z-10 text-white font-semibold text-sm">
+                <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50" />
+                <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)]" />
+                <span className="relative z-10 text-brand-primary-foreground font-semibold text-sm">
                   {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </span>
               </div>
-              <div className="grid flex-1 text-left min-w-0 py-1">
+              <div className="grid flex-1 text-left min-w-0">
                 <span className="truncate font-semibold text-sm">{user.name || "User"}</span>
                 <span className="truncate text-muted-foreground text-xs">{roleLabel}</span>
               </div>
@@ -103,9 +104,9 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-3 px-4 py-4 border-b">
                 <div className="relative flex h-12 w-12 items-center justify-center shrink-0">
-                  <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50" />
-                  <div className="absolute inset-[2px] rounded-full bg-[#304ffe]" />
-                  <span className="relative z-10 text-white font-bold text-base">
+                  <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50" />
+                  <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)]" />
+                  <span className="relative z-10 text-brand-primary-foreground font-bold text-base">
                     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </span>
                 </div>
@@ -123,7 +124,7 @@ export function NavUser({
                 </Badge>
               </div>
             </DropdownMenuLabel>
-            {user.role === "ADMIN" && (
+            {(user.role === "ADMIN" || user.role === "SUPERADMIN") && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>

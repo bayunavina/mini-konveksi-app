@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Dialog,
   DialogContent,
@@ -33,7 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
-import { ArrowLeftIcon, PlusIcon, UserIcon, KeyIcon, PencilIcon, ArrowPathIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, PlusIcon, UserIcon, KeyIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 interface Employee {
@@ -413,7 +415,7 @@ export default function UsersPage() {
             </div>
               <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+                  <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
                     <PlusIcon className="mr-2 h-4 w-4" />
                     Tambah User
                   </Button>
@@ -488,12 +490,11 @@ export default function UsersPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="salary">Gaji Pokok (opsional)</Label>
-                    <Input
+                    <FormattedNumberInput
                       id="salary"
-                      type="number"
                       placeholder="0"
                       value={formData.baseSalary}
-                      onChange={(e) => setFormData({ ...formData, baseSalary: e.target.value })}
+                      onValueChange={(v) => setFormData({ ...formData, baseSalary: v })}
                     />
                   </div>
 
@@ -516,7 +517,7 @@ export default function UsersPage() {
                     onClick={handleCreateUser}
                     disabled={!formData.name || !formData.email || !formData.role || saving}
                   >
-                    {saving ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <UserIcon className="mr-2 h-4 w-4" />}
+                    {saving ? <Spinner data-icon="inline-start" /> : <UserIcon className="mr-2 h-4 w-4" />}
                     Simpan
                   </Button>
                 </DialogFooter>
@@ -581,7 +582,7 @@ export default function UsersPage() {
                     <TableCell className="font-medium hidden md:table-cell">{user.name}</TableCell>
                     <TableCell className="hidden lg:table-cell">{user.email || "-"}</TableCell>
                     <TableCell>
-                      <Badge className={ROLE_COLORS[user.role] || "bg-gray-100"}>
+                      <Badge className={`${ROLE_COLORS[user.role] || "bg-gray-100"}`}>
                         {ROLE_LABELS[user.role] || user.role}
                       </Badge>
                     </TableCell>
@@ -703,12 +704,11 @@ export default function UsersPage() {
 
             <div className="space-y-2">
               <Label htmlFor="edit-salary">Gaji Pokok</Label>
-              <Input
+              <FormattedNumberInput
                 id="edit-salary"
-                type="number"
                 placeholder="0"
                 value={editFormData.baseSalary}
-                onChange={(e) => setEditFormData({ ...editFormData, baseSalary: e.target.value })}
+                onValueChange={(v) => setEditFormData({ ...editFormData, baseSalary: v })}
               />
             </div>
 
@@ -742,7 +742,7 @@ export default function UsersPage() {
               onClick={handleUpdateUser}
               disabled={!editFormData.name || !editFormData.email || !editFormData.role || saving}
             >
-              {saving ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <PencilIcon className="mr-2 h-4 w-4" />}
+              {saving ? <Spinner data-icon="inline-start" /> : <PencilIcon className="mr-2 h-4 w-4" />}
               Simpan Perubahan
             </Button>
           </DialogFooter>
@@ -772,7 +772,7 @@ export default function UsersPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Role</span>
-              <Badge className={ROLE_COLORS[userToDelete?.role || ""] || "bg-gray-100"}>
+              <Badge className={`${ROLE_COLORS[userToDelete?.role || ""] || "bg-gray-100"}`}>
                 {ROLE_LABELS[userToDelete?.role || ""] || userToDelete?.role}
               </Badge>
             </div>
@@ -798,7 +798,7 @@ export default function UsersPage() {
               disabled={saving}
             >
               {saving ? (
-                <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner data-icon="inline-start" />
               ) : (
                 <TrashIcon className="mr-2 h-4 w-4" />
               )}
@@ -886,7 +886,7 @@ export default function UsersPage() {
               className="flex-1"
             >
               {saving ? (
-                <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner data-icon="inline-start" />
               ) : (
                 <KeyIcon className="mr-2 h-4 w-4" />
               )}

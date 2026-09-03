@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,11 +29,21 @@ interface Transaction {
   createdAt?: string
 }
 
+interface CostCategory {
+  id: string
+  code: string
+  name: string
+  type: "DIRECT" | "INDIRECT"
+}
+
 interface MonthlyReport {
   month: string
   income: number
   expense: number
-  profit: number
+  hpp: number
+  bop: number
+  grossProfit: number
+  netProfit: number
   transactions: number
 }
 
@@ -43,20 +53,38 @@ export default function ReportsPage() {
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([])
 
   const { data: transactions, loading } = useFetch<Transaction[]>("/api/transactions")
+  const { data: costCategories } = useFetch<CostCategory[]>("/api/cost-categories?all=true")
+
+  // DIRECT set untuk HPP - source of truth dari cost_categories API
+  const directSet = useMemo(
+    () => new Set((costCategories || []).filter(c => c.type === "DIRECT").map(c => c.code)),
+    [costCategories]
+  )
+
+  const getCategoryLabel = (code: string) => {
+    const found = costCategories?.find(c => c.code === code)
+    if (found) return `${found.code} - ${found.name}`
+    return code
+  }
 
   useEffect(() => {
     if (transactions) {
-      const grouped: Record<string, { income: number; expense: number; count: number }> = {}
+      const grouped: Record<string, { income: number; expense: number; hpp: number; bop: number; count: number }> = {}
 
       transactions.forEach((t) => {
         const month = t.date ? new Date(t.date).toISOString().slice(0, 7) : "unknown"
         if (!grouped[month]) {
-          grouped[month] = { income: 0, expense: 0, count: 0 }
+          grouped[month] = { income: 0, expense: 0, hpp: 0, bop: 0, count: 0 }
         }
         if (t.type === "INCOME") {
           grouped[month].income += t.amount
         } else {
           grouped[month].expense += t.amount
+          if (directSet.has(t.category)) {
+            grouped[month].hpp += t.amount
+          } else {
+            grouped[month].bop += t.amount
+          }
         }
         grouped[month].count++
       })
@@ -66,19 +94,25 @@ export default function ReportsPage() {
           month,
           income: data.income,
           expense: data.expense,
-          profit: data.income - data.expense,
+          hpp: data.hpp,
+          bop: data.bop,
+          grossProfit: data.income - data.hpp,
+          netProfit: data.income - data.expense,
           transactions: data.count,
         }))
         .sort((a, b) => b.month.localeCompare(a.month))
 
       setMonthlyReports(reports)
     }
-  }, [transactions])
+  }, [transactions, costCategories])
 
   const currentMonthData = monthlyReports.find((r) => r.month === period)
   const totalIncome = currentMonthData?.income || 0
   const totalExpense = currentMonthData?.expense || 0
-  const profit = currentMonthData?.profit || 0
+  const hpp = currentMonthData?.hpp || 0
+  const bop = currentMonthData?.bop || 0
+  const grossProfit = currentMonthData?.grossProfit || 0
+  const netProfit = currentMonthData?.netProfit || 0
 
   const categoryExpense = (transactions || [])
     .filter((t) => t.type === "EXPENSE")
@@ -116,15 +150,19 @@ export default function ReportsPage() {
               columns={[
                 { key: "month", label: "Bulan" },
                 { key: "income", label: "Pendapatan" },
-                { key: "expense", label: "Pengeluaran" },
-                { key: "profit", label: "Keuntungan" },
+                { key: "hpp", label: "HPP (DIRECT)" },
+                { key: "grossProfit", label: "Laba Kotor" },
+                { key: "bop", label: "BOP (INDIRECT)" },
+                { key: "netProfit", label: "Laba Bersih" },
                 { key: "transactions", label: "Transaksi" },
               ]}
               data={monthlyReports.map((r) => ({
                 month: formatMonth(r.month),
                 income: formatCurrency(r.income),
-                expense: formatCurrency(r.expense),
-                profit: formatCurrency(r.profit),
+                hpp: formatCurrency(r.hpp),
+                grossProfit: formatCurrency(r.grossProfit),
+                bop: formatCurrency(r.bop),
+                netProfit: formatCurrency(r.netProfit),
                 transactions: r.transactions,
               }))}
             />
@@ -151,7 +189,7 @@ export default function ReportsPage() {
         </Select>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
@@ -174,6 +212,88 @@ export default function ReportsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Laba Kotor</CardTitle>
+            <BanknotesIcon className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <>
+                <div className={`text-2xl font-bold ${grossProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  {formatCurrency(grossProfit)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Pendapatan - HPP ({formatCurrency(hpp)}) • Margin: {totalIncome > 0 ? Math.round((grossProfit / totalIncome) * 100) : 0}%
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
+            <BanknotesIcon className="h-4 w-4 text-[var(--chart-blue)]" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <>
+                <div className={`text-2xl font-bold ${netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  {formatCurrency(netProfit)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Laba Kotor - BOP ({formatCurrency(bop)}) • Margin: {totalIncome > 0 ? Math.round((netProfit / totalIncome) * 100) : 0}%
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">HPP</CardTitle>
+            <ArrowTrendingDownIcon className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-amber-600">
+                  {formatCurrency(hpp)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  6 kategori DIRECT • {totalExpense > 0 ? Math.round((hpp/totalExpense)*100) : 0}% dari pengeluaran
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">BOP</CardTitle>
+            <ArrowTrendingDownIcon className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-orange-600">
+                  {formatCurrency(bop)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  8 kategori INDIRECT • {totalExpense > 0 ? Math.round((bop/totalExpense)*100) : 0}% dari pengeluaran
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
             <ArrowTrendingDownIcon className="h-4 w-4 text-red-600" />
           </CardHeader>
@@ -186,27 +306,7 @@ export default function ReportsPage() {
                   {formatCurrency(totalExpense)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {Object.keys(categoryExpense).length} kategori
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Keuntungan</CardTitle>
-            <BanknotesIcon className="h-4 w-4 text-[var(--chart-blue)]" />
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <>
-                <div className={`text-2xl font-bold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatCurrency(profit)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Margin: {totalIncome > 0 ? Math.round((profit / totalIncome) * 100) : 0}%
+                  HPP + BOP • {Object.keys(categoryExpense).length} kategori
                 </p>
               </>
             )}
@@ -265,11 +365,17 @@ export default function ReportsPage() {
                       <div className="font-medium text-green-600">
                         + {formatCurrency(report.income)}
                       </div>
-                      <div className="text-sm text-red-600">
-                        - {formatCurrency(report.expense)}
+                      <div className="text-xs text-amber-600">
+                        HPP -{formatCurrency(report.hpp)}
                       </div>
-                      <div className={`text-sm font-medium ${report.profit >= 0 ? "text-[var(--chart-blue)]" : "text-red-600"}`}>
-                        Laba: {formatCurrency(report.profit)}
+                      <div className="text-xs font-medium text-emerald-600">
+                        Kotor {formatCurrency(report.grossProfit)}
+                      </div>
+                      <div className="text-xs text-orange-600">
+                        BOP -{formatCurrency(report.bop)}
+                      </div>
+                      <div className={`text-sm font-medium ${report.netProfit >= 0 ? "text-[var(--chart-blue)]" : "text-red-600"}`}>
+                        Bersih: {formatCurrency(report.netProfit)}
                       </div>
                     </div>
                   </div>
@@ -335,10 +441,10 @@ export default function ReportsPage() {
                           (() => {
                             const incomeCount = (transactions || []).filter((t) => t.type === "INCOME").length
                             const total = (transactions || []).length
-                            return total > 0 ? (incomeCount / total) * 100 : 50
+                            return total > 0 ? (incomeCount / total) * 100 : 0
                           })()
                         }%`,
-                        backgroundColor: "#304ffe"
+                        backgroundColor: "var(--brand-primary)"
                       }}
                     />
                   </div>
@@ -371,29 +477,20 @@ export default function ReportsPage() {
                 .sort(([, a], [, b]) => b - a)
                 .map(([category, amount]) => {
                   const percentage = totalExpenseAll > 0 ? Math.round((amount / totalExpenseAll) * 100) : 0
+                  const isDirect = directSet.has(category)
                   return (
-                    <div key={category} className="p-4 border rounded-lg">
-                      <div className="text-2xl font-bold">{percentage}%</div>
-                      <div className="text-sm text-muted-foreground">
-                        {category === "SELLING"
-                          ? "Penjualan"
-                          : category === "SERVICE"
-                          ? "Jasa"
-                          : category === "CAPITAL"
-                          ? "Modal"
-                          : category === "SALARY"
-                          ? "Gaji"
-                          : category === "MATERIAL"
-                          ? "Bahan Baku"
-                          : category === "UTILITY"
-                          ? "Utilitas"
-                          : category === "RENT"
-                          ? "Sewa"
-                          : "Lainnya"}
+                    <div key={category} className={`p-4 border rounded-lg ${isDirect ? "border-amber-200 bg-amber-50/50" : "border-orange-200 bg-orange-50/50"}`}>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${isDirect ? "bg-amber-100 text-amber-800" : "bg-orange-100 text-orange-800"}`}>
+                          {isDirect ? "DIRECT" : "INDIRECT"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{percentage}%</span>
                       </div>
+                      <div className="text-lg font-bold mt-2">{getCategoryLabel(category)}</div>
                       <div className="text-sm font-medium">
                         {formatCurrency(amount)}
                       </div>
+                      <div className="text-xs text-muted-foreground">{isDirect ? "Masuk HPP" : "Masuk BOP"}</div>
                     </div>
                   )
                 })}

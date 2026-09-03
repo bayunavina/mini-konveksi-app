@@ -34,10 +34,11 @@ import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
   CheckIcon,
-  ArrowPathIcon,
   ArchiveBoxIcon,
+  ScaleIcon,
 } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
+import { Spinner } from "@/components/ui/spinner"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -138,7 +139,7 @@ const navigationData = {
         { title: "Overview", url: "/dashboard/transfer" },
         { title: "Barang Keluar", url: "/dashboard/transfer/outgoing" },
         { title: "Barang Masuk", url: "/dashboard/transfer/incoming" },
-        { title: "Setup Gudang", url: "/dashboard/transfer/warehouses" },
+        { title: "Setup Gudang", url: "/dashboard/transfer/warehouses", roles: ["ADMIN"] as UserRole[] },
       ],
     },
     {
@@ -147,6 +148,7 @@ const navigationData = {
       icon: UsersIcon,
       submenu: [
         { title: "Daftar Karyawan", url: "/dashboard/employees" },
+        { title: "Tim Produksi", url: "/dashboard/employees/teams" },
         { title: "Penggajian", url: "/dashboard/employees/salaries" },
         { title: "Klaim Gaji", url: "/dashboard/employees/salary-claims" },
         { title: "Kasbon", url: "/dashboard/employees/advances" },
@@ -160,6 +162,7 @@ const navigationData = {
         { title: "Overview", url: "/overview/finance" },
         { title: "Transaksi", url: "/overview/finance/transactions" },
         { title: "Laporan", url: "/overview/finance/reports" },
+        { title: "Dashboard HPP", url: "/overview/finance/hpp-dashboard" },
       ],
     },
     {
@@ -175,6 +178,11 @@ const navigationData = {
       title: "QR/Barcode",
       url: "/dashboard/qr-generator",
       icon: QrCodeIcon,
+    },
+    {
+      title: "Balance Report",
+      url: "/dashboard/balance",
+      icon: ScaleIcon,
     },
     {
       title: "Log Aktivitas",
@@ -272,11 +280,16 @@ const navigationData = {
   ],
 }
 
-function NavMenuItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function NavMenuItem({ item, isActive, userRole }: { item: NavItem; isActive: boolean; userRole: UserRole }) {
   const pathname = usePathname()
   
-  if (item.submenu && item.submenu.length > 0) {
-    const hasActiveChild = item.submenu.some(
+  // P3-1: Filter submenu items by role
+  const visibleSubmenu = item.submenu
+    ? item.submenu.filter(subItem => !subItem.roles || subItem.roles.includes(userRole))
+    : undefined
+  
+  if (visibleSubmenu && visibleSubmenu.length > 0) {
+    const hasActiveChild = visibleSubmenu.some(
       (sub) => pathname === sub.url || pathname.startsWith(sub.url + "/")
     )
 
@@ -299,7 +312,7 @@ function NavMenuItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {item.submenu.map((subItem) => (
+            {visibleSubmenu.map((subItem) => (
               <SidebarMenuSubItem key={subItem.title}>
                 <SidebarMenuSubButton
                   asChild
@@ -318,7 +331,7 @@ function NavMenuItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
     )
   }
 
-  if (!item.submenu) {
+  if (!visibleSubmenu) {
     return (
       <SidebarMenuButton
         asChild
@@ -471,7 +484,7 @@ export function KonveksiSidebar() {
     )
   }
 
-  const roleBasedNav = userRole === "ADMIN" ? navigationData.admin 
+  const roleBasedNav = userRole === "ADMIN" || userRole === "SUPERADMIN" ? navigationData.admin 
     : userRole === "QC" ? navigationData.qc 
     : userRole === "GUDANG" ? navigationData.gudang
     : navigationData.karyawan
@@ -514,7 +527,7 @@ export function KonveksiSidebar() {
               // Special handling for Gudang Scan QR button
               if (userRole === "GUDANG" && item.title === "Scan QR") {
                 return (
-                  <SidebarMenuItem key={item.title} className="mb-2">
+                  <SidebarMenuItem key={item.title} className="mt-2 first:mt-0">
                     <SidebarMenuButton
                       tooltip={item.title}
                       className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md hover:shadow-lg hover:shadow-green-500/25 transition-all duration-200 cursor-pointer"
@@ -530,10 +543,10 @@ export function KonveksiSidebar() {
               return (
                 <Fragment key={item.title}>
                   {userRole === "GUDANG" && item.title === "Dashboard" && (
-                    <div className="h-px bg-border/50 my-2 mx-2" />
+                    <div className="h-px bg-border/50 my-3 mx-2" />
                   )}
                   <SidebarMenuItem>
-                    <NavMenuItem item={item} isActive={isActive} />
+                    <NavMenuItem item={item} isActive={isActive} userRole={userRole} />
                   </SidebarMenuItem>
                 </Fragment>
               )
@@ -621,7 +634,7 @@ export function KonveksiSidebar() {
                     disabled={scanProcessing}
                     className="flex-1"
                   >
-                    {scanProcessing && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                    {scanProcessing && <Spinner data-icon="inline-start" />}
                     Cancel
                   </Button>
                   <Button 
@@ -629,7 +642,7 @@ export function KonveksiSidebar() {
                     disabled={scanProcessing}
                     className="bg-green-600 hover:bg-green-700 flex-1"
                   >
-                    {scanProcessing && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                    {scanProcessing && <Spinner data-icon="inline-start" />}
                     <CheckIcon className="mr-2 h-4 w-4" />
                     Terima
                   </Button>

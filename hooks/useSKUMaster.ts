@@ -20,7 +20,7 @@ export function useSKUMaster() {
   const { data = [], isLoading, refetch } = useQuery<SKU[]>({
     queryKey: [SKU_QUERY_KEY],
     queryFn: async () => {
-      const res = await fetch("/api/master-skus")
+      const res = await fetch("/api/master-skus?all=true")
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }

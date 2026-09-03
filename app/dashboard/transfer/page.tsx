@@ -94,7 +94,7 @@ export default function TransferPage() {
         title="Transfer"
         description="Kelola transfer barang antar gudang"
         actions={
-          <Button asChild className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+          <Button asChild className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
             <Link href="/dashboard/transfer/new">
               <TruckIcon className="mr-2 h-4 w-4" />
               Transfer Baru
@@ -306,7 +306,7 @@ export default function TransferPage() {
                         {transfer.type === "FINISHED" ? totalQty : "-"}
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_COLORS[transfer.status] || "bg-gray-100 text-gray-800"}>
+                        <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100 text-gray-800"}`}>
                           {STATUS_LABELS[transfer.status] || transfer.status}
                         </Badge>
                       </TableCell>
@@ -357,7 +357,7 @@ export default function TransferPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
                     {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
                   </Badge>
                 </div>

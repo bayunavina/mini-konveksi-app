@@ -48,6 +48,8 @@ import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
 
 import { ROLE_LABELS } from "@/lib/constants"
+
+const isAdminRole = (role?: string | null) => role === "ADMIN" || role === "SUPERADMIN"
 import { toast } from "sonner"
 
 
@@ -234,9 +236,9 @@ export default function EmployeesPage() {
       email: employee.email || "",
       phone: employee.phone || "",
       role: employee.role || "KARYAWAN",
-      employmentType: employee.role === "ADMIN" ? "NA" : (employee.employmentType || "HARIAN"),
-      baseSalary: employee.role === "ADMIN" ? "" : (employee.baseSalary?.toString() || ""),
-      ratePerUnit: employee.role === "ADMIN" ? "" : (employee.ratePerUnit?.toString() || ""),
+      employmentType: isAdminRole(employee.role) ? "NA" : (employee.employmentType || "HARIAN"),
+      baseSalary: isAdminRole(employee.role) ? "" : (employee.baseSalary?.toString() || ""),
+      ratePerUnit: isAdminRole(employee.role) ? "" : (employee.ratePerUnit?.toString() || ""),
       teamId: employee.team?.id || "",
     })
     setEditDialogOpen(true)
@@ -260,9 +262,9 @@ export default function EmployeesPage() {
     setFormData(prev => ({
       ...prev,
       role,
-      employmentType: role === "ADMIN" ? "NA" : prev.employmentType === "NA" ? "HARIAN" : prev.employmentType,
-      baseSalary: role === "ADMIN" ? "" : prev.baseSalary,
-      ratePerUnit: role === "ADMIN" ? "" : prev.ratePerUnit,
+      employmentType: isAdminRole(role) ? "NA" : prev.employmentType === "NA" ? "HARIAN" : prev.employmentType,
+      baseSalary: isAdminRole(role) ? "" : prev.baseSalary,
+      ratePerUnit: isAdminRole(role) ? "" : prev.ratePerUnit,
     }))
   }
 
@@ -369,7 +371,7 @@ export default function EmployeesPage() {
         title="Karyawan"
         description="Kelola data karyawan"
         actions={
-          <Button onClick={openAddDialog} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+          <Button onClick={openAddDialog} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
             <PlusIcon className="mr-2 h-4 w-4" />
             Tambah Karyawan
           </Button>
@@ -551,7 +553,7 @@ export default function EmployeesPage() {
                 data={filtered.map(e => ({
                   ...e,
                   role: ROLE_LABELS[e.role as keyof typeof ROLE_LABELS] || e.role,
-                  employmentType: e.role === "ADMIN" ? "N/A" : (EMPLOYMENT_TYPE_LABELS[e.employmentType || "HARIAN"] || e.employmentType),
+                  employmentType: isAdminRole(e.role) ? "N/A" : (EMPLOYMENT_TYPE_LABELS[e.employmentType || "HARIAN"] || e.employmentType),
                   baseSalary: e.baseSalary && e.baseSalary > 0 ? formatCurrency(e.baseSalary) : "-",
                   ratePerUnit: e.ratePerUnit && e.ratePerUnit > 0 ? formatCurrency(e.ratePerUnit) : "-",
                   isActive: e.isActive ? "Aktif" : "Nonaktif",
@@ -649,13 +651,13 @@ export default function EmployeesPage() {
                       <TableCell className="font-medium">{employee.name}</TableCell>
                       <TableCell className="hidden md:table-cell text-muted-foreground">{employee.email || "-"}</TableCell>
                       <TableCell>
-                        <Badge className={ROLE_COLORS[employee.role] || "bg-gray-100 text-gray-800"}>
+                        <Badge className={`${ROLE_COLORS[employee.role] || "bg-gray-100 text-gray-800"}`}>
                           {ROLE_LABELS[employee.role as keyof typeof ROLE_LABELS] || employee.role}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        <Badge className={employee.role === "ADMIN" ? EMPLOYMENT_TYPE_COLORS["NA"] : EMPLOYMENT_TYPE_COLORS[employee.employmentType || "HARIAN"]}>
-                          {employee.role === "ADMIN" ? "N/A" : EMPLOYMENT_TYPE_LABELS[employee.employmentType || "HARIAN"]}
+                        <Badge className={isAdminRole(employee.role) ? EMPLOYMENT_TYPE_COLORS["NA"] : EMPLOYMENT_TYPE_COLORS[employee.employmentType || "HARIAN"]}>
+                          {isAdminRole(employee.role) ? "N/A" : EMPLOYMENT_TYPE_LABELS[employee.employmentType || "HARIAN"]}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right hidden lg:table-cell">
@@ -739,7 +741,7 @@ export default function EmployeesPage() {
                 <select
                   value={formData.role}
                   onChange={(e) => handleRoleChange(e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 bg-background"
+                  className="w-full h-7 border rounded-md px-3 bg-background"
                 >
                   <option value="KARYAWAN">Karyawan</option>
                   <option value="QC">QC</option>
@@ -752,10 +754,10 @@ export default function EmployeesPage() {
                 <select
                   value={formData.employmentType}
                   onChange={(e) => setFormData({ ...formData, employmentType: e.target.value })}
-                  className="w-full border rounded-md px-3 py-2 bg-background"
-                  disabled={formData.role === "ADMIN"}
+                  className="w-full h-7 border rounded-md px-3 bg-background"
+                  disabled={isAdminRole(formData.role)}
                 >
-                  {formData.role === "ADMIN" ? (
+                  {isAdminRole(formData.role) ? (
                     <option value="NA">N/A (Admin Panel)</option>
                   ) : (
                     <>
@@ -772,7 +774,7 @@ export default function EmployeesPage() {
                 <select
                   value={formData.teamId}
                   onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-                  className="w-full border rounded-md px-3 py-2 bg-background"
+                  className="w-full h-7 border rounded-md px-3 bg-background"
                 >
                   <option value="">Tanpa Tim</option>
                   {teams?.map((t) => (
@@ -842,8 +844,8 @@ export default function EmployeesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Tipe Karyawan</p>
-                  <Badge className={EMPLOYMENT_TYPE_COLORS[selectedEmployee.role === "ADMIN" ? "NA" : (selectedEmployee.employmentType || "HARIAN")]}>
-                    {selectedEmployee.role === "ADMIN" ? "N/A" : EMPLOYMENT_TYPE_LABELS[selectedEmployee.employmentType || "HARIAN"]}
+                  <Badge className={EMPLOYMENT_TYPE_COLORS[isAdminRole(selectedEmployee.role) ? "NA" : (selectedEmployee.employmentType || "HARIAN")]}>
+                    {isAdminRole(selectedEmployee.role) ? "N/A" : EMPLOYMENT_TYPE_LABELS[selectedEmployee.employmentType || "HARIAN"]}
                   </Badge>
                 </div>
                 <div>
@@ -922,9 +924,9 @@ export default function EmployeesPage() {
                   value={formData.employmentType}
                   onChange={(e) => setFormData({ ...formData, employmentType: e.target.value })}
                   className="w-full border rounded-md px-3 py-2"
-                  disabled={formData.role === "ADMIN"}
+                  disabled={isAdminRole(formData.role)}
                 >
-                  {formData.role === "ADMIN" ? (
+                  {isAdminRole(formData.role) ? (
                     <option value="NA">N/A (Admin Panel)</option>
                   ) : (
                     <>

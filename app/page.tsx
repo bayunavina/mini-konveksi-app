@@ -45,8 +45,8 @@ export default function Home() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
             <div className="flex items-center gap-3">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50 shadow-sm" />
-              <div className="absolute inset-[2px] rounded-full bg-[#304ffe] flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50 shadow-sm" />
+              <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
                 <Scissors className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -67,7 +67,7 @@ export default function Home() {
           <div className="container mx-auto px-4 md:px-6 py-20 md:py-32">
             <div className="mx-auto max-w-4xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border bg-card/50 px-4 py-1.5 text-sm backdrop-blur-sm mb-6">
-                <Shirt className="h-4 w-4 text-[#304ffe]" />
+                <Shirt className="h-4 w-4 text-[var(--brand-primary)]" />
                 <span className="text-muted-foreground">Sistem Manajemen Produksi Konveksi</span>
               </div>
               
@@ -76,7 +76,7 @@ export default function Home() {
                   Kelola Produksi
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-[#304ffe] to-[#304ffe]/80 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary)]/80 bg-clip-text text-transparent">
                   Lebih Modern
                 </span>
               </h1>
@@ -116,10 +116,10 @@ export default function Home() {
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="bg-card rounded-2xl p-6 border border-border hover:border-[#304ffe]/50 hover:shadow-lg transition-all"
+                className="bg-card rounded-2xl p-6 border border-border hover:border-[var(--brand-primary)]/50 hover:shadow-lg transition-all"
               >
-                <div className="h-12 w-12 rounded-xl bg-[#304ffe]/10 flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-[#304ffe]" />
+                <div className="h-12 w-12 rounded-xl bg-[var(--brand-primary)]/10 flex items-center justify-center mb-4">
+                  <feature.icon className="h-6 w-6 text-[var(--brand-primary)]" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>
@@ -135,8 +135,8 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <div className="flex items-center gap-2">
               <div className="relative flex h-8 w-8 items-center justify-center">
-                <div className="absolute inset-0 rounded-full border-2 border-[#304ffe]/50 shadow-sm" />
-                <div className="absolute inset-[2px] rounded-full bg-[#304ffe] flex items-center justify-center p-1">
+                <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50 shadow-sm" />
+                <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)] flex items-center justify-center p-1">
                   <Scissors className="h-full w-full text-white" />
                 </div>
               </div>

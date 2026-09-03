@@ -3,16 +3,29 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PageHeader } from "@/components/shared"
 import { QRCodeGenerator } from "@/components/qr-generator"
 import { BarcodeGenerator, BatchBarcodeGenerator } from "@/components/qr-generator"
 import { Button } from "@/components/ui/button"
+import { useFetch } from "@/hooks/useFetch"
+import { generateMaterialLotQR, generateEmployeeQR, generateJobOrderQR } from "@/lib/qr-payload"
 import { QrCodeIcon, RectangleStackIcon, ListBulletIcon } from "@heroicons/react/24/outline"
+import { toast } from "sonner"
 
 export default function QRGeneratorPage() {
   const [qrValue, setQRValue] = useState("")
   const [barcodeValue, setBarcodeValue] = useState("")
   const [batchItems, setBatchItems] = useState<{ sku: string; name: string }[]>([])
+  const [qrEntityType, setQrEntityType] = useState<"MATERIAL_LOT" | "EMPLOYEE" | "JOB_ORDER">("MATERIAL_LOT")
+  const [selectedLotId, setSelectedLotId] = useState("")
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
+  const [selectedJoId, setSelectedJoId] = useState("")
+
+  const { data: lots } = useFetch<{ id: string; lotNumber: string; qrCode: string; product?: { code: string; name: string } }[]>("/api/material-lots")
+  const { data: employees } = useFetch<{ id: string; name: string; qrCode?: string; role?: string }[]>("/api/employees")
+  const { data: joData } = useFetch<{ data: { id: string; joNumber: string; qrCode?: string; product?: { name: string } }[] }>("/api/job-orders")
+  const joList = (joData as unknown as { data?: { id: string; joNumber: string; qrCode?: string; product?: { name: string } }[] })?.data || (Array.isArray(joData) ? (joData as unknown as { id: string; joNumber: string }[]) : [])
 
   const handleGenerateFromForm = (type: "lot" | "sku") => {
     if (type === "lot") {
@@ -30,6 +43,39 @@ export default function QRGeneratorPage() {
     } else {
       const skuCode = `SKU-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`
       setBarcodeValue(skuCode)
+    }
+  }
+
+  const handleGenerateRealQR = () => {
+    try {
+      if (qrEntityType === "MATERIAL_LOT") {
+        const lot = (lots || []).find(l => l.id === selectedLotId)
+        if (!lot) { toast.error("Pilih lot terlebih dahulu"); return }
+        const payload = generateMaterialLotQR({
+          id: lot.id,
+          lotNumber: lot.lotNumber,
+          qrCode: lot.qrCode,
+          skuCode: lot.product?.code,
+          skuName: lot.product?.name,
+        })
+        setQRValue(payload)
+        toast.success(`QR generated untuk lot ${lot.lotNumber}`)
+      } else if (qrEntityType === "EMPLOYEE") {
+        const emp = (employees || []).find(e => e.id === selectedEmployeeId)
+        if (!emp) { toast.error("Pilih karyawan terlebih dahulu"); return }
+        const payload = generateEmployeeQR({ id: emp.id, name: emp.name, role: emp.role })
+        setQRValue(payload)
+        toast.success(`QR generated untuk karyawan ${emp.name}`)
+      } else if (qrEntityType === "JOB_ORDER") {
+        const jo = joList.find((j: { id: string }) => j.id === selectedJoId)
+        if (!jo) { toast.error("Pilih JO terlebih dahulu"); return }
+        const payload = generateJobOrderQR({ id: jo.id, joNumber: jo.joNumber, productName: (jo as { product?: { name: string } }).product?.name })
+        setQRValue(payload)
+        toast.success(`QR generated untuk JO ${jo.joNumber}`)
+      }
+    } catch (e) {
+      toast.error("Gagal generate QR")
+      console.error(e)
     }
   }
 
@@ -59,17 +105,72 @@ export default function QRGeneratorPage() {
         <TabsContent value="qr" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Generate QR Code Lot Bahan</CardTitle>
+              <CardTitle>Generate QR Code (Data Real)</CardTitle>
               <CardDescription>
-                Generate QR code untuk lot bahan baku dengan data JSON
+                Generate QR code dari data yang ada di database — format konsisten, bisa di-scan langsung
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Button onClick={() => handleGenerateFromForm("lot")} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
-                  Generate Sample Lot
-                </Button>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Tipe Entity</label>
+                  <Select value={qrEntityType} onValueChange={(v) => setQrEntityType(v as typeof qrEntityType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MATERIAL_LOT">Bahan Baku (Lot)</SelectItem>
+                      <SelectItem value="EMPLOYEE">Karyawan (Badge)</SelectItem>
+                      <SelectItem value="JOB_ORDER">Job Order</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {qrEntityType === "MATERIAL_LOT" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Pilih Lot</label>
+                    <Select value={selectedLotId} onValueChange={setSelectedLotId}>
+                      <SelectTrigger><SelectValue placeholder="Pilih lot..." /></SelectTrigger>
+                      <SelectContent>
+                        {(lots || []).map(lot => (
+                          <SelectItem key={lot.id} value={lot.id}>{lot.lotNumber} - {lot.product?.name || "-"}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {qrEntityType === "EMPLOYEE" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Pilih Karyawan</label>
+                    <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+                      <SelectTrigger><SelectValue placeholder="Pilih karyawan..." /></SelectTrigger>
+                      <SelectContent>
+                        {(employees || []).filter(e => e).map(emp => (
+                          <SelectItem key={emp.id} value={emp.id}>{emp.name} - {emp.role || "KARYAWAN"}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {qrEntityType === "JOB_ORDER" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Pilih JO</label>
+                    <Select value={selectedJoId} onValueChange={setSelectedJoId}>
+                      <SelectTrigger><SelectValue placeholder="Pilih JO..." /></SelectTrigger>
+                      <SelectContent>
+                        {joList.map((jo: { id: string; joNumber: string }) => (
+                          <SelectItem key={jo.id} value={jo.id}>{jo.joNumber}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="flex items-end">
+                  <Button onClick={handleGenerateRealQR} className="w-full dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+                    <QrCodeIcon className="mr-2 h-4 w-4" />
+                    Generate QR
+                  </Button>
+                </div>
               </div>
+
               <QRCodeGenerator
                 value={qrValue}
                 onChange={setQRValue}
@@ -78,11 +179,26 @@ export default function QRGeneratorPage() {
                 showPrint
               />
               <div className="space-y-2">
-                <p className="text-sm font-medium">Format Data QR:</p>
+                <p className="text-sm font-medium">Format Data QR (JSON):</p>
                 <pre className="p-3 bg-muted rounded-lg text-xs overflow-auto">
-                  {qrValue || '{"type": "MATERIAL_LOT", "lotId": "...", "sku": "...", "quantity": ...}'}
+                  {qrValue || '{"type": "MATERIAL_LOT|EMPLOYEE|JOB_ORDER", "id": "uuid", "code": "...", "name": "..."}'}
                 </pre>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Sample (Demo)</CardTitle>
+              <CardDescription>Sample untuk testing — bukan dari database</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleGenerateFromForm("lot")}>
+                  Generate Sample Lot
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Gunakan card di atas untuk data real. Sample hanya untuk testing format.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -97,7 +213,7 @@ export default function QRGeneratorPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
-                <Button onClick={() => handleGenerateFromForm("sku")} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+                <Button onClick={() => handleGenerateFromForm("sku")} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
                   Generate Sample SKU
                 </Button>
               </div>

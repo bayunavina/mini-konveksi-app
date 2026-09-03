@@ -3,18 +3,20 @@
 import { useState } from "react"
 import Link from "next/link"
 import { 
+  ArrowPathIcon,
   PlusIcon,
   EyeIcon,
-  TrashIcon,
   PauseIcon,
   PlayIcon,
-  ArrowPathIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { 
   Table, 
   TableBody, 
@@ -40,10 +42,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
+import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
 import { 
   JOB_ORDER_STATUS_LABELS, 
@@ -62,6 +72,7 @@ export default function ProduksiPage() {
   const [syncing, setSyncing] = useState(false)
   
   const { user } = useSessionWithRole()
+  const { formatCurrency } = useCurrency()
   const isSuperadmin = user?.email === SUPERADMIN_EMAIL
   
   const { data: response, loading, refetch } = useFetch<{
@@ -146,12 +157,12 @@ export default function ProduksiPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-6 pt-4">
+    <div className="page-container p-3 md:p-6 pt-4">
       <PageHeader
         title="Produksi"
         description="Kelola job order dan progres produksi"
         actions={
-          <Button asChild className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+          <Button asChild className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
             <Link href="/dashboard/produksi/new">
               <PlusIcon className="mr-2 h-4 w-4" />
               Job Order Baru
@@ -162,10 +173,11 @@ export default function ProduksiPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Daftar Job Order</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <ArrowPathIcon className="mr-2 h-4 w-4" />
                 Refresh
               </Button>
               <Button 
@@ -175,20 +187,10 @@ export default function ProduksiPage() {
                 disabled={syncing}
                 className="text-blue-600 hover:text-blue-700"
               >
-                <ArrowPathIcon className={`mr-2 h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                {syncing ? <Spinner data-icon="inline-start" /> : <ArrowPathIcon className="mr-2 h-4 w-4" />}
                 {syncing ? "Syncing..." : "Sync Data"}
               </Button>
-              {isSuperadmin && (
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  className="text-white"
-                  onClick={() => setShowResetDialog(true)}
-                >
-                  <TrashIcon className="mr-2 h-4 w-4" />
-                  Reset Data
-                </Button>
-              )}
+              <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
               <ExportPrint
                 columns={[
                   { key: "joNumber", label: "Nomor JO" },
@@ -198,6 +200,8 @@ export default function ProduksiPage() {
                   { key: "employeeName", label: "Karyawan" },
                   { key: "targetQty", label: "Target" },
                   { key: "completedQty", label: "Selesai" },
+                  { key: "hppEstimated", label: "HPP Est" },
+                  { key: "hppPerPcs", label: "HPP/Pcs" },
                   { key: "status", label: "Status" },
                 ]}
                 data={filteredJobOrders.map(jo => ({
@@ -206,28 +210,53 @@ export default function ProduksiPage() {
                   productName: jo.product?.name || "-",
                   productSku: jo.product?.sku || "-",
                   employeeName: jo.employee?.name || "-",
+                  hppEstimated: formatCurrency(jo.hppEstimated || 0),
+                  hppPerPcs: formatCurrency(jo.hppPerPcs || 0),
                   status: JOB_ORDER_STATUS_LABELS[jo.status as JobOrderStatus] || jo.status,
                 }))}
                 title="Daftar Job Order Produksi"
                 filename="job-order-produksi"
               />
+              {isSuperadmin && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" title="Aksi lainnya" className="px-2 sm:px-3">
+                      <EllipsisVerticalIcon className="h-4 w-4" />
+                      <span className="sr-only">Aksi lainnya</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      Superadmin
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setShowResetDialog(true)}
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    >
+                      <TrashIcon className="mr-2 h-4 w-4" />
+                      Reset Data
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
             <Input
               type="search"
               placeholder="Cari nomor JO, SKU, atau karyawan..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:max-w-sm"
+              className="h-10 w-full sm:max-w-sm"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="data-[size=default]:h-10 w-full sm:w-[170px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="ALL">Semua Status</SelectItem>
                 {Object.entries(JOB_ORDER_STATUS_LABELS).map(([value, label]) => (
                   <SelectItem key={value} value={value}>{label}</SelectItem>
@@ -255,6 +284,7 @@ export default function ProduksiPage() {
                   <TableHead>Produk / SKU</TableHead>
                   <TableHead>Nama Karyawan</TableHead>
                   <TableHead>Target / Selesai</TableHead>
+                  <TableHead>HPP Est</TableHead>
                   <TableHead>Progress</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-center">Aksi</TableHead>
@@ -282,6 +312,12 @@ export default function ProduksiPage() {
                       {(jo.acceptedQty ?? jo.completedQty)} / {jo.targetQty}
                     </TableCell>
                     <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-amber-700">{jo.hppEstimated ? formatCurrency(jo.hppEstimated) : "-"}</span>
+                        <span className="text-xs text-muted-foreground">{jo.hppPerPcs ? `${formatCurrency(jo.hppPerPcs)}/pcs` : "-"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="w-[100px] flex items-center gap-2">
                         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                           <div 
@@ -293,7 +329,7 @@ export default function ProduksiPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={JOB_ORDER_STATUS_COLORS[jo.status as JobOrderStatus] || "bg-gray-100 text-gray-800"}>
+                      <Badge className={`${JOB_ORDER_STATUS_COLORS[jo.status as JobOrderStatus] || "bg-gray-100 text-gray-800"}`}>
                         {JOB_ORDER_STATUS_LABELS[jo.status as JobOrderStatus] || jo.status}
                       </Badge>
                     </TableCell>

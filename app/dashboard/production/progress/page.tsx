@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Dialog,
   DialogContent,
@@ -16,9 +17,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/shared"
-import { ArrowLeftIcon, ArrowPathIcon, CubeIcon, CheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, CubeIcon, CheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 
 interface Assignment {
@@ -261,21 +263,19 @@ export default function EmployeeProgressPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Qty Selesai *</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder={`Max: ${selectedAssignment.targetQty - (selectedAssignment.completedQty + selectedAssignment.acceptedQty)}`}
                   value={formData.qtyCompleted}
-                  onChange={(e) => setFormData({ ...formData, qtyCompleted: e.target.value })}
+                  onValueChange={(v) => setFormData({ ...formData, qtyCompleted: v })}
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Qty Reject (QC)</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder="0"
                   value={formData.qtyRejected}
-                  onChange={(e) => setFormData({ ...formData, qtyRejected: e.target.value })}
+                  onValueChange={(v) => setFormData({ ...formData, qtyRejected: v })}
                 />
                 <p className="text-xs text-muted-foreground">
                   Qty yang di-reject oleh QC (tidak dihitung untuk gaji)
@@ -311,7 +311,7 @@ export default function EmployeeProgressPage() {
               Batal
             </Button>
             <Button onClick={handleUpdateProgress} disabled={!formData.qtyCompleted || submitting}>
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <CheckIcon className="mr-2 h-4 w-4" />}
+              {submitting ? <Spinner data-icon="inline-start" /> : <CheckIcon className="mr-2 h-4 w-4" />}
               Update
             </Button>
           </DialogFooter>

@@ -208,7 +208,7 @@ export default function FinishedTransferPage() {
                     <TableCell>{getWarehouseName(transfer.toWarehouseId)}</TableCell>
                     <TableCell>{formatDate(transfer.createdAt)}</TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[transfer.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[transfer.status] || transfer.status}
                       </Badge>
                     </TableCell>
@@ -264,9 +264,9 @@ export default function FinishedTransferPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <Badge className={STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}>
-                  {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
-                </Badge>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
+                    {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
+                  </Badge>
               </div>
               {selectedTransfer.notes && (
                 <div>

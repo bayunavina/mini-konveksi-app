@@ -26,9 +26,12 @@ export async function GET(request: NextRequest) {
 
     if (result.length > 0) {
       const role = result[0].role || "KARYAWAN"
+      const isSuperAdmin = role === "SUPERADMIN"
+      const isAdmin = role === "ADMIN" || isSuperAdmin
       return NextResponse.json({
         role,
-        isAdmin: role === "ADMIN",
+        isAdmin,
+        isSuperAdmin,
         employeeId: result[0].id,
       })
     }
@@ -47,14 +50,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         role: "ADMIN",
         isAdmin: true,
+        isSuperAdmin: false,
         employeeId: null,
         note: "User found but not in employees table - defaulting to ADMIN",
       })
     }
 
-    return NextResponse.json({ role: "GUEST", isAdmin: false })
+    return NextResponse.json({ role: "GUEST", isAdmin: false, isSuperAdmin: false })
   } catch (error) {
     console.error("Error fetching user role:", error)
-    return NextResponse.json({ role: "GUEST", isAdmin: false })
+    return NextResponse.json({ role: "GUEST", isAdmin: false, isSuperAdmin: false })
   }
 }

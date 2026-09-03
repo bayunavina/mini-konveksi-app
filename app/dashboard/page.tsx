@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { Loader2 } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function DashboardPage() {
   const { user, isLoading } = useSessionWithRole()
@@ -12,6 +12,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isLoading && user) {
       switch (user.role) {
+        case "SUPERADMIN":
         case "ADMIN":
           router.replace("/dashboard/admin")
           break
@@ -25,7 +26,7 @@ export default function DashboardPage() {
           router.replace("/dashboard/karyawan")
           break
         default:
-          router.replace("/dashboard/karyawan")
+          router.replace("/sign-in")
       }
     }
   }, [user, isLoading, router])
@@ -33,14 +34,14 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <Spinner className="size-8 text-primary" />
     </div>
   )
 }

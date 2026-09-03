@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -34,11 +36,12 @@ import {
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { WrenchScrewdriverIcon, Cog6ToothIcon, EyeIcon, PencilIcon, TrashIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
+import { WrenchScrewdriverIcon, Cog6ToothIcon, EyeIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
 import { formatDate, formatDateLong } from "@/lib/utils"
 import { useCurrency } from "@/hooks/useCurrency"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 
 interface Asset {
   id: string
@@ -271,12 +274,12 @@ export default function AssetsPage() {
         description="Kelola aset dan inventaris"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" onClick={() => refetch()}>
               Refresh
             </Button>
               <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+                  <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
                     <WrenchScrewdriverIcon className="mr-2 h-4 w-4" />
                     Tambah Asset
                   </Button>
@@ -331,20 +334,18 @@ export default function AssetsPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Tanggal Pembelian</Label>
-                      <Input
-                        type="date"
-                        lang="id"
+                      <DatePicker
                         value={formData.purchaseDate}
-                        onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                        onChange={(date) => setFormData({ ...formData, purchaseDate: date })}
+                        placeholder="Pilih tanggal pembelian"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label>Nilai ({currencySymbol})</Label>
-                      <Input
-                        type="number"
+                      <FormattedNumberInput
                         placeholder="0"
                         value={formData.purchaseValue}
-                        onChange={(e) => setFormData({ ...formData, purchaseValue: e.target.value })}
+                        onValueChange={(v) => setFormData({ ...formData, purchaseValue: v })}
                       />
                     </div>
                   </div>
@@ -354,7 +355,7 @@ export default function AssetsPage() {
                     Batal
                   </Button>
                   <Button onClick={handleCreate} disabled={!formData.code || !formData.name || submitting}>
-                    {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                    {submitting && <Spinner data-icon="inline-start" />}
                     Simpan
                   </Button>
                 </DialogFooter>
@@ -514,7 +515,7 @@ export default function AssetsPage() {
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[asset.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[asset.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[asset.status] || asset.status}
                       </Badge>
                     </TableCell>
@@ -589,7 +590,7 @@ export default function AssetsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={STATUS_COLORS[selectedAsset.status] || "bg-gray-100"}>
+                  <Badge className={`${STATUS_COLORS[selectedAsset.status] || "bg-gray-100"}`}>
                     {STATUS_LABELS[selectedAsset.status] || selectedAsset.status}
                   </Badge>
                 </div>
@@ -686,20 +687,18 @@ export default function AssetsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Tanggal Pembelian</Label>
-                <Input
-                  type="date"
-                  lang="id"
+                <DatePicker
                   value={editFormData.purchaseDate}
-                  onChange={(e) => setEditFormData({ ...editFormData, purchaseDate: e.target.value })}
+                  onChange={(date) => setEditFormData({ ...editFormData, purchaseDate: date })}
+                  placeholder="Pilih tanggal pembelian"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Nilai ({currencySymbol})</Label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder="0"
                   value={editFormData.purchaseValue}
-                  onChange={(e) => setEditFormData({ ...editFormData, purchaseValue: e.target.value })}
+                  onValueChange={(v) => setEditFormData({ ...editFormData, purchaseValue: v })}
                 />
               </div>
             </div>
@@ -709,7 +708,7 @@ export default function AssetsPage() {
               Batal
             </Button>
             <Button onClick={handleUpdate} disabled={!editFormData.code || !editFormData.name || submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan Perubahan
             </Button>
           </DialogFooter>
@@ -733,7 +732,7 @@ export default function AssetsPage() {
               Batal
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Hapus
             </Button>
           </DialogFooter>

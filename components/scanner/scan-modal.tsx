@@ -14,8 +14,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CameraScanner } from "./camera-scanner"
 import { KeyboardScanner } from "./keyboard-scanner"
-import { QrCodeIcon, CameraIcon, ArrowUpTrayIcon, PhotoIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import { QrCodeIcon, CameraIcon, ArrowUpTrayIcon, PhotoIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
+import { Spinner } from "@/components/ui/spinner"
 import { Html5Qrcode } from "html5-qrcode"
 
 interface ScanModalProps {
@@ -200,7 +201,7 @@ export function ScanModal({
                         >
                           {scanningImage ? (
                             <>
-                              <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                              <Spinner data-icon="inline-start" />
                               Memindai...
                             </>
                           ) : (

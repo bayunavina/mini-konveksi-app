@@ -1,329 +1,179 @@
-# Codeguide Starter Fullstack
+# Mini Konveksi App (ERP Konveksi)
 
-A modern web application starter template built with Next.js 15, featuring authentication, database integration, and dark mode support.
+Sistem ERP untuk manajemen produksi konveksi berbasis web. Dibangun dengan **Next.js 15 (App Router + Turbopack)**, **TypeScript**, **Drizzle ORM**, dan **PostgreSQL**.
 
 ## Tech Stack
 
 - **Framework:** [Next.js 15](https://nextjs.org/) (App Router with Turbopack)
 - **Language:** TypeScript
 - **Authentication:** [Better Auth](https://better-auth.com/)
-- **Database:** [Drizzle ORM](https://orm.drizzle.team/) with PostgreSQL
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) (New York style)
-- **Theme System:** [next-themes](https://github.com/pacocoursey/next-themes)
-- **Icons:** [Lucide React](https://lucide.dev/)
+- **Database:** [Drizzle ORM](https://orm.drizzle.team/) dengan PostgreSQL 16
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) + Tailwind CSS v4
+- **Data Fetching:** TanStack Query + React Table
+- **Charting:** Recharts
+- **QR/Barcode:** html5-qrcode, @zxing/browser, bwip-js, react-zxing
+- **PDF/Excel:** jsPDF, xlsx
+- **Notification:** Email (Nodemailer/SMTP) + Firebase FCM (push)
+- **Icons:** Lucide React, Tabler Icons, Heroicons
 
-## Prerequisites
+## Fitur Utama
 
-Before you begin, ensure you have the following:
-- Node.js 18+ installed
-- Docker and Docker Compose (for database setup)
-- Generated project documents from [CodeGuide](https://codeguide.dev/) for best development experience
+- 🔐 **Autentikasi & Peran (Role-Based):** ADMIN, OPERATOR, GUDANG, QC, KEUANGAN, MANAGER, KARYAWAN, VIEWER
+- 📦 **Inventory:** Master SKU, bahan baku (material lots), produk jadi, barang reject, stok per gudang
+- 🏭 **Produksi:** Job Order (JO), penugasan produksi, progress, log produksi
+- ✅ **Quality Control:** Laporan QC, input reject, scan hasil produksi
+- 🔄 **Transfer Barang:** Transfer antar gudang (incoming/outgoing/finished)
+- 💰 **Finance:** Transaksi kasbon (advances), laporan keuangan, pembayaran
+- 👥 **HR:** Karyawan, tim, upah per unit, komponen gaji, slip gaji
+- 🏷️ **Aset:** Pencatatan aset & pemeliharaan mesin
+- 📊 **Dashboard per Role:** Admin, Gudang, QC, Karyawan
+- 📄 **QR Generator & Scanner**
+- 🔔 **Notifikasi:** Email (SMTP Gmail) & push notification (Firebase)
+- 🌙 **Dark mode** dengan next-themes
 
-## Getting Started
+## Prasyarat
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd codeguide-starter-fullstack
-   ```
+- Node.js 18+
+- Docker & Docker Compose (untuk database PostgreSQL)
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
+## Quick Start (Development)
 
-3. **Environment Variables Setup**
-   - Copy the `.env.example` file to `.env`:
-     ```bash
-     cp .env.example .env
-     ```
-   - The default values work with Docker setup, modify as needed
+```bash
+# 1. Install dependencies
+npm install
 
-4. **Start the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   ```
+# 2. Setup environment variables
+cp .env.example .env
 
-5. **Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.**
+# 3. Start PostgreSQL (port 5432)
+npm run db:up
 
-## Configuration
+# 4. Push database schema
+npm run db:push
 
-### Option 1: Docker Setup (Recommended)
-1. **Start PostgreSQL with Docker:**
-   ```bash
-   npm run db:up
-   ```
-   This starts PostgreSQL in a Docker container with default credentials.
+# 5. Seed Superadmin
+npm run seed:admin
 
-2. **Push database schema:**
-   ```bash
-   npm run db:push
-   ```
+# 6. Start development server
+npm run dev
+```
 
-### Option 2: Local Database Setup
-1. Create a PostgreSQL database locally
-2. Update your environment variables in `.env`:
-   ```env
-   DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-   POSTGRES_DB=your_database_name
-   POSTGRES_USER=your_username
-   POSTGRES_PASSWORD=your_password
-   ```
-3. Run database migrations:
-   ```bash
-   npm run db:push
-   ```
+Buka **http://localhost:3000**
+
+### Akun Default (Superadmin)
+
+```
+Email:    erpkonveksi@gmail.com
+Password: erpkonveksi123!
+```
+
+> Akun karyawan/gudang/QC dibuat melalui menu **Dashboard → Settings → Users** atau di-seed via `scripts/seed.ts`.
 
 ## Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Salin `.env.example` menjadi `.env`. Konfigurasi lengkap:
 
-```env
-# Database Configuration (defaults work with Docker)
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/postgres
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
+| Variabel | Deskripsi |
+| --- | --- |
+| `DATABASE_URL` | Koneksi PostgreSQL (default dev: port `5433` saja, `db:up` memakai `5432` sesuai docker-compose) |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Kredensial database dev |
+| `BETTER_AUTH_SECRET` | Secret untuk Better Auth |
+| `BETTER_AUTH_URL` / `NEXT_PUBLIC_BETTER_AUTH_URL` | URL base aplikasi |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | Email service (Gmail App Password) |
+| `FIREBASE_SERVICE_ACCOUNT` | Service account JSON untuk push notification |
 
-# Authentication
-BETTER_AUTH_SECRET=your_secret_key_here
-BETTER_AUTH_URL=http://localhost:3000
-NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-```
+> **Catatan:** `docker-compose.yaml` memetakan container `postgres` ke port **5432** (kredensial `konveksi_user`/`konveksi_password`/`konveksi_db`). Untuk mode development gunakan service `postgres-dev` (port **5433**) yang memakai variabel dari `.env`.
 
-## Features
+## Script Tersedia
 
-- 🔐 Authentication with Better Auth (email/password)
-- 🗄️ PostgreSQL Database with Drizzle ORM
-- 🎨 40+ shadcn/ui components (New York style)
-- 🌙 Dark mode with system preference detection
-- 🚀 App Router with Server Components and Turbopack
-- 📱 Responsive design with TailwindCSS v4
-- 🎯 Type-safe database operations
-- 🔒 Modern authentication patterns
-- 🐳 Full Docker support with multi-stage builds
-- 🚀 Production-ready deployment configuration
-
-## Project Structure
-
-```
-codeguide-starter-fullstack/
-├── app/                        # Next.js app router pages
-│   ├── globals.css            # Global styles with dark mode
-│   ├── layout.tsx             # Root layout with providers
-│   └── page.tsx               # Main page
-├── components/                # React components
-│   └── ui/                    # shadcn/ui components (40+)
-├── db/                        # Database configuration
-│   ├── index.ts              # Database connection
-│   └── schema/               # Database schemas
-├── docker/                    # Docker configuration
-│   └── postgres/             # PostgreSQL initialization
-├── hooks/                     # Custom React hooks
-├── lib/                       # Utility functions
-│   ├── auth.ts               # Better Auth configuration
-│   └── utils.ts              # General utilities
-├── auth-schema.ts            # Authentication schema
-├── docker-compose.yml        # Docker services configuration
-├── Dockerfile                # Application container definition
-├── drizzle.config.ts         # Drizzle configuration
-└── components.json           # shadcn/ui configuration
-```
-
-## Database Integration
-
-This starter includes modern database integration:
-
-- **Drizzle ORM** for type-safe database operations
-- **PostgreSQL** as the database provider
-- **Better Auth** integration with Drizzle adapter
-- **Database migrations** with Drizzle Kit
-
-## Development Commands
-
-### Application
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build for production with Turbopack
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
+### Aplikasi
+| Script | Fungsi |
+| --- | --- |
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Build produksi |
+| `npm run start` | Start production server |
+| `npm run lint` | Jalankan ESLint |
 
 ### Database
-- `npm run db:up` - Start PostgreSQL in Docker
-- `npm run db:down` - Stop PostgreSQL container
-- `npm run db:dev` - Start development PostgreSQL (port 5433)
-- `npm run db:dev-down` - Stop development PostgreSQL
-- `npm run db:push` - Push schema changes to database
-- `npm run db:generate` - Generate Drizzle migration files
-- `npm run db:studio` - Open Drizzle Studio (database GUI)
-- `npm run db:reset` - Reset database (drop all tables and recreate)
-
-### Styling with shadcn/ui
-- Pre-configured with 40+ shadcn/ui components in New York style
-- Components are fully customizable and use CSS variables for theming
-- Automatic dark mode support with next-themes integration
-- Add new components: `npx shadcn@latest add [component-name]`
+| Script | Fungsi |
+| --- | --- |
+| `npm run db:up` | Start PostgreSQL (port 5432) |
+| `npm run db:down` | Stop PostgreSQL |
+| `npm run db:dev` | Start PostgreSQL dev (port 5433) |
+| `npm run db:dev-down` | Stop PostgreSQL dev |
+| `npm run db:push` | Push schema ke database |
+| `npm run db:generate` | Generate migration |
+| `npm run db:migrate` | Jalankan migration |
+| `npm run db:studio` | Buka Drizzle Studio |
+| `npm run db:reset` | Drop & push ulang schema |
+| `npm run seed:admin` | Seed superadmin |
 
 ### Docker
-- `npm run docker:build` - Build application Docker image
-- `npm run docker:up` - Start full application stack (app + database)
-- `npm run docker:down` - Stop all containers
-- `npm run docker:logs` - View container logs
-- `npm run docker:clean` - Stop containers and clean up volumes
+| Script | Fungsi |
+| --- | --- |
+| `npm run docker:build` | Build image app |
+| `npm run docker:up` | Start full stack (app + db) |
+| `npm run docker:down` | Stop semua container |
+| `npm run docker:logs` | Lihat logs container |
+| `npm run deploy` | Rebuild & deploy (down → build --no-cache → up) |
 
-## Docker Development
+## Struktur Proyek
 
-### Quick Start with Docker
+```
+mini-konveksi-app/
+├── app/                        # Next.js App Router
+│   ├── api/                    # API routes (admin, produksi, qc, dll)
+│   ├── dashboard/              # Halaman dashboard per role & modul
+│   ├── overview/               # Halaman overview (finance)
+│   ├── maintenance/            # Maintenance mode page
+│   ├── sign-in/  sign-up/      # Autentikasi
+│   ├── layout.tsx              # Root layout
+│   └── page.tsx                # Landing page
+├── components/                 # React components (UI & fitur)
+├── db/                         # Drizzle config & schema
+│   └── schema/                 # auth.ts, app.ts, index.ts
+├── drizzle/                    # File migrasi
+├── hooks/                      # Custom hooks
+├── lib/                        # Utility: auth, email, firebase, dll
+├── public/                     # Aset statis
+├── scripts/                    # Seed scripts (admin, user, dll)
+├── docker-compose.yaml         # postgres, postgres-dev, app
+├── Dockerfile                  # Container app
+├── middleware.ts               # Route protection & maintenance mode
+└── drizzle.config.ts           # Konfigurasi Drizzle Kit
+```
+
+## Mode Maintenance & Deploy
+
+- **Maintenance mode:** dikontrol via cookie `maintenance=true` (lihat `middleware.ts`). Halaman admin settings tetap bisa diakses saat maintenance.
+- **Production deploy:** `npm run deploy` atau `npm run docker:up` setelah mengisi `.env` dengan nilai produksi.
+
+## Deployment (Docker Compose)
+
 ```bash
-# Start the entire stack (recommended for new users)
-npm run docker:up
-
-# View logs
-npm run docker:logs
-
-# Stop everything
-npm run docker:down
+git clone <your-repo>
+cd mini-konveksi-app
+cp .env.example .env
+# isi DATABASE_URL, BETTER_AUTH_SECRET, dll dengan nilai produksi
+npm run deploy
 ```
 
-### Development Workflow
-```bash
-# Option 1: Database only (develop app locally)
-npm run db:up          # Start PostgreSQL
-npm run dev            # Start Next.js development server
+Akses di **http://localhost:3000**. Kredensial database produksi (container `postgres`) menggunakan `konveksi_user`/`konveksi_password` dan dapat diubah di `docker-compose.yaml`.
 
-# Option 2: Full Docker stack
-npm run docker:up      # Start both app and database
-```
+## Dokumentasi
 
-### Docker Services
+Dokumen desain & referensi tersedia di folder `documentation/`:
 
-The `docker-compose.yml` includes:
+- `app_flow_document.md` — Alur aplikasi
+- `app_flowchart.md` — Flowchart
+- `backend_structure_document.md` — Struktur backend
+- `frontend_guidelines_document.md` — Panduan frontend
+- `project_requirements_document.md` — Requirement proyek
+- `security_guideline_document.md` — Panduan keamanan
+- `tech_stack_document.md` — Teknologi yang dipakai
 
-- **postgres**: Main PostgreSQL database (port 5432)
-- **postgres-dev**: Development database (port 5433) - use `--profile dev`
-- **app**: Next.js application container (port 3000)
-
-### Docker Profiles
-
-```bash
-# Start development database on port 5433
-docker-compose --profile dev up postgres-dev -d
-
-# Or use the npm script
-npm run db:dev
-```
-
-## Deployment
-
-### Production Deployment
-
-#### Option 1: Docker Compose (VPS/Server)
-
-1. **Clone and setup on your server:**
-   ```bash
-   git clone <your-repo>
-   cd codeguide-starter-fullstack
-   cp .env.example .env
-   ```
-
-2. **Configure environment variables:**
-   ```bash
-   # Edit .env with production values
-   DATABASE_URL=postgresql://postgres:your_secure_password@postgres:5432/postgres
-   POSTGRES_DB=postgres
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=your_secure_password
-   BETTER_AUTH_SECRET=your-very-secure-secret-key
-   BETTER_AUTH_URL=https://yourdomain.com
-   NEXT_PUBLIC_BETTER_AUTH_URL=https://yourdomain.com
-   ```
-
-3. **Deploy:**
-   ```bash
-   npm run docker:up
-   ```
-
-#### Option 2: Container Registry (AWS/GCP/Azure)
-
-1. **Build and push image:**
-   ```bash
-   # Build the image
-   docker build -t your-registry/codeguide-starter-fullstack:latest .
-   
-   # Push to registry
-   docker push your-registry/codeguide-starter-fullstack:latest
-   ```
-
-2. **Deploy using your cloud provider's container service**
-
-#### Option 3: Vercel + External Database
-
-1. **Deploy to Vercel:**
-   ```bash
-   npm i -g vercel
-   vercel
-   ```
-
-2. **Add environment variables in Vercel dashboard:**
-   - `DATABASE_URL`: Your managed PostgreSQL connection string
-   - `BETTER_AUTH_SECRET`: Generate a secure secret
-   - `BETTER_AUTH_URL`: Your Vercel deployment URL
-
-3. **Setup database:**
-   ```bash
-   # Push schema to your managed database
-   npm run db:push
-   ```
-
-### Environment Variables for Production
-
-```env
-# Required for production
-DATABASE_URL=postgresql://user:password@host:port/database
-BETTER_AUTH_SECRET=generate-a-very-secure-32-character-key
-BETTER_AUTH_URL=https://yourdomain.com
-
-# Optional optimizations
-NODE_ENV=production
-```
-
-### Production Considerations
-
-- **Database**: Use managed PostgreSQL (AWS RDS, Google Cloud SQL, etc.)
-- **Security**: Generate strong secrets, use HTTPS
-- **Performance**: Enable Next.js output: 'standalone' for smaller containers
-- **Monitoring**: Add logging and health checks
-- **Backup**: Regular database backups
-- **SSL**: Terminate SSL at load balancer or reverse proxy
-
-### Health Checks
-
-The application includes basic health checks. You can extend them:
-
-```dockerfile
-# In Dockerfile, add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
-```
-
-## AI Coding Agent Integration
-
-This starter is optimized for AI coding agents:
-
-- **Clear file structure** and naming conventions
-- **TypeScript integration** with proper type definitions
-- **Modern authentication** patterns
-- **Database schema** examples
+Panduan menjalankan aplikasi: [Run-app.md](Run-app.md)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-# codeguide-starter-fullstack
+Kontribusi dipersilakan! Silakan submit Pull Request.

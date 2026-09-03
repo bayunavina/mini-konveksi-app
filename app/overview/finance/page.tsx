@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,6 +52,13 @@ interface Transaction {
   createdAt?: string
 }
 
+interface CostCategory {
+  id: string
+  code: string
+  name: string
+  type: "DIRECT" | "INDIRECT"
+}
+
 const TYPE_LABELS: Record<string, string> = {
   INCOME: "Pemasukan",
   EXPENSE: "Pengeluaran",
@@ -80,26 +87,38 @@ export default function FinancePage() {
   const { formatCurrency } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 })
+  const [summary, setSummary] = useState({ income: 0, expense: 0, hpp: 0, bop: 0, grossProfit: 0, netProfit: 0, balance: 0 })
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [resetting, setResetting] = useState(false)
 
   const { user } = useSessionWithRole()
   const { data: transactions, loading, refetch } = useFetch<Transaction[]>("/api/transactions")
+  const { data: costCategories } = useFetch<CostCategory[]>("/api/cost-categories?all=true")
 
   const isSuperadmin = user?.email === SUPERADMIN_EMAIL
 
+  const directSet = useMemo(
+    () => new Set((costCategories || []).filter(c => c.type === "DIRECT").map(c => c.code)),
+    [costCategories]
+  )
+  const getCategoryLabel = (code: string) => {
+    const found = costCategories?.find(c => c.code === code)
+    if (found) return `${found.code} - ${found.name}`
+    return CATEGORY_LABELS[code] || code
+  }
+
   useEffect(() => {
     if (transactions) {
-      const income = transactions
-        .filter((t) => t.type === "INCOME")
-        .reduce((acc, t) => acc + t.amount, 0)
-      const expense = transactions
-        .filter((t) => t.type === "EXPENSE")
-        .reduce((acc, t) => acc + t.amount, 0)
-      setSummary({ income, expense, balance: income - expense })
+      const income = transactions.filter((t) => t.type === "INCOME").reduce((acc, t) => acc + t.amount, 0)
+      const expense = transactions.filter((t) => t.type === "EXPENSE").reduce((acc, t) => acc + t.amount, 0)
+      // HPP: hanya kategori DIRECT dari cost_categories API (source of truth)
+      const hpp = transactions.filter((t) => t.type === "EXPENSE" && directSet.has(t.category)).reduce((acc, t) => acc + t.amount, 0)
+      const bop = expense - hpp
+      const grossProfit = income - hpp
+      const netProfit = income - expense
+      setSummary({ income, expense, hpp, bop, grossProfit, netProfit, balance: netProfit })
     }
-  }, [transactions])
+  }, [transactions, costCategories])
 
   const filtered = (transactions || []).filter(
     (t) =>
@@ -184,7 +203,7 @@ export default function FinancePage() {
                 Reset Data
               </Button>
             )}
-            <Button asChild className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+            <Button asChild className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <Link href="/overview/finance/transactions">
                 <BanknotesIcon className="mr-2 h-4 w-4" />
                 Transaksi Baru
@@ -211,6 +230,64 @@ export default function FinancePage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Laba Kotor</CardTitle>
+            <BanknotesIcon className="h-4 w-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${summary.grossProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+              {loading ? "-" : formatCurrency(summary.grossProfit)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pendapatan - HPP ({loading ? "-" : formatCurrency(summary.hpp)}) • {summary.income>0 ? Math.round((summary.grossProfit/summary.income)*100) : 0}% margin
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
+            <BanknotesIcon className="h-4 w-4 text-[var(--chart-blue)]" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${summary.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {loading ? "-" : formatCurrency(summary.netProfit)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Kotor - BOP ({loading ? "-" : formatCurrency(summary.bop)}) • {summary.income>0 ? Math.round((summary.netProfit/summary.income)*100) : 0}% margin
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">HPP</CardTitle>
+            <ArrowTrendingDownIcon className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">
+              {loading ? "-" : formatCurrency(summary.hpp)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {(costCategories || []).filter(c => c.type === "DIRECT").length} kategori DIRECT
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">BOP</CardTitle>
+            <ArrowTrendingDownIcon className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {loading ? "-" : formatCurrency(summary.bop)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {(costCategories || []).filter(c => c.type === "INDIRECT").length} kategori INDIRECT
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
             <ArrowTrendingDownIcon className="h-4 w-4 text-red-600" />
           </CardHeader>
@@ -219,21 +296,7 @@ export default function FinancePage() {
               {loading ? "-" : formatCurrency(summary.expense)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {loading ? "-" : transactions?.filter((t) => t.type === "EXPENSE").length} transaksi
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-            <BanknotesIcon className="h-4 w-4 text-[var(--chart-blue)]" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${summary.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
-              {loading ? "-" : formatCurrency(summary.balance)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {loading ? "-" : transactions?.length || 0} total transaksi
+              HPP + BOP • {loading ? "-" : transactions?.filter((t) => t.type === "EXPENSE").length} transaksi
             </p>
           </CardContent>
         </Card>
@@ -292,7 +355,7 @@ export default function FinancePage() {
 data={filtered.map((t) => ({
                   date: formatDate(t.date),
                   type: TYPE_LABELS[t.type] || t.type,
-                category: CATEGORY_LABELS[t.category] || t.category,
+                category: getCategoryLabel(t.category),
                 description: t.description || "-",
                 reference: t.reference || "-",
                 amount: `${t.type === "INCOME" ? "+" : "-"} ${formatCurrency(t.amount)}`,
@@ -371,7 +434,9 @@ data={filtered.map((t) => ({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {CATEGORY_LABELS[transaction.category] || transaction.category}
+                      <Badge variant="outline" className={transaction.type==="EXPENSE" ? (directSet.has(transaction.category) ? "border-amber-300 bg-amber-50 text-amber-800" : "border-orange-300 bg-orange-50 text-orange-800") : ""}>
+                        {getCategoryLabel(transaction.category)}
+                      </Badge>
                     </TableCell>
                     <TableCell>{transaction.description || "-"}</TableCell>
                     <TableCell className="font-mono text-xs">{transaction.reference || "-"}</TableCell>

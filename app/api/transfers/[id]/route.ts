@@ -61,16 +61,24 @@ export async function PUT(
       const transfer = currentTransfer[0]
 
       const itemsWithProductId = items.filter(item => item.productId && item.quantity)
+      const itemsWithoutProductId = items.filter(item => !item.productId)
       
       if (itemsWithProductId.length === 0 && items.length > 0) {
         console.log(`[PUT /transfers/${id}] Info: Items exist but no valid productId, skipping inventory updates`)
       }
+      if (itemsWithoutProductId.length > 0) {
+        console.log(`[PUT /transfers/${id}] Warning: ${itemsWithoutProductId.length} items without productId will be skipped (no stock movement)`)
+      }
+
+      const failedItems: Array<{ productId: string | null; skuCode: string | null; quantity: number; reason: string }> = []
+      const succeededItems: string[] = []
 
       for (const item of itemsWithProductId) {
         const productId = item.productId!
         const quantity = item.quantity!
 
         try {
+          // Validate source stock before any mutation for this item
           if (transfer.fromWarehouseId) {
             const sourceStock = await db
               .select()
@@ -81,7 +89,13 @@ export async function PUT(
               ))
 
             if (sourceStock.length === 0 || (sourceStock[0].quantity ?? 0) < quantity) {
-              console.log(`[PUT /transfers/${id}] Skipping OUT: insufficient stock for product ${productId}`)
+              console.log(`[PUT /transfers/${id}] Failed: insufficient stock for product ${productId}`)
+              failedItems.push({
+                productId,
+                skuCode: item.skuCode || null,
+                quantity,
+                reason: `Insufficient stock: have ${sourceStock[0]?.quantity ?? 0}, need ${quantity}`,
+              })
               continue
             }
 
@@ -131,9 +145,46 @@ export async function PUT(
               notes: `Transfer ${transfer.transferNumber} - IN`,
             })
           }
+
+          succeededItems.push(productId)
         } catch (invError) {
           console.error(`[PUT /transfers/${id}] Inventory error for product ${productId}:`, invError)
+          failedItems.push({
+            productId,
+            skuCode: item.skuCode || null,
+            quantity,
+            reason: String(invError),
+          })
         }
+      }
+
+      // Handle productId-less items as failed (no stock movement possible)
+      for (const item of itemsWithoutProductId) {
+        failedItems.push({
+          productId: null,
+          skuCode: item.skuCode || null,
+          quantity: item.quantity || 0,
+          reason: "Missing productId - no stock movement possible",
+        })
+      }
+
+      // If any items failed, revert status to IN_PROGRESS and inform caller
+      if (failedItems.length > 0) {
+        const hasPartialSuccess = succeededItems.length > 0
+        const newStatus = hasPartialSuccess ? "IN_PROGRESS" : "PENDING"
+        await db.update(transfers)
+          .set({ status: newStatus, updatedAt: new Date() })
+          .where(eq(transfers.id, id))
+        
+        console.log(`[PUT /transfers/${id}] Partial completion: ${succeededItems.length} succeeded, ${failedItems.length} failed -> status ${newStatus}`)
+
+        return NextResponse.json({
+          ...updated[0],
+          status: newStatus,
+          warning: `Transfer partially completed: ${failedItems.length} item(s) failed`,
+          failedItems,
+          succeededCount: succeededItems.length,
+        })
       }
     }
 

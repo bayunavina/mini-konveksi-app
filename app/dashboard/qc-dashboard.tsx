@@ -52,12 +52,12 @@ interface QCReport {
 
 const statusColors: Record<string, string> = {
   ASSIGNED: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)] dark:text-[var(--chart-blue)]",
-  IN_PROGRESS: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+  IN_PROGRESS: "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground",
+  COMPLETED: "bg-success-light text-success-foreground dark:bg-success-light dark:text-success-foreground",
+  DRAFT: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
   APPROVED: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)] dark:text-[var(--chart-blue)]",
-  QC_PENDING: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  QC_PENDING: "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground",
+  PENDING: "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground",
 }
 
 const statusLabels: Record<string, string> = {
@@ -142,11 +142,11 @@ export function QCDashboard() {
   const recentReports = (qcReports || []).slice(0, 5)
 
   return (
-    <div className="flex-1 space-y-4 p-3 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="page-container p-3 md:p-6 pt-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">QC Dashboard</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight">QC Dashboard</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Welcome, {user?.name || "QC Staff"} - Quality Control Dashboard
           </p>
         </div>
@@ -158,12 +158,12 @@ export function QCDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sedang Produksi</CardTitle>
-            <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
-              <BuildingOfficeIcon className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+            <div className="p-2 rounded-lg bg-warning-light dark:bg-warning-light">
+              <BuildingOfficeIcon className="h-4 w-4 text-warning-foreground dark:text-warning-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -175,8 +175,8 @@ export function QCDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Menunggu QC</CardTitle>
-            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-              <ExclamationCircleIcon className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <div className="p-2 rounded-lg bg-warning-light dark:bg-warning-light">
+              <ExclamationCircleIcon className="h-4 w-4 text-warning-foreground dark:text-warning-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -188,8 +188,8 @@ export function QCDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hari Ini</CardTitle>
-            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-              <ClipboardDocumentCheckIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <div className="p-2 rounded-lg bg-success-light dark:bg-success-light">
+              <ClipboardDocumentCheckIcon className="h-4 w-4 text-success-foreground dark:text-success-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -201,8 +201,8 @@ export function QCDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sukses</CardTitle>
-            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-              <CheckIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <div className="p-2 rounded-lg bg-success-light dark:bg-success-light">
+              <CheckIcon className="h-4 w-4 text-success-foreground dark:text-success-foreground" />
             </div>
           </CardHeader>
           <CardContent>
@@ -214,18 +214,18 @@ export function QCDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Reject</CardTitle>
-            <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
-              <XMarkIcon className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <div className="p-2 rounded-lg bg-destructive/10 dark:bg-destructive/10">
+              <XMarkIcon className="h-4 w-4 text-destructive dark:text-destructive" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{qcLoading ? "-" : stats.totalReject}</div>
+            <div className="text-2xl font-bold text-destructive dark:text-destructive">{qcLoading ? "-" : stats.totalReject}</div>
             <p className="text-xs text-muted-foreground">Pcs reject</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -238,17 +238,17 @@ export function QCDashboard() {
           <CardContent>
             {inProgressJobs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <BuildingOfficeIcon className="h-12 w-12 mx-auto mb-2 text-yellow-500" />
+                <BuildingOfficeIcon className="h-12 w-12 mx-auto mb-2 text-warning-foreground" />
                 <p>Tidak ada job order dalam produksi</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {inProgressJobs.map((jo) => (
-                  <div key={jo.id} className="flex items-center gap-4 p-3 rounded-lg border bg-yellow-50 dark:bg-yellow-950/20">
+                  <div key={jo.id} className="flex items-center gap-4 p-3 rounded-lg border bg-warning-light dark:bg-warning-light/20">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{jo.joNumber}</span>
-                        <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                        <Badge className="bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground">
                           Produksi
                         </Badge>
                       </div>
@@ -285,17 +285,17 @@ export function QCDashboard() {
               </div>
             ) : pendingJobs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <CheckIcon className="h-12 w-12 mx-auto mb-2 text-green-500" />
+                <CheckIcon className="h-12 w-12 mx-auto mb-2 text-success-foreground" />
                 <p>Semua job order sudah di-QC!</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {pendingJobs.map((jo) => (
-                  <div key={jo.id} className="flex items-center gap-4 p-3 rounded-lg border bg-orange-50 dark:bg-orange-950/20">
+                  <div key={jo.id} className="flex items-center gap-4 p-3 rounded-lg border bg-warning-light dark:bg-warning-light/20">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{jo.joNumber}</span>
-                        <Badge className={statusColors[jo.status] || "bg-gray-100"}>
+                        <Badge className={`${statusColors[jo.status] || "bg-muted"}`}>
                           {statusLabels[jo.status] || jo.status}
                         </Badge>
                       </div>
@@ -348,11 +348,11 @@ export function QCDashboard() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{report.jobOrder?.joNumber || "-"}</span>
-                        <Badge variant="outline" className="text-green-600 bg-green-50 dark:bg-green-900/30">
+                        <Badge variant="outline" className="text-success-foreground bg-success-light dark:bg-success-light">
                           +{report.successQty}
                         </Badge>
                         {report.rejectQty > 0 && (
-                          <Badge variant="outline" className="text-red-600 bg-red-50 dark:bg-red-900/30">
+                          <Badge variant="outline" className="text-destructive bg-destructive-light dark:bg-destructive/10">
                             -{report.rejectQty}
                           </Badge>
                         )}

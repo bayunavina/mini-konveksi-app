@@ -8,10 +8,10 @@ export const TRANSFER_STATUS_LABELS: Record<TransferStatus, string> = {
 };
 
 export const TRANSFER_STATUS_COLORS: Record<TransferStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  SHIPPED: "bg-blue-100 text-blue-800",
-  RECEIVED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-gray-100 text-gray-600",
+  PENDING: "bg-warning-light text-warning-foreground",
+  SHIPPED: "bg-brand-primary/10 text-brand-primary",
+  RECEIVED: "bg-success-light text-success-foreground",
+  CANCELLED: "bg-muted text-muted-foreground",
 };
 
 export interface TransferOrder {

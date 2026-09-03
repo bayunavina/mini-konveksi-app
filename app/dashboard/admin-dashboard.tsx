@@ -113,12 +113,12 @@ interface Maintenance {
 const statusColors: Record<string, string> = {
   DRAFT: "bg-muted/50 text-muted-foreground border border-muted-foreground/20 backdrop-blur-sm",
   APPROVED: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)] border border-[var(--chart-blue)]/30 backdrop-blur-sm shadow-[0_0_10px_var(--chart-blue)] dark:shadow-[0_0_15px_var(--chart-blue)]",
-  IN_PROGRESS: "bg-yellow-500/10 text-yellow-600 border border-yellow-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(234,179,8,0.3)] dark:shadow-[0_0_15px_rgba(234,179,8,0.4)]",
-  QC_PENDING: "bg-orange-500/10 text-orange-600 border border-orange-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(249,115,22,0.3)] dark:shadow-[0_0_15px_rgba(249,115,22,0.4)]",
-  COMPLETED: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(16,185,129,0.3)] dark:shadow-[0_0_15px_rgba(16,185,129,0.4)]",
-  PENDING: "bg-yellow-500/10 text-yellow-600 border border-yellow-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(234,179,8,0.3)] dark:shadow-[0_0_15px_rgba(234,179,8,0.4)]",
+  IN_PROGRESS: "bg-warning-light text-warning-foreground border border-warning/30 backdrop-blur-sm shadow-[0_0_10px_var(--warning)] dark:shadow-[0_0_15px_var(--warning)]",
+  QC_PENDING: "bg-warning-light text-warning-foreground border border-warning/30 backdrop-blur-sm shadow-[0_0_10px_var(--warning)] dark:shadow-[0_0_15px_var(--warning)]",
+  COMPLETED: "bg-success-light text-success-foreground border border-success/30 backdrop-blur-sm shadow-[0_0_10px_var(--success)] dark:shadow-[0_0_15px_var(--success)]",
+  PENDING: "bg-warning-light text-warning-foreground border border-warning/30 backdrop-blur-sm shadow-[0_0_10px_var(--warning)] dark:shadow-[0_0_15px_var(--warning)]",
   SHIPPED: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)] border border-[var(--chart-blue)]/30 backdrop-blur-sm shadow-[0_0_10px_var(--chart-blue)] dark:shadow-[0_0_15px_var(--chart-blue)]",
-  RECEIVED: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 backdrop-blur-sm shadow-[0_0_10px_rgba(16,185,129,0.3)] dark:shadow-[0_0_15px_rgba(16,185,129,0.4)]",
+  RECEIVED: "bg-success-light text-success-foreground border border-success/30 backdrop-blur-sm shadow-[0_0_10px_var(--success)] dark:shadow-[0_0_15px_var(--success)]",
 }
 
 const statusLabels: Record<string, string> = {
@@ -417,9 +417,9 @@ export function AdminDashboard() {
   const recentTransfers = (transfers || []).slice(0, 4)
 
   return (
-    <div className="flex-1 space-y-3 p-2 sm:p-3 lg:p-4">
+    <div className="page-container p-3 md:p-6 pt-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-5">
         <div>
           <h2 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
@@ -432,7 +432,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Cards Row 1 - Main Stats */}
-      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         <StatCard
           title="Saldo"
           value={formatCurrency(stats.totalSaldo)}
@@ -484,7 +484,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Cards Row 2 - Compact Stats */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         <CompactStat title="Total JO" value={stats.totalJO} icon={ListBulletIcon} iconColor="text-slate-600" href="/dashboard/produksi" delay={100} />
         <CompactStat title="QC Request" value={stats.qcRequest} icon={BellIcon} iconColor="text-amber-600" href="/dashboard/qc-reports" delay={120} />
         <CompactStat title="QC Reject" value={stats.qcReject} icon={ExclamationTriangleIcon} iconColor="text-red-600" href="/dashboard/inventory/rejects" delay={150} />
@@ -493,7 +493,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Cards Row 3 - Compact Stats */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         <CompactStat title="Pers. Gaji" value={stats.persetujuanGaji} icon={CurrencyDollarIcon} iconColor="text-amber-600" href="/dashboard/employees/salary-claims" delay={260} />
         <CompactStat title="Pers. Kasbon" value={stats.persetujuanKasbon} icon={BanknotesIcon} iconColor="text-teal-600" href="/dashboard/employees/advances" delay={270} />
         <CompactStat title="Maintenance" value={stats.maintenancePending} icon={WrenchIcon} iconColor="text-orange-600" href="/dashboard/assets/maintenance" delay={280} />
@@ -505,9 +505,9 @@ export function AdminDashboard() {
       <FinanceLineChart
         data={financeData}
         lines={[
-          { dataKey: "saldo", color: "#304ffe", name: "Saldo" },
-          { dataKey: "pemasukan", color: "#22c55e", name: "Pemasukan" },
-          { dataKey: "pengeluaran", color: "#ef4444", name: "Pengeluaran" },
+          { dataKey: "saldo", color: "var(--brand-primary)", name: "Saldo" },
+          { dataKey: "pemasukan", color: "var(--success)", name: "Pemasukan" },
+          { dataKey: "pengeluaran", color: "var(--destructive)", name: "Pengeluaran" },
         ]}
         xAxisKey="month"
         year={financeYear}
@@ -515,7 +515,7 @@ export function AdminDashboard() {
       />
 
       {/* Charts Row 2 - Transfer */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
         <div className="lg:col-span-2">
           <InventoryBarChart
             data={inventoryData}
@@ -548,7 +548,7 @@ export function AdminDashboard() {
       />
 
       {/* Tables Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         {/* Job Order Table */}
         <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '300ms' }}>
           <CardHeader className="pb-2 px-3 sm:px-4">
@@ -585,7 +585,7 @@ export function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-medium text-xs sm:text-sm truncate">{jo.joNumber}</span>
-                        <Badge className={`${statusColors[jo.status] || "bg-muted"} text-[7px] sm:text-[8px] px-1.5 py-0 h-5 backdrop-blur-sm`}>
+                        <Badge className={`${statusColors[jo.status] || "bg-muted"} backdrop-blur-sm`}>
                           {statusLabels[jo.status] || jo.status}
                         </Badge>
                       </div>
@@ -652,7 +652,7 @@ export function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-medium text-xs sm:text-sm truncate">{transfer.transferNumber}</span>
-                        <Badge className={`${statusColors[transfer.status] || "bg-muted"} text-[7px] sm:text-[8px] px-1.5 py-0 h-5 backdrop-blur-sm`}>
+                        <Badge className={`${statusColors[transfer.status] || "bg-muted"} backdrop-blur-sm`}>
                           {statusLabels[transfer.status] || transfer.status}
                         </Badge>
                       </div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -24,10 +25,11 @@ import {
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { PlusIcon, BanknotesIcon, ArrowPathIcon, EyeIcon, PencilIcon, TrashIcon, CalculatorIcon } from "@heroicons/react/24/outline"
+import { PlusIcon, BanknotesIcon, EyeIcon, PencilIcon, TrashIcon, CalculatorIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { formatDateLong } from "@/lib/utils"
@@ -135,17 +137,26 @@ export default function SalariesPage() {
     }))
   }, [week, year])
 
+  useEffect(() => {
+    if (!isLoading && user && user.role !== "ADMIN" && user.role !== "SUPERADMIN") {
+      router.push("/dashboard")
+    }
+  }, [user, isLoading, router])
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }
 
-  if (user?.role !== "ADMIN") {
-    router.push("/dashboard")
-    return null
+  if (!isLoading && user?.role !== "ADMIN" && user?.role !== "SUPERADMIN") {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <Spinner className="size-8 text-primary" />
+      </div>
+    )
   }
 
   const filteredSalaries = (salaries || []).filter((s) => {
@@ -432,7 +443,7 @@ export default function SalariesPage() {
               <CalculatorIcon className="mr-2 h-4 w-4" />
               Hitung Otomatis
             </Button>
-            <Button onClick={() => setDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+            <Button onClick={() => setDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
               Tambah Gaji
             </Button>
@@ -546,7 +557,7 @@ export default function SalariesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded-md px-3 py-2 text-sm"
+              className="h-7 border rounded-md px-3 text-sm"
             >
               <option value="all">Semua Status</option>
               <option value="PENDING">Pending</option>
@@ -596,7 +607,7 @@ export default function SalariesPage() {
                       {formatCurrency(salary.totalSalary)}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[salary.status] || "bg-gray-100 text-gray-800"}>
+                      <Badge className={`${STATUS_COLORS[salary.status] || "bg-gray-100 text-gray-800"}`}>
                         {salary.status === "PENDING" ? "Pending" : "Terbayar"}
                       </Badge>
                     </TableCell>
@@ -784,7 +795,7 @@ export default function SalariesPage() {
               Batal
             </Button>
             <Button onClick={handleCreateSalary} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan
             </Button>
           </DialogFooter>
@@ -867,30 +878,27 @@ export default function SalariesPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Gaji Pokok</label>
-              <Input
-                type="number"
+              <FormattedNumberInput
                 placeholder="0"
                 value={formData.baseSalary}
-                onChange={(e) => setFormData({ ...formData, baseSalary: e.target.value })}
+                onValueChange={(v) => setFormData({ ...formData, baseSalary: v })}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tunjangan</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder="0"
                   value={formData.totalAllowances}
-                  onChange={(e) => setFormData({ ...formData, totalAllowances: e.target.value })}
+                  onValueChange={(v) => setFormData({ ...formData, totalAllowances: v })}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Potongan</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder="0"
                   value={formData.totalDeductions}
-                  onChange={(e) => setFormData({ ...formData, totalDeductions: e.target.value })}
+                  onValueChange={(v) => setFormData({ ...formData, totalDeductions: v })}
                 />
               </div>
             </div>
@@ -898,7 +906,7 @@ export default function SalariesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Batal</Button>
             <Button onClick={handleUpdate} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan
             </Button>
           </DialogFooter>
@@ -914,7 +922,7 @@ export default function SalariesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Hapus
             </Button>
           </DialogFooter>
@@ -959,10 +967,11 @@ export default function SalariesPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tahun</label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="2026"
                     value={calcFormData.periodYear}
-                    onChange={(e) => setCalcFormData({ ...calcFormData, periodYear: e.target.value })}
+                    onChange={(e) => setCalcFormData({ ...calcFormData, periodYear: e.target.value.replace(/\D/g, "") })}
                   />
                 </div>
               </div>
@@ -971,7 +980,7 @@ export default function SalariesPage() {
                   Batal
                 </Button>
                 <Button onClick={handleCalculate} disabled={calculating || !calcFormData.employeeId}>
-                  {calculating && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                  {calculating && <Spinner data-icon="inline-start" />}
                   Hitung
                 </Button>
               </div>
@@ -987,7 +996,7 @@ export default function SalariesPage() {
                   Hitung Ulang
                 </Button>
                 <Button onClick={handleCreateFromCalculation} disabled={submitting}>
-                  {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                  {submitting && <Spinner data-icon="inline-start" />}
                   Simpan
                 </Button>
               </div>

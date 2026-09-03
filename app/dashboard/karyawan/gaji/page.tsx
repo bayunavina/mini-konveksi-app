@@ -27,8 +27,8 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
+import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { useCurrency } from "@/hooks/useCurrency"
 
@@ -236,113 +236,111 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-6 pt-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gaji Saya</h1>
-          <p className="text-muted-foreground">Kelola klaim dan riwayat gaji produksi</p>
-        </div>
+    <div className="flex-1 space-y-3 sm:space-y-4 p-3 sm:p-6 pt-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Gaji Saya</h1>
+        <p className="text-sm text-muted-foreground">Kelola klaim dan riwayat gaji produksi</p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Rincian Gaji</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
+          <CardTitle className="text-base sm:text-lg">Rincian Gaji</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Klaim gaji setelah hasil produksi melewati QC
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 sm:p-6">
           {salaryData.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <BanknotesIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Belum ada data gaji</p>
-              <p className="text-sm mt-1">Data gaji akan muncul setelah menyelesaikan job order</p>
+            <div className="p-6 sm:p-8 text-center text-muted-foreground">
+              <BanknotesIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 opacity-30" />
+              <p className="font-medium text-sm sm:text-base">Belum ada data gaji</p>
+              <p className="text-xs sm:text-sm mt-1">Data gaji akan muncul setelah menyelesaikan job order</p>
             </div>
           ) : (
-            <div className="overflow-auto">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="text-center font-semibold">No. JO</TableHead>
-                    <TableHead className="text-center font-semibold">Produk</TableHead>
-                    <TableHead className="text-center font-semibold">Qty Target</TableHead>
-                    <TableHead className="text-center font-semibold">Rate/Unit</TableHead>
-                    <TableHead className="text-center font-semibold">Total Produksi</TableHead>
-                    <TableHead className="text-center font-semibold">QC Reject</TableHead>
-                    <TableHead className="text-center font-semibold">Diterima</TableHead>
-                    <TableHead className="text-center font-semibold">Total Gaji</TableHead>
-                    <TableHead className="text-center font-semibold">Status</TableHead>
-                    <TableHead className="text-center font-semibold">Aksi</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap">No. JO</TableHead>
+                    <TableHead className="text-center p-2 text-xs hidden sm:table-cell">Produk</TableHead>
+                    <TableHead className="text-center p-2 text-xs">Target</TableHead>
+                    <TableHead className="text-center p-2 text-xs hidden md:table-cell">Rate/Unit</TableHead>
+                    <TableHead className="text-center p-2 text-xs">Prod</TableHead>
+                    <TableHead className="text-center p-2 text-xs">Rej</TableHead>
+                    <TableHead className="text-center p-2 text-xs hidden lg:table-cell">Diterima</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap">Total</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {salaryData.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="text-center font-mono font-medium">
-                        {item.joNumber}
+                      <TableCell className="text-center p-2">
+                        <span className="font-mono font-medium text-xs">{item.joNumber}</span>
                       </TableCell>
-                      <TableCell className="text-center max-w-[150px] truncate">
-                        {item.productName}
+                      <TableCell className="text-center p-2 hidden sm:table-cell">
+                        <span className="text-xs truncate max-w-[100px] block">{item.productName}</span>
                       </TableCell>
-                      <TableCell className="text-center">{item.targetQty}</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center p-2 text-xs">{item.targetQty}</TableCell>
+                      <TableCell className="text-center p-2 text-xs hidden md:table-cell whitespace-nowrap">
                         {formatCurrency(item.ratePerUnit)}
                       </TableCell>
-                      <TableCell className="text-center font-medium">{item.completedQty}</TableCell>
-                      <TableCell className="text-center text-destructive">{item.rejectedQty}</TableCell>
-                      <TableCell className="text-center font-medium text-emerald-600">{item.acceptedQty}</TableCell>
-                      <TableCell className="text-center font-bold text-primary">
+                      <TableCell className="text-center p-2 font-medium text-xs">{item.completedQty}</TableCell>
+                      <TableCell className="text-center p-2 text-destructive text-xs">{item.rejectedQty}</TableCell>
+                      <TableCell className="text-center p-2 font-medium text-emerald-600 text-xs hidden lg:table-cell">{item.acceptedQty}</TableCell>
+                      <TableCell className="text-center p-2 font-bold text-primary text-xs whitespace-nowrap">
                         {formatCurrency(item.totalSalary)}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={`${STATUS_COLORS[item.status] || STATUS_COLORS.PENDING}`}>
+                      <TableCell className="text-center p-2">
+                        <Badge className={`${STATUS_COLORS[item.status] || STATUS_COLORS.PENDING} whitespace-nowrap`}>
                           {STATUS_LABELS[item.status] || "Menunggu"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!canClaim(item) || claiming === item.id}
-                            onClick={() => handleKlaim(item)}
-                            className="h-8 text-xs"
-                          >
-                            {claiming === item.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <>
+                      <TableCell className="text-center p-2">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!canClaim(item) || claiming === item.id}
+                              onClick={() => handleKlaim(item)}
+                              className="h-8 px-2 text-xs min-w-[60px]"
+                            >
+                              {claiming === item.id ? (
+                                <Spinner data-icon="inline-start" />
+                              ) : (
                                 <BanknotesIcon className="h-3 w-3 mr-1" />
-                                Klaim
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={!canExport(item)}
-                            onClick={() => {
-                              setSelectedClaim(item)
-                              setExportModalOpen(true)
-                            }}
-                            className="h-8 w-8 p-0"
-                            title="Export Slip"
-                          >
-                            <ArrowDownTrayIcon className="h-4 w-4" />
-                          </Button>
+                              )}
+                              Klaim
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={!canExport(item)}
+                              onClick={() => {
+                                setSelectedClaim(item)
+                                setExportModalOpen(true)
+                              }}
+                              className="h-8 w-8 p-0"
+                              title="Export Slip"
+                            >
+                              <ArrowDownTrayIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {!item.qcPassed && (
+                            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              <ExclamationCircleIcon className="h-3 w-3" />
+                              Belum QC
+                            </p>
+                          )}
                         </div>
-                        {!item.qcPassed && (
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            <ExclamationCircleIcon className="h-3 w-3 inline mr-1" />
-                            Belum QC
-                          </p>
-                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -354,7 +352,7 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
       </Card>
 
       <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Export Slip Gaji</DialogTitle>
             <DialogDescription>
@@ -362,11 +360,11 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
             </DialogDescription>
           </DialogHeader>
           {selectedClaim && (
-            <div className="space-y-3 py-4">
+            <div className="space-y-3 py-2">
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Produk</span>
-                  <span className="font-medium">{selectedClaim.productName}</span>
+                  <span className="font-medium text-sm truncate-1">{selectedClaim.productName}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Produksi</span>
@@ -380,24 +378,24 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
                   <span className="text-muted-foreground">Diterima</span>
                   <span className="font-medium text-emerald-600">{selectedClaim.acceptedQty} pcs</span>
                 </div>
-                <div className="flex justify-between border-t pt-2 font-bold">
+                <div className="flex justify-between border-t pt-2 font-bold text-sm">
                   <span>Total Gaji</span>
                   <span className="text-primary">{formatCurrency(selectedClaim.totalSalary)}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckIcon className="h-4 w-4 text-emerald-500" />
+                <CheckIcon className="h-4 w-4 text-emerald-500 shrink-0" />
                 <span>Slip gaji telah disetujui oleh admin</span>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setExportModalOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setExportModalOpen(false)} className="min-h-[44px] w-full sm:w-auto">
               Batal
             </Button>
-            <Button onClick={handleExportSlip} disabled={exportLoading}>
+            <Button onClick={handleExportSlip} disabled={exportLoading} className="min-h-[44px] w-full sm:w-auto">
               {exportLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Spinner data-icon="inline-start" />
               ) : (
                 <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
               )}

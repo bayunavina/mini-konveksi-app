@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { MagnifyingGlassIcon, ArrowLeftIcon, ArrowPathIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline"
+import { MagnifyingGlassIcon, ArrowLeftIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
@@ -256,7 +257,7 @@ export default function SalaryPage() {
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari karyawan..."
@@ -267,7 +268,7 @@ export default function SalaryPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="pl-9"
+                className="h-10 pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -286,7 +287,7 @@ export default function SalaryPage() {
                 </div>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -326,7 +327,7 @@ export default function SalaryPage() {
                     <TableCell className="py-2 text-center">{formatCurrency(parseFloat(s.ratePerUnit || "0"))}</TableCell>
                     <TableCell className="py-2 text-center font-bold">{formatCurrency(parseFloat(s.totalSalary || "0"))}</TableCell>
                     <TableCell className="py-2 text-center">
-                      <Badge className={s.status === "PAID" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
+                      <Badge className={`${s.status === "PAID" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
                         {s.status}
                       </Badge>
                     </TableCell>
@@ -413,7 +414,7 @@ export default function SalaryPage() {
               Batal
             </Button>
             <Button onClick={handleCalculateSalary} disabled={!formData.assignmentId || submitting}>
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <CurrencyDollarIcon className="mr-2 h-4 w-4" />}
+              {submitting ? <Spinner data-icon="inline-start" /> : <CurrencyDollarIcon className="mr-2 h-4 w-4" />}
               Hitung & Simpan
             </Button>
           </DialogFooter>

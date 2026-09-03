@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Badge } from "@/components/ui/badge"
 import { 
   Dialog,
@@ -134,29 +135,29 @@ export default function QCScanPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-6 pt-4">
+    <div className="flex-1 space-y-3 sm:space-y-4 p-3 sm:p-6 pt-4">
       <PageHeader
         title="Scan QC"
         description="Scan barcode untuk proses quality control"
         actions={
-          <Button variant="outline" onClick={() => router.push("/dashboard/qc")}>
-            <ArrowLeftIcon className="mr-2 h-4 w-4" />
-            Kembali
+          <Button variant="outline" onClick={() => router.push("/dashboard/qc")} className="min-h-[44px] px-3">
+            <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Kembali</span>
           </Button>
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <QrCodeIcon className="h-5 w-5" />
               Scan Barcode
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              className="w-full" 
+              className="w-full min-h-[48px]" 
               size="lg"
               onClick={() => setScanModalOpen(true)}
             >
@@ -175,15 +176,16 @@ export default function QCScanPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Masukkan Nomor JO</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input 
                   placeholder="Contoh: JO260327-xxx"
                   id="manual-jo"
+                  className="text-base min-h-[44px]"
                 />
                 <Button variant="secondary" onClick={() => {
                   const input = document.getElementById("manual-jo") as HTMLInputElement
                   if (input?.value) handleScan(input.value)
-                }}>
+                }} className="min-h-[44px]">
                   Cari
                 </Button>
               </div>
@@ -193,7 +195,7 @@ export default function QCScanPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Job Orders Menunggu QC</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Job Orders Menunggu QC</CardTitle>
           </CardHeader>
           <CardContent>
             {pendingAssignments.length === 0 ? (
@@ -206,19 +208,19 @@ export default function QCScanPage() {
                 {pendingAssignments.map((a) => (
                   <div 
                     key={a.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-orange-50 dark:bg-orange-950/20 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-950/30"
+                    className="flex items-center justify-between p-3 rounded-lg border bg-orange-50 dark:bg-orange-950/20 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-950/30 gap-2 min-h-[60px]"
                     onClick={() => {
                       setSelectedAssignment(a)
                       setSuccessQty(String(a.pendingQty || 0))
                       setRejectQty("0")
                     }}
                   >
-                    <div>
-                      <p className="font-medium">{a.jobOrder?.joNumber}</p>
-                      <p className="text-sm text-muted-foreground">{a.product?.name}</p>
-                      <p className="text-xs text-muted-foreground">{a.employee?.name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{a.jobOrder?.joNumber}</p>
+                      <p className="text-xs text-muted-foreground truncate">{a.product?.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{a.employee?.name}</p>
                     </div>
-                    <Badge className="bg-orange-100 text-orange-700">
+                    <Badge className="bg-orange-100 text-orange-700 shrink-0">
                       {a.pendingQty} pcs
                     </Badge>
                   </div>
@@ -230,7 +232,7 @@ export default function QCScanPage() {
       </div>
 
       <Dialog open={scanModalOpen} onOpenChange={setScanModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Scan Barcode</DialogTitle>
             <DialogDescription>
@@ -246,39 +248,36 @@ export default function QCScanPage() {
       </Dialog>
 
       <Dialog open={!!selectedAssignment} onOpenChange={(open) => !open && setSelectedAssignment(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Proses QC - {selectedAssignment?.jobOrder?.joNumber}</DialogTitle>
             <DialogDescription>
               {selectedAssignment?.product?.name} - {selectedAssignment?.pendingQty} pcs menunggu QC
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Berhasil (Lolos)</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
+                  placeholder="0"
                   value={successQty}
-                  onChange={(e) => setSuccessQty(e.target.value)}
-                  min="0"
-                  max={selectedAssignment?.pendingQty}
+                  onValueChange={(v) => setSuccessQty(v)}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Reject</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
+                  placeholder="0"
                   value={rejectQty}
-                  onChange={(e) => setRejectQty(e.target.value)}
-                  min="0"
+                  onValueChange={(v) => setRejectQty(v)}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Alasan Reject (Opsional)</label>
               <select
-                className="w-full h-10 px-3 border rounded-md bg-background text-sm"
+                className="w-full h-7 px-3 border rounded-md bg-background text-sm"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               >
@@ -295,11 +294,11 @@ export default function QCScanPage() {
               </select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedAssignment(null)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setSelectedAssignment(null)} className="min-h-[44px] w-full sm:w-auto">
               Batal
             </Button>
-            <Button onClick={handleSubmitQC} disabled={isSubmitting}>
+            <Button onClick={handleSubmitQC} disabled={isSubmitting} className="min-h-[44px] w-full sm:w-auto">
               {isSubmitting ? "Memproses..." : "Simpan QC"}
             </Button>
           </DialogFooter>

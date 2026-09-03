@@ -7,9 +7,9 @@ export const STOCK_TYPE_LABELS: Record<StockType, string> = {
 };
 
 export const STOCK_TYPE_COLORS: Record<StockType, string> = {
-  MATERIAL: "bg-blue-100 text-blue-800",
-  FINISHED: "bg-green-100 text-green-800",
-  REJECT: "bg-red-100 text-red-800",
+  MATERIAL: "bg-brand-primary/10 text-brand-primary",
+  FINISHED: "bg-success-light text-success-foreground",
+  REJECT: "bg-destructive/10 text-destructive",
 };
 
 export interface Stock {

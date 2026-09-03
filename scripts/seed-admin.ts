@@ -72,22 +72,22 @@ async function seedAdmin() {
     )
     console.log('Account created with hashed password')
 
-    // Create or update employee record with ADMIN role
+    // Create or update employee record with SUPERADMIN role
     const existingEmployee = await pool.query('SELECT id FROM employees WHERE email = $1', [email])
 
     if (existingEmployee.rows.length > 0) {
       await pool.query(
         'UPDATE employees SET role = $1, user_id = $2, is_active = true WHERE email = $3',
-        ['ADMIN', userId, email]
+        ['SUPERADMIN', userId, email]
       )
-      console.log('Employee record updated to ADMIN')
+      console.log('Employee record updated to SUPERADMIN')
     } else {
       const employeeId = crypto.randomUUID()
       await pool.query(
         'INSERT INTO employees (id, name, email, role, user_id, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())',
-        [employeeId, name, email, 'ADMIN', userId]
+        [employeeId, name, email, 'SUPERADMIN', userId]
       )
-      console.log('Employee record created with ADMIN role')
+      console.log('Employee record created with SUPERADMIN role')
     }
 
     // Deactivate old default admin accounts

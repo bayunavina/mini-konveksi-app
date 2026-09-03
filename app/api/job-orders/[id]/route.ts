@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { jobOrders, products, teams, qcReports, employees, notifications, productionAssignments, productionLogs, rejects, productionProgress } from "@/db/schema"
+import { jobOrders, products, teams, qcReports, employees, notifications, productionAssignments, productionLogs, rejects, productionProgress, materialLots } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 
 export async function GET(
@@ -109,7 +109,7 @@ export async function PUT(
     // Find job order by ID or JO number
     const isUUID = id.includes("-") && id.length === 36
     const findCondition = isUUID ? eq(jobOrders.id, id) : eq(jobOrders.joNumber, id)
-    const existingJO = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber }).from(jobOrders).where(findCondition).limit(1)
+    const existingJO = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber, status: jobOrders.status }).from(jobOrders).where(findCondition).limit(1)
     
     if (existingJO.length === 0) {
       return NextResponse.json({ error: "Job order not found" }, { status: 404 })
@@ -117,6 +117,7 @@ export async function PUT(
 
     const actualId = existingJO[0].id
     const joNumber = existingJO[0].joNumber
+    const prevStatus = (existingJO[0] as any).status
     const updateData: Record<string, unknown> = {}
     if (status !== undefined) updateData.status = status
     if (completedQty !== undefined) updateData.completedQty = completedQty
@@ -129,6 +130,28 @@ export async function PUT(
       // Delete notifications by referenceId (could be UUID or JO number)
       await db.delete(notifications).where(eq(notifications.referenceId, actualId))
       await db.delete(notifications).where(eq(notifications.referenceId, joNumber))
+    }
+
+    // P2-2: Jika status COMPLETED (dan sebelumnya belum COMPLETED), auto potong stok material lot terkait
+    if (status === "COMPLETED" && prevStatus !== "COMPLETED") {
+      try {
+        const assignments = await db.select({ materialLotId: productionAssignments.materialLotId, targetQty: productionAssignments.targetQty, completedQty: productionAssignments.completedQty, acceptedQty: productionAssignments.acceptedQty })
+          .from(productionAssignments).where(eq(productionAssignments.jobOrderId, actualId))
+        for (const a of assignments) {
+          if (!a.materialLotId) continue
+          const lotRows = await db.select().from(materialLots).where(eq(materialLots.id, a.materialLotId)).limit(1)
+          if (lotRows.length === 0) continue
+          const lot = lotRows[0]
+          // pakai acceptedQty jika ada, fallback completedQty, fallback targetQty
+          const usedQty = (a.acceptedQty && a.acceptedQty > 0 ? a.acceptedQty : (a.completedQty && a.completedQty > 0 ? a.completedQty : a.targetQty)) || 0
+          if (usedQty <= 0) continue
+          const newQty = Math.max(0, (lot.quantity || 0) - usedQty)
+          const newStatus = newQty <= 0 ? "DEPLETED" : newQty < ((lot.initialQty || 0) * 0.2) ? "LOW" : lot.status
+          await db.update(materialLots).set({ quantity: newQty, status: newStatus, updatedAt: new Date() }).where(eq(materialLots.id, a.materialLotId))
+        }
+      } catch (e) {
+        console.error("P2-2 auto potong lot failed", e)
+      }
     }
 
     const updated = await db
@@ -154,7 +177,7 @@ export async function DELETE(
     // Find job order by ID or JO number
     const isUUID = id.includes("-") && id.length === 36
     const findCondition = isUUID ? eq(jobOrders.id, id) : eq(jobOrders.joNumber, id)
-    const existingJO = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber }).from(jobOrders).where(findCondition).limit(1)
+    const existingJO = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber, status: jobOrders.status }).from(jobOrders).where(findCondition).limit(1)
     
     if (existingJO.length === 0) {
       return NextResponse.json({ error: "Job order not found" }, { status: 404 })

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,6 +50,7 @@ interface QCReport {
 }
 
 export default function FinishedGoodsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
@@ -123,12 +124,10 @@ export default function FinishedGoodsPage() {
         title="Barang Jadi (Finished Goods)"
         description="Inventory barang jadi dari hasil QC produksi"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/inventory">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/inventory")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <ExportPrint
               title="Daftar Barang Jadi"
@@ -166,7 +165,7 @@ export default function FinishedGoodsPage() {
             </div>
             <div className="flex gap-2">
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Cari JO, SKU..."
@@ -177,7 +176,7 @@ export default function FinishedGoodsPage() {
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="pl-9 w-[180px]"
+                  className="h-10 pl-9 w-[180px]"
                 />
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -200,7 +199,7 @@ export default function FinishedGoodsPage() {
                   </div>
                 )}
               </div>
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
                 Refresh
               </Button>
             </div>

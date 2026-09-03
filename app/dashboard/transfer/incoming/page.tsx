@@ -1,14 +1,15 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Dialog,
   DialogContent,
@@ -43,7 +44,6 @@ import {
   EyeIcon,
   PlusIcon,
   TruckIcon,
-  ArrowPathIcon,
 } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useSKUMaster } from "@/hooks/useSKUMaster"
@@ -131,7 +131,7 @@ export default function IncomingPage() {
   const [transferItems, setTransferItems] = useState<TransferFormItem[]>([])
   const [selectedProduct, setSelectedProduct] = useState("")
   const [itemQuantity, setItemQuantity] = useState("")
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: allTransfers, loading, refetch } = useFetch<Transfer[]>("/api/transfers")
@@ -139,7 +139,21 @@ export default function IncomingPage() {
   const { skus: skuMaster } = useSKUMaster()
   const { user } = useSessionWithRole()
   const userRole = user?.role || "GUDANG"
-  const isAdmin = userRole === "ADMIN"
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN"
+
+  // P3-1: Simplifikasi Transfer - non-ADMIN otomatis ke Gudang Utama (default warehouse)
+  const defaultWarehouse = useMemo(() => {
+    if (!warehouses || warehouses.length === 0) return null
+    // Cari Gudang Utama / default, fallback ke warehouse pertama
+    return warehouses.find(w => /utama|main|default/i.test(w.name)) || warehouses[0]
+  }, [warehouses])
+
+  // Sinkronkan destinationWarehouse dengan default warehouse untuk non-ADMIN
+  useEffect(() => {
+    if (!isAdmin && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id) {
+      setDestinationWarehouse(defaultWarehouse.id)
+    }
+  }, [isAdmin, defaultWarehouse, destinationWarehouse])
 
   const incomingTransfers = (allTransfers || []).filter(t => t.type === "INCOMING")
 
@@ -441,9 +455,9 @@ export default function IncomingPage() {
       />
 
       <div className="flex gap-2">
-        <ScanButton onScan={handleScan} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80" />
+        <ScanButton onScan={handleScan} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80" />
         {isAdmin && (
-          <Button onClick={() => setCreateDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+          <Button onClick={() => setCreateDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
             <PlusIcon className="mr-2 h-4 w-4" />
             Buat Transfer Masuk
           </Button>
@@ -462,18 +476,25 @@ export default function IncomingPage() {
           <div className="space-y-4 py-2 overflow-y-auto flex-1 min-h-0">
             <div className="space-y-2">
               <Label>Gudang Tujuan *</Label>
-              <Select value={destinationWarehouse} onValueChange={setDestinationWarehouse}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih gudang tujuan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses?.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isAdmin ? (
+                <Select value={destinationWarehouse} onValueChange={setDestinationWarehouse}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih gudang tujuan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses?.map((warehouse) => (
+                      <SelectItem key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/30">
+                  <Badge variant="outline">Default</Badge>
+                  <span className="text-sm font-medium">{defaultWarehouse?.name || "Gudang Utama"}</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -494,14 +515,13 @@ export default function IncomingPage() {
                   </Select>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Input
-                    type="number"
+                  <FormattedNumberInput
                     placeholder="Qty"
                     className="w-24"
                     value={itemQuantity}
-                    onChange={(e) => setItemQuantity(e.target.value)}
+                    onValueChange={(v) => setItemQuantity(v)}
                   />
-                  <Button size="lg" onClick={handleAddItem} disabled={!selectedProduct || !itemQuantity}>
+                  <Button onClick={handleAddItem} disabled={!selectedProduct || !itemQuantity}>
                     +
                   </Button>
                 </div>
@@ -548,7 +568,7 @@ export default function IncomingPage() {
               Batal
             </Button>
             <Button onClick={handleCreateTransfer} disabled={!destinationWarehouse || creating}>
-              {creating && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {creating && <Spinner data-icon="inline-start" />}
               <TruckIcon className="mr-2 h-4 w-4" />
               Buat Transfer
             </Button>
@@ -659,7 +679,7 @@ export default function IncomingPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[transfer.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[transfer.status] || transfer.status}
                       </Badge>
                     </TableCell>
@@ -786,7 +806,7 @@ export default function IncomingPage() {
                 </div>
                 <div className="flex justify-between gap-2">
                   <span className="text-sm text-muted-foreground shrink-0">Status:</span>
-                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"} shrink-0`}>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
                     {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
                   </Badge>
                 </div>
@@ -798,7 +818,7 @@ export default function IncomingPage() {
               Batal
             </Button>
             <Button variant="destructive" onClick={handleDeleteTransfer} disabled={deleting}>
-              {deleting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {deleting && <Spinner data-icon="inline-start" />}
               <TrashIcon className="mr-2 h-4 w-4" />
               Hapus
             </Button>
@@ -944,7 +964,7 @@ export default function IncomingPage() {
                 </div>
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm text-muted-foreground shrink-0">Status:</span>
-                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"} shrink-0`}>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
                     {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
                   </Badge>
                 </div>
@@ -963,7 +983,7 @@ export default function IncomingPage() {
                   disabled={scanProcessing}
                   className="flex-1"
                 >
-                  {scanProcessing && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                  {scanProcessing && <Spinner data-icon="inline-start" />}
                   Cancel
                 </Button>
                 <Button 
@@ -971,7 +991,7 @@ export default function IncomingPage() {
                   disabled={scanProcessing}
                   className="bg-green-600 hover:bg-green-700 flex-1"
                 >
-                  {scanProcessing && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                  {scanProcessing && <Spinner data-icon="inline-start" />}
                   <CheckIcon className="mr-1 h-4 w-4" />
                   Terima
                 </Button>

@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -31,9 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/shared"
-import { MagnifyingGlassIcon, ArrowLeftIcon, PlusIcon, ArrowPathIcon, QrCodeIcon, CubeIcon, ArrowRightIcon, CameraIcon, ArrowTrendingDownIcon, PhotoIcon, XMarkIcon, CheckIcon, TrashIcon, PrinterIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline"
+import { MagnifyingGlassIcon, ArrowLeftIcon, PlusIcon, QrCodeIcon, CubeIcon, ArrowRightIcon, CameraIcon, ArrowTrendingDownIcon, PhotoIcon, XMarkIcon, CheckIcon, TrashIcon, PrinterIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useSKUMaster } from "@/hooks/useSKUMaster"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 import { Html5Qrcode } from "html5-qrcode"
 
@@ -79,6 +81,7 @@ interface Summary {
 }
 
 export default function MaterialsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<string>("")
@@ -576,22 +579,20 @@ export default function MaterialsPage() {
         title="Bahan Baku"
         description="Kelola stok bahan baku dengan QR Code"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/inventory">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/inventory")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Button variant="outline" onClick={() => setScanDialogOpen(true)}>
               <CameraIcon className="mr-2 h-4 w-4" />
               Scan QR
             </Button>
-            <Button onClick={() => setAddProductDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+            <Button onClick={() => setAddProductDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
               Tambah Bahan Baku
             </Button>
-            <Button onClick={() => setAddLotDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+            <Button onClick={() => setAddLotDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
               Tambah Stok
             </Button>
@@ -640,7 +641,7 @@ export default function MaterialsPage() {
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Cari kode, QR code, atau produk..."
@@ -651,7 +652,7 @@ export default function MaterialsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="pl-9"
+                className="h-10 pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -676,7 +677,7 @@ export default function MaterialsPage() {
               )}
             </div>
             <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="data-[size=default]:h-10 w-[200px]">
                 <SelectValue placeholder="Semua Produk" />
               </SelectTrigger>
               <SelectContent>
@@ -688,7 +689,7 @@ export default function MaterialsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => refetchAll()}>
+            <Button variant="outline" size="sm" className="h-10" onClick={() => refetchAll()}>
               Refresh
             </Button>
           </div>
@@ -910,11 +911,10 @@ export default function MaterialsPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Quantity (Stok) *</label>
-              <Input
-                type="number"
+              <FormattedNumberInput
                 placeholder="Contoh: 100"
                 value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                onValueChange={(v) => setFormData({ ...formData, quantity: v })}
               />
             </div>
             <div className="space-y-2">
@@ -931,7 +931,7 @@ export default function MaterialsPage() {
               Batal
             </Button>
             <Button onClick={handleAddLot} disabled={!selectedProduct || !formData.quantity || submitting}>
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <QrCodeIcon className="mr-2 h-4 w-4" />}
+              {submitting ? <Spinner data-icon="inline-start" /> : <QrCodeIcon className="mr-2 h-4 w-4" />}
               Simpan
             </Button>
           </DialogFooter>
@@ -1024,7 +1024,7 @@ export default function MaterialsPage() {
                 </Button>
                 {scanning && (
                   <div className="flex items-center justify-center py-4">
-                    <ArrowPathIcon className="h-6 w-6 animate-spin" />
+                    <Spinner className="size-6" />
                     <span className="ml-2">Memindai QR Code...</span>
                   </div>
                 )}
@@ -1045,7 +1045,7 @@ export default function MaterialsPage() {
             </Button>
             {scanMode === "manual" && (
               <Button onClick={handleScanQr} disabled={!scanQrInput.trim() || submitting}>
-                {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <MagnifyingGlassIcon className="mr-2 h-4 w-4" />}
+                {submitting ? <Spinner data-icon="inline-start" /> : <MagnifyingGlassIcon className="mr-2 h-4 w-4" />}
                 Cari
               </Button>
             )}
@@ -1079,12 +1079,10 @@ export default function MaterialsPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Quantity Produksi *</label>
-                <Input
-                  type="number"
+                <FormattedNumberInput
                   placeholder={`Max: ${selectedLot.quantity}`}
                   value={produceQty}
-                  onChange={(e) => setProduceQty(e.target.value)}
-                  max={selectedLot.quantity}
+                  onValueChange={setProduceQty}
                 />
                 <p className="text-xs text-muted-foreground">
                   Stok akan berkurang {produceQty || 0} Pcs
@@ -1100,7 +1098,7 @@ export default function MaterialsPage() {
               onClick={handleProduce}
               disabled={!produceQty || parseInt(produceQty) > (selectedLot?.quantity || 0) || submitting}
             >
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <CubeIcon className="mr-2 h-4 w-4" />}
+              {submitting ? <Spinner data-icon="inline-start" /> : <CubeIcon className="mr-2 h-4 w-4" />}
               Produksi
             </Button>
           </DialogFooter>
@@ -1194,7 +1192,7 @@ export default function MaterialsPage() {
               Batal
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting ? <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" /> : <TrashIcon className="mr-2 h-4 w-4" />}
+              {submitting ? <Spinner data-icon="inline-start" /> : <TrashIcon className="mr-2 h-4 w-4" />}
               Hapus
             </Button>
           </DialogFooter>

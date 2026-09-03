@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -226,11 +226,10 @@ export default function NewTransferPage() {
             </div>
             <div className="w-32 space-y-2">
               <Label>Jumlah</Label>
-              <Input
-                type="number"
+              <FormattedNumberInput
                 placeholder="0"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                onValueChange={(v) => setQuantity(v)}
               />
             </div>
             <Button onClick={handleAddItem} disabled={!selectedItem || !quantity}>

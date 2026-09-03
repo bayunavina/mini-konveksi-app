@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Dialog,
   DialogContent,
@@ -34,8 +36,11 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import { ScanButton } from "@/components/scanner"
+import { parseQRPayload } from "@/lib/qr-payload"
+import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { formatDate, formatDateLong } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -109,7 +114,23 @@ export default function OutgoingPage() {
 
   const { data: allTransfers, loading: transfersLoading, refetch } = useFetch<Transfer[]>("/api/transfers")
   const { data: warehouses, loading: warehousesLoading } = useFetch<Warehouse[]>("/api/warehouses")
-  const { data: masterSkus } = useFetch<Product[]>("/api/master-skus")
+  const { data: masterSkus } = useFetch<Product[]>("/api/master-skus?all=true")
+  const { user } = useSessionWithRole()
+  const userRole = user?.role || "GUDANG"
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN"
+
+  // P3-1: Simplifikasi Transfer - non-ADMIN otomatis ke Gudang Utama (default warehouse)
+  const defaultWarehouse = useMemo(() => {
+    if (!warehouses || warehouses.length === 0) return null
+    return warehouses.find(w => /utama|main|default/i.test(w.name)) || warehouses[0]
+  }, [warehouses])
+
+  // Sinkronkan destinationWarehouse dengan default warehouse untuk non-ADMIN
+  useEffect(() => {
+    if (!isAdmin && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id) {
+      setDestinationWarehouse(defaultWarehouse.id)
+    }
+  }, [isAdmin, defaultWarehouse, destinationWarehouse])
 
   const outgoingTransfers = (allTransfers || []).filter(t => t.type === "OUTGOING")
 
@@ -259,7 +280,7 @@ export default function OutgoingPage() {
               />
               <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+                  <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
                     <PlusIcon className="mr-2 h-4 w-4" />
                     Transfer Baru
                   </Button>
@@ -276,33 +297,47 @@ export default function OutgoingPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Gudang Asal *</Label>
-                        <Select value={sourceWarehouse} onValueChange={setSourceWarehouse}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih asal" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {warehouses?.map((warehouse) => (
-                              <SelectItem key={warehouse.id} value={warehouse.id}>
-                                {warehouse.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {isAdmin ? (
+                          <Select value={sourceWarehouse} onValueChange={setSourceWarehouse}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih asal" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {warehouses?.map((warehouse) => (
+                                <SelectItem key={warehouse.id} value={warehouse.id}>
+                                  {warehouse.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/30">
+                            <Badge variant="outline">Default</Badge>
+                            <span className="text-sm font-medium">{defaultWarehouse?.name || "Gudang Utama"}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label>Gudang Tujuan *</Label>
-                        <Select value={destinationWarehouse} onValueChange={setDestinationWarehouse}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih tujuan" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {warehouses?.filter(w => w.id !== sourceWarehouse).map((warehouse) => (
-                              <SelectItem key={warehouse.id} value={warehouse.id}>
-                                {warehouse.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {isAdmin ? (
+                          <Select value={destinationWarehouse} onValueChange={setDestinationWarehouse}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih tujuan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {warehouses?.filter(w => w.id !== sourceWarehouse).map((warehouse) => (
+                                <SelectItem key={warehouse.id} value={warehouse.id}>
+                                  {warehouse.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/30">
+                            <Badge variant="outline">Default</Badge>
+                            <span className="text-sm font-medium">Gudang Bahan Jadi</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -321,12 +356,27 @@ export default function OutgoingPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <Input
-                          type="number"
+                        <ScanButton
+                          variant="outline"
+                          size="default"
+                          onScan={(raw) => {
+                            const parsed = parseQRPayload(raw)
+                            const code = parsed.payload?.code || raw
+                            const id = parsed.payload?.id || raw
+                            const found = masterSkus?.find(s => s.id === id || s.code === code || s.code.toLowerCase() === code.toLowerCase())
+                            if (found) {
+                              setSelectedProduct(found.id)
+                              toast.success(`Produk terpilih: ${found.code}`)
+                            } else {
+                              toast.error(`SKU tidak ditemukan: ${code}`)
+                            }
+                          }}
+                        />
+                        <FormattedNumberInput
                           placeholder="Qty"
                           className="w-24"
                           value={itemQuantity}
-                          onChange={(e) => setItemQuantity(e.target.value)}
+                          onValueChange={(v) => setItemQuantity(v)}
                         />
                         <Button onClick={handleAddItem} disabled={!selectedProduct || !itemQuantity}>
                           +
@@ -374,7 +424,7 @@ export default function OutgoingPage() {
                       Batal
                     </Button>
                     <Button onClick={handleCreateTransfer} disabled={!sourceWarehouse || !destinationWarehouse || transferItems.length === 0 || creating}>
-                      {creating && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                      {creating && <Spinner data-icon="inline-start" />}
                       <TruckIcon className="mr-2 h-4 w-4" />
                       Buat Transfer
                     </Button>
@@ -416,7 +466,7 @@ export default function OutgoingPage() {
                     <TableCell>{getWarehouseName(transfer.toWarehouseId)}</TableCell>
                     <TableCell>{formatDate(transfer.createdAt)}</TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[transfer.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[transfer.status] || transfer.status}
                       </Badge>
                     </TableCell>
@@ -476,7 +526,7 @@ export default function OutgoingPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
                     {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
                   </Badge>
                 </div>

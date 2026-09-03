@@ -333,99 +333,97 @@ export default function QCReportPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-3 sm:space-y-4 p-3 sm:p-6 pt-4">
       <PageHeader
         title="QC Reports"
         description="Laporan hasil quality control produksi"
         actions={
-          <>
-            <Button variant="outline" size="sm" onClick={handlePrint} disabled={filteredReports.length === 0}>
-              <PrinterIcon className="mr-2 h-4 w-4" />
-              Print
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={handlePrint} disabled={filteredReports.length === 0} className="min-h-[44px] px-3">
+              <PrinterIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Print</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportExcel} disabled={filteredReports.length === 0}>
-              <ArrowDownTrayIcon className="mr-2 h-4 w-4" />
-              Export Excel
+            <Button variant="outline" size="sm" onClick={handleExportExcel} disabled={filteredReports.length === 0} className="min-h-[44px] px-3">
+              <ArrowDownTrayIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.location.href = "/dashboard/qc"}>
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
+            <Button variant="outline" size="sm" onClick={() => window.location.href = "/dashboard/qc"} className="min-h-[44px] px-3">
+              <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Kembali</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <ArrowPathIcon className="mr-2 h-4 w-4" />
-              Refresh
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="min-h-[44px] px-3">
+              <ArrowPathIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
-          </>
+          </div>
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Laporan</CardTitle>
-            <CheckIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? "-" : stats.total}</div>
-          </CardContent>
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Total Laporan</p>
+              <div className="text-xl sm:text-2xl font-bold">{loading ? "-" : stats.total}</div>
+            </div>
+            <CheckIcon className="h-5 w-5 text-muted-foreground shrink-0" />
+          </div>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hari Ini</CardTitle>
-            <CheckIcon className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? "-" : stats.todayCount}</div>
-          </CardContent>
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Hari Ini</p>
+              <div className="text-xl sm:text-2xl font-bold">{loading ? "-" : stats.todayCount}</div>
+            </div>
+            <CheckIcon className="h-5 w-5 text-green-600 shrink-0" />
+          </div>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sukses</CardTitle>
-            <CheckIcon className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? "-" : `${stats.totalSuccess} Pcs`}</div>
-          </CardContent>
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Total Sukses</p>
+              <div className="text-xl sm:text-2xl font-bold">{loading ? "-" : `${stats.totalSuccess} Pcs`}</div>
+            </div>
+            <CheckIcon className="h-5 w-5 text-green-600 shrink-0" />
+          </div>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Reject</CardTitle>
-            <XMarkIcon className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{loading ? "-" : `${stats.totalReject} Pcs`}</div>
-          </CardContent>
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Total Reject</p>
+              <div className="text-xl sm:text-2xl font-bold text-red-600">{loading ? "-" : `${stats.totalReject} Pcs`}</div>
+            </div>
+            <XMarkIcon className="h-5 w-5 text-red-600 shrink-0" />
+          </div>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
+        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Daftar Laporan QC</CardTitle>
-              <CardDescription>Riwayat laporan quality control</CardDescription>
+              <CardTitle className="text-base sm:text-lg">Daftar Laporan QC</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Riwayat laporan quality control</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Filter waktu" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua</SelectItem>
-                  <SelectItem value="today">Hari Ini</SelectItem>
-                  <SelectItem value="week">7 Hari</SelectItem>
-                  <SelectItem value="month">30 Hari</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full sm:w-[140px] h-10 text-base">
+                <SelectValue placeholder="Filter waktu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="today">Hari Ini</SelectItem>
+                <SelectItem value="week">7 Hari</SelectItem>
+                <SelectItem value="month">30 Hari</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <div className="relative mb-4">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Cari JO number, nama employee, catatan..."
+              placeholder="Cari JO, employee, catatan..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -433,24 +431,24 @@ export default function QCReportPage() {
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="pl-9"
+              className="pl-9 text-base"
             />
             {showSuggestions && suggestions.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
                 {suggestions.map((s, i) => (
                   <button
                     key={`${s.type}-${s.value}-${i}`}
-                    className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm"
+                    className="w-full px-4 py-3 text-left hover:bg-muted flex items-center gap-2 text-sm min-h-[44px]"
                     onClick={() => selectSuggestion(s.value)}
                   >
-                    <span className={`text-xs px-2 py-0.5 rounded ${
+                    <span className={`text-xs px-2 py-0.5 rounded shrink-0 ${
                       s.type === "joNumber" ? "bg-blue-100 text-blue-700" :
                       s.type === "employee" ? "bg-purple-100 text-purple-700" :
                       "bg-green-100 text-green-700"
                     }`}>
                       {s.type === "joNumber" ? "JO" : s.type === "employee" ? "Employee" : "Other"}
                     </span>
-                    <span className="font-medium">{s.label}</span>
+                    <span className="font-medium truncate">{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -466,7 +464,7 @@ export default function QCReportPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-500">
               <p>Gagal memuat data</p>
-              <Button variant="outline" className="mt-2" onClick={() => refetch()}>
+              <Button variant="outline" className="mt-2 min-h-[44px]" onClick={() => refetch()}>
                 Coba Lagi
               </Button>
             </div>
@@ -479,35 +477,35 @@ export default function QCReportPage() {
               <Table id="qc-report-table">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="text-center w-12">No</TableHead>
-                    <TableHead className="text-center">Tanggal</TableHead>
-                    <TableHead className="text-center">No. JO</TableHead>
-                    <TableHead className="text-center">Sukses</TableHead>
-                    <TableHead className="text-center">Reject</TableHead>
-                    <TableHead className="text-center">QC Staff</TableHead>
-                    <TableHead className="text-center">Catatan</TableHead>
+                    <TableHead className="text-center w-10 p-2 text-xs">No</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap">Tanggal</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap">No. JO</TableHead>
+                    <TableHead className="text-center p-2 text-xs">Sukses</TableHead>
+                    <TableHead className="text-center p-2 text-xs">Reject</TableHead>
+                    <TableHead className="text-center p-2 text-xs whitespace-nowrap hidden sm:table-cell">QC Staff</TableHead>
+                    <TableHead className="text-center p-2 text-xs hidden md:table-cell">Catatan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredReports.map((report, index) => (
                     <TableRow key={report.id} className="hover:bg-muted/30">
-                      <TableCell className="text-center font-medium">{index + 1}</TableCell>
-                      <TableCell className="text-center whitespace-nowrap">
+                      <TableCell className="text-center p-2 font-medium">{index + 1}</TableCell>
+                      <TableCell className="text-center p-2 text-xs whitespace-nowrap">
                         {formatDate(report.createdAt)}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center p-2">
                         <Badge variant="outline" className="font-mono">
                           {report.jobOrder?.joNumber || "-"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center text-green-600 font-semibold">
+                      <TableCell className="text-center p-2 text-green-600 font-semibold text-sm">
                         {report.successQty}
                       </TableCell>
-                      <TableCell className={`text-center font-semibold ${report.rejectQty > 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                      <TableCell className={`text-center p-2 font-semibold text-sm ${report.rejectQty > 0 ? "text-red-600" : "text-muted-foreground"}`}>
                         {report.rejectQty}
                       </TableCell>
-                      <TableCell className="text-center">{report.employee?.name || "-"}</TableCell>
-                      <TableCell className="text-center text-muted-foreground max-w-[200px] truncate">
+                      <TableCell className="text-center p-2 text-xs hidden sm:table-cell">{report.employee?.name || "-"}</TableCell>
+                      <TableCell className="text-center p-2 text-xs text-muted-foreground max-w-[120px] truncate hidden md:table-cell">
                         {report.notes || "-"}
                       </TableCell>
                     </TableRow>
@@ -517,12 +515,12 @@ export default function QCReportPage() {
             </div>
           )}
           {filteredReports.length > 0 && (
-            <div className="mt-4 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
+            <div className="mt-4 p-3 sm:p-4 bg-muted/30 rounded-lg border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
+                <span className="text-muted-foreground text-xs sm:text-sm">
                   Menampilkan <span className="font-semibold">{filteredReports.length}</span> data
                 </span>
-                <div className="flex gap-6">
+                <div className="flex gap-4 text-xs sm:text-sm">
                   <span>Total Sukses: <span className="font-semibold text-green-600">{stats.totalSuccess} Pcs</span></span>
                   <span>Total Reject: <span className="font-semibold text-red-600">{stats.totalReject} Pcs</span></span>
                 </div>

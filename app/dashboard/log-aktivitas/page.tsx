@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { Input } from "@/components/ui/input"
 import { PageHeader } from "@/components/shared"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
@@ -86,17 +87,26 @@ export default function LogAktivitasPage() {
     return () => clearInterval(interval)
   }, [fetchLogs])
 
+  useEffect(() => {
+    if (!isLoading && user && user.role !== "ADMIN" && user.role !== "SUPERADMIN") {
+      router.push("/dashboard")
+    }
+  }, [user, isLoading, router])
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }
 
-  if (user?.role !== "ADMIN") {
-    router.push("/dashboard")
-    return null
+  if (!isLoading && user?.role !== "ADMIN" && user?.role !== "SUPERADMIN") {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <Spinner className="size-8 text-primary" />
+      </div>
+    )
   }
 
   const filteredLogs = logs.filter((log) => {
@@ -177,7 +187,7 @@ export default function LogAktivitasPage() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="border rounded-md px-3 py-2 text-sm min-w-[150px]"
+              className="h-7 border rounded-md px-3 text-sm min-w-[150px]"
             >
               <option value="all">Semua Tipe</option>
               <option value="INCOME">Pemasukan</option>

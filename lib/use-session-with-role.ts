@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 
-export type UserRole = "ADMIN" | "QC" | "GUDANG" | "KARYAWAN" | "GUEST"
+export type UserRole = "SUPERADMIN" | "ADMIN" | "QC" | "GUDANG" | "KARYAWAN" | "GUEST"
 
 export interface SessionWithRole {
   user: {
@@ -12,6 +12,7 @@ export interface SessionWithRole {
     image: string | null
     role: UserRole
     isAdmin: boolean
+    isSuperAdmin: boolean
     isQC: boolean
     isGudang: boolean
     isKaryawan: boolean
@@ -47,6 +48,7 @@ export function useSessionWithRole() {
         
         let role: UserRole = "GUEST"
         let isAdmin = false
+        let isSuperAdmin = false
         let employeeId: string | undefined
 
         try {
@@ -54,7 +56,8 @@ export function useSessionWithRole() {
           if (roleResponse.ok) {
             const roleData = await roleResponse.json()
             role = roleData.role || "GUEST"
-            isAdmin = roleData.isAdmin || false
+            isAdmin = roleData.isAdmin || role === "SUPERADMIN" || role === "ADMIN"
+            isSuperAdmin = roleData.isSuperAdmin || role === "SUPERADMIN"
             employeeId = roleData.employeeId
           }
         } catch (error) {
@@ -69,6 +72,7 @@ export function useSessionWithRole() {
             image: sessionUser.image || null,
             role,
             isAdmin,
+            isSuperAdmin,
             isQC: role === "QC",
             isGudang: role === "GUDANG",
             isKaryawan: role === "KARYAWAN",

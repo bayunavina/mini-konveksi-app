@@ -11,10 +11,29 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
     const offset = parseInt(searchParams.get("offset") || "0")
 
+    // ensure job_order_costs exists
+    try {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS job_order_costs (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          job_order_id uuid REFERENCES job_orders(id) ON DELETE CASCADE NOT NULL,
+          cost_category_code text NOT NULL,
+          cost_category_name text,
+          type text NOT NULL,
+          estimated_amount integer DEFAULT 0 NOT NULL,
+          actual_amount integer DEFAULT 0 NOT NULL,
+          notes text,
+          created_at timestamp DEFAULT NOW(),
+          updated_at timestamp DEFAULT NOW()
+        )
+      `)
+    } catch {}
+
     const baseQuery = db
       .select({
         id: jobOrders.id,
         joNumber: jobOrders.joNumber,
+        qrCode: jobOrders.qrCode,
         targetQty: jobOrders.targetQty,
         completedQty: jobOrders.completedQty,
         rejectedQty: jobOrders.rejectedQty,
@@ -37,6 +56,12 @@ export async function GET(request: NextRequest) {
           SELECT COALESCE(SUM(pa.accepted_qty), 0)
           FROM ${productionAssignments} pa
           WHERE pa.job_order_id = ${jobOrders.id}
+        )`,
+        hppEstimated: sql<number | null>`(
+          SELECT COALESCE(SUM(estimated_amount),0) FROM job_order_costs WHERE job_order_id = ${jobOrders.id} AND type='DIRECT'
+        )`,
+        hppActual: sql<number | null>`(
+          SELECT COALESCE(SUM(actual_amount),0) FROM job_order_costs WHERE job_order_id = ${jobOrders.id} AND type='DIRECT'
         )`,
       })
       .from(jobOrders)
@@ -70,6 +95,7 @@ export async function GET(request: NextRequest) {
     const formatted = results.map(row => ({
       id: row.id,
       joNumber: row.joNumber,
+      qrCode: (row as { qrCode?: string | null }).qrCode || null,
       targetQty: row.targetQty,
       completedQty: row.completedQty,
       rejectedQty: row.rejectedQty,
@@ -86,6 +112,9 @@ export async function GET(request: NextRequest) {
       employee: {
         name: row.employeeName || "-",
       },
+      hppEstimated: (row as any).hppEstimated ?? 0,
+      hppActual: (row as any).hppActual ?? 0,
+      hppPerPcs: row.targetQty ? Math.round(Number((row as any).hppEstimated || 0) / row.targetQty) : 0,
     }))
 
     return NextResponse.json({
@@ -111,6 +140,12 @@ function generateJoNumber(): string {
   return `JO${year}${month}${day}-${random}`
 }
 
+function generateJoQrCode(): string {
+  const ts = Date.now().toString(36).toUpperCase()
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase()
+  return `JOQR-${ts}${rand}`
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -119,9 +154,11 @@ export async function POST(request: NextRequest) {
     console.log("Creating job order with data:", { joNumber, productId, teamId, targetQty, dueDate, notes })
 
     const generatedJoNumber = joNumber || generateJoNumber()
+    const generatedQrCode = generateJoQrCode()
 
     const newJobOrder = await db.insert(jobOrders).values({
       joNumber: generatedJoNumber,
+      qrCode: generatedQrCode,
       productId: productId || null,
       teamId: teamId || null,
       targetQty: targetQty || 0,

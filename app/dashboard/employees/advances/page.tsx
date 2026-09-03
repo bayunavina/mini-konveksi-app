@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -28,7 +31,6 @@ import { ExportPrint } from "@/components/shared/export-print"
 import { 
   PlusIcon, 
   BanknotesIcon, 
-  ArrowPathIcon, 
   EyeIcon, 
   TrashIcon, 
   CheckIcon,
@@ -107,6 +109,12 @@ export default function AdvancesPage() {
   const { data: advances, loading, refetch } = useFetch<Advance[]>("/api/advances")
   const { data: employees } = useFetch<{ id: string; name: string }[]>("/api/employees")
 
+  useEffect(() => {
+    if (!isLoading && user && user.role !== "ADMIN" && user.role !== "SUPERADMIN") {
+      router.push("/dashboard")
+    }
+  }, [user, isLoading, router])
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -115,9 +123,12 @@ export default function AdvancesPage() {
     )
   }
 
-  if (user?.role !== "ADMIN") {
-    router.push("/dashboard")
-    return null
+  if (!isLoading && user?.role !== "ADMIN" && user?.role !== "SUPERADMIN") {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   const filteredAdvances = (advances || []).filter((a) => {
@@ -328,7 +339,7 @@ export default function AdvancesPage() {
         title="Kasbon"
         description="Kelola pengajuan kasbon karyawan"
         actions={
-          <Button onClick={() => setDialogOpen(true)} className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+          <Button onClick={() => setDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
             <PlusIcon className="mr-2 h-4 w-4" />
             Tambah Kasbon
           </Button>
@@ -454,7 +465,7 @@ export default function AdvancesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded-md px-3 py-2 text-sm"
+              className="h-7 border rounded-md px-3 text-sm"
             >
               <option value="all">Semua Status</option>
               <option value="PENDING">Menunggu</option>
@@ -508,7 +519,7 @@ export default function AdvancesPage() {
                           {formatCurrency(sisa)}
                         </TableCell>
                         <TableCell>
-                          <Badge className={STATUS_COLORS[advance.status] || "bg-gray-100 text-gray-800"}>
+                          <Badge className={`${STATUS_COLORS[advance.status] || "bg-gray-100 text-gray-800"}`}>
                             {STATUS_LABELS[advance.status] || advance.status}
                           </Badge>
                         </TableCell>
@@ -607,7 +618,7 @@ export default function AdvancesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
             <Button onClick={handleCreateAdvance} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan
             </Button>
           </DialogFooter>
@@ -728,11 +739,11 @@ export default function AdvancesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tanggal Bayar</label>
-                <Input
-                  type="date"
+                <Label>Tanggal Bayar</Label>
+                <DatePicker
                   value={paymentData.date}
-                  onChange={(e) => setPaymentData({ ...paymentData, date: e.target.value })}
+                  onChange={(date) => setPaymentData({ ...paymentData, date })}
+                  placeholder="Pilih tanggal bayar"
                 />
               </div>
               <div className="space-y-2">
@@ -748,7 +759,7 @@ export default function AdvancesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayDialogOpen(false)}>Batal</Button>
             <Button onClick={handlePay} disabled={submitting} className="bg-green-600 hover:bg-green-700">
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan Pembayaran
             </Button>
           </DialogFooter>
@@ -777,7 +788,7 @@ export default function AdvancesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRemarkDialogOpen(false)}>Batal</Button>
             <Button onClick={handleUpdateRemark} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan
             </Button>
           </DialogFooter>
@@ -794,7 +805,7 @@ export default function AdvancesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Hapus
             </Button>
           </DialogFooter>

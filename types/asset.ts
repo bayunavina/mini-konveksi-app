@@ -25,10 +25,10 @@ export const ASSET_STATUS_LABELS: Record<AssetStatus, string> = {
 };
 
 export const ASSET_STATUS_COLORS: Record<AssetStatus, string> = {
-  ACTIVE: "bg-green-100 text-green-800",
-  MAINTENANCE: "bg-yellow-100 text-yellow-800",
-  BROKEN: "bg-red-100 text-red-800",
-  RETIRED: "bg-gray-100 text-gray-600",
+  ACTIVE: "bg-success-light text-success-foreground",
+  MAINTENANCE: "bg-warning-light text-warning-foreground",
+  BROKEN: "bg-destructive/10 text-destructive",
+  RETIRED: "bg-muted text-muted-foreground",
 };
 
 export const MAINTENANCE_TYPE_LABELS: Record<MaintenanceType, string> = {

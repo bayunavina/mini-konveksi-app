@@ -50,6 +50,7 @@ const breadcrumbLabels: Record<string, string> = {
   finance: "Keuangan",
   assets: "Assets",
   "qr-generator": "QR/Barcode",
+  balance: "Balance Report",
   settings: "Settings",
   new: "Baru",
   salaries: "Penggajian",
@@ -104,6 +105,7 @@ const MODULE_RESULTS = [
   { keywords: ["user", "pengguna", "role"], title: "User & Role", href: "/dashboard/settings/users" },
   { keywords: ["notifikasi"], title: "Notifikasi", href: "/dashboard/settings/notifications" },
   { keywords: ["qr", "barcode", "scan"], title: "QR Generator", href: "/dashboard/qr-generator" },
+  { keywords: ["balance", "selisih", "reconcile", "stok opname", "deviasi", "laporan balance"], title: "Balance Report", href: "/dashboard/balance" },
 ]
 
 const ROLE_MODULES: Record<string, typeof MODULE_RESULTS> = {
@@ -260,7 +262,7 @@ export function DashboardHeader() {
         let allNotifications: DbNotification[] = []
 
         // For ADMIN, fetch both personal notifications and system-wide notifications
-        if (userRole === "ADMIN") {
+        if (userRole === "ADMIN" || userRole === "SUPERADMIN") {
           const [personalRes, systemRes] = await Promise.all([
             employeeId ? fetch(`/api/notifications?employeeId=${employeeId}`) : Promise.resolve(null),
             fetch(`/api/notifications`) // Fetch all notifications (no employeeId filter = system-wide)
@@ -691,7 +693,7 @@ export function DashboardHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
-        {userRole === "ADMIN" && (
+        {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
           <>
             <div ref={searchContainerRef} className="relative hidden md:flex">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -813,7 +815,7 @@ export function DashboardHeader() {
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                {userRole === "ADMIN" && (
+                {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
                   <DropdownMenuItem asChild className="text-center justify-center text-primary">
                     <Link href="/dashboard/log-aktivitas">
                       Lihat semua notifikasi

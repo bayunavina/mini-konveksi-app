@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -273,22 +274,22 @@ export default function QCOverviewPage() {
 
   if (loading) {
     return (
-      <div className="px-6 py-4 space-y-4">
+      <div className="px-3 py-3 space-y-3 sm:px-6 sm:py-4 space-y-4">
         <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />)}
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}
         </div>
-        <div className="h-96 bg-muted animate-pulse rounded-lg" />
+        <div className="h-96 bg-muted animate-pulse rounded-xl" />
       </div>
     )
   }
 
   return (
-    <div className="px-6 py-4 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground" />
-          <div className="relative">
+    <div className="px-3 py-3 sm:px-6 sm:py-4 space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="relative flex-1 min-w-0">
             <Input
               type="search"
               placeholder="Cari JO atau produk..."
@@ -299,75 +300,75 @@ export default function QCOverviewPage() {
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="max-w-[300px]"
+              className="w-full text-base"
             />
             {showSuggestions && suggestions.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
                 {suggestions.map((s, i) => (
                   <button
                     key={`${s.type}-${s.value}-${i}`}
-                    className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm"
+                    className="w-full px-4 py-3 text-left hover:bg-muted flex items-center gap-2 text-sm min-h-[44px]"
                     onClick={() => selectSuggestion(s.value)}
                   >
-                    <span className={`text-xs px-2 py-0.5 rounded ${
+                    <span className={`text-xs px-2 py-0.5 rounded shrink-0 ${
                       s.type === "jo" ? "bg-blue-100 text-blue-700" :
                       s.type === "product" ? "bg-green-100 text-green-700" :
                       "bg-purple-100 text-purple-700"
                     }`}>
                       {s.type === "jo" ? "JO" : s.type === "product" ? "Produk" : "Karyawan"}
                     </span>
-                    <span className="font-medium">{s.label}</span>
+                    <span className="font-medium truncate">{s.label}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => window.location.href = "/dashboard/qc"}>
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Kembali
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => window.location.href = "/dashboard/qc"} className="min-h-[44px] px-3">
+            <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Kembali</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={fetchData}>
-            <ArrowPathIcon className="h-4 w-4 mr-2" />
-            Refresh
+          <Button variant="outline" size="sm" onClick={fetchData} className="min-h-[44px] px-3">
+            <ArrowPathIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           {selectedRows.size > 0 && (
-            <Button size="sm" onClick={openQCDialog}>
-              <CheckIcon className="h-4 w-4 mr-2" />
-              Proses QC ({getTotalSelected()})
+            <Button size="sm" onClick={openQCDialog} className="min-h-[44px]">
+              <CheckIcon className="h-4 w-4 sm:mr-2" />
+              Proses ({getTotalSelected()})
             </Button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:max-w-md">
+      <div className="grid grid-cols-2 gap-3">
         <Card className="border-blue-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total JO</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Total JO</p>
+              <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
             </div>
-            <BuildingLibraryIcon className="h-8 w-8 text-[var(--chart-blue)]" />
+            <BuildingLibraryIcon className="h-7 w-7 sm:h-8 sm:w-8 text-[var(--chart-blue)] shrink-0" />
           </div>
         </Card>
 
         <Card className="border-red-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">QC Request</p>
-              <p className="text-2xl font-bold text-red-600">{stats.qcRequest}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">QC Request</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.qcRequest}</p>
             </div>
-            <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
+            <ExclamationCircleIcon className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 shrink-0" />
           </div>
         </Card>
       </div>
 
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-lg">Daftar JO</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <h3 className="font-semibold text-base sm:text-lg">Daftar JO</h3>
         <div className="flex items-center gap-2">
           {qcRequestItems.length > 0 && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {qcRequestItems.length} item QC Request
             </p>
           )}
@@ -398,96 +399,96 @@ export default function QCOverviewPage() {
         </div>
       </div>
 
-      <Card className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="text-center w-[50px]">
-                <input
-                  type="checkbox"
-                  checked={selectedRows.size === qcRequestItems.length && qcRequestItems.length > 0}
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-              </TableHead>
-              <TableHead className="text-center w-[50px]">No</TableHead>
-              <TableHead className="text-center">Tanggal</TableHead>
-              <TableHead className="text-center">No. JO</TableHead>
-              <TableHead className="text-center">Produk</TableHead>
-              <TableHead className="text-center">Karyawan</TableHead>
-              <TableHead className="text-center">Qty Proses</TableHead>
-              <TableHead className="text-center">Target</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {qcRequestItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
-                  <ClipboardDocumentCheckIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  <p>Tidak ada QC Request</p>
-                </TableCell>
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="text-center w-[44px] p-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.size === qcRequestItems.length && qcRequestItems.length > 0}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                </TableHead>
+                <TableHead className="text-center w-[36px] p-2 text-xs">No</TableHead>
+                <TableHead className="text-center p-2 text-xs">Tanggal</TableHead>
+                <TableHead className="text-center p-2 text-xs">No. JO</TableHead>
+                <TableHead className="text-center p-2 text-xs">Produk</TableHead>
+                <TableHead className="text-center p-2 text-xs">Karyawan</TableHead>
+                <TableHead className="text-center p-2 text-xs">Qty</TableHead>
+                <TableHead className="text-center p-2 text-xs">Target</TableHead>
+                <TableHead className="text-center p-2 text-xs">Status</TableHead>
               </TableRow>
-            ) : (
-              qcRequestItems.map((a, i) => {
-                const total = (a.completedQty || 0) + (a.rejectedQty || 0)
-                const progress = a.targetQty > 0 ? Math.round((total / a.targetQty) * 100) : 0
-                const isSelected = selectedRows.has(a.id)
+            </TableHeader>
+            <TableBody>
+              {qcRequestItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                    <ClipboardDocumentCheckIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                    <p>Tidak ada QC Request</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                qcRequestItems.map((a, i) => {
+                  const total = (a.completedQty || 0) + (a.rejectedQty || 0)
+                  const progress = a.targetQty > 0 ? Math.round((total / a.targetQty) * 100) : 0
+                  const isSelected = selectedRows.has(a.id)
 
-                return (
-                  <TableRow 
-                    key={a.id} 
-                    className={`cursor-pointer ${isSelected ? "bg-green-50" : "bg-red-50/30"}`}
-                    onClick={() => toggleSelect(a.id)}
-                  >
-                    <TableCell className="text-center">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(a.id)}
-                        className="h-4 w-4 rounded border-gray-300"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">{i + 1}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="text-sm">{formatDate(a.assignedAt)}</span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-mono font-semibold text-sm">{a.jobOrder?.joNumber || "-"}</span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-medium text-sm">{a.product?.name || "-"}</span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="text-sm">{a.employee?.name || "-"}</span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                        {total}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center w-[100px]">
-                      <div className="space-y-1">
-                        <Progress value={progress} className="h-1.5" />
-                        <span className="text-xs">{total}/{a.targetQty}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge className="bg-yellow-100 text-black border-yellow-300 animate-pulse">
-                        {STATUS_LABELS[a.status] || a.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
+                  return (
+                    <TableRow 
+                      key={a.id} 
+                      className={`cursor-pointer ${isSelected ? "bg-green-50" : "bg-red-50/30"}`}
+                      onClick={() => toggleSelect(a.id)}
+                    >
+                      <TableCell className="text-center p-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(a.id)}
+                          className="h-4 w-4 rounded border-gray-300"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center p-2 text-xs text-muted-foreground">{i + 1}</TableCell>
+                      <TableCell className="text-center p-2 text-xs">{formatDate(a.assignedAt)}</TableCell>
+                      <TableCell className="text-center p-2">
+                        <span className="font-mono font-semibold text-xs">{a.jobOrder?.joNumber || "-"}</span>
+                      </TableCell>
+                      <TableCell className="text-center p-2">
+                        <span className="font-medium text-xs truncate-1">{a.product?.name || "-"}</span>
+                      </TableCell>
+                      <TableCell className="text-center p-2">
+                        <span className="text-xs truncate-1">{a.employee?.name || "-"}</span>
+                      </TableCell>
+                      <TableCell className="text-center p-2">
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                          {total}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center p-2 w-[70px]">
+                        <div className="space-y-1">
+                          <Progress value={progress} className="h-1" />
+                          <span className="text-[10px]">{total}/{a.targetQty}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center p-2">
+                        <Badge className="bg-yellow-100 text-black border-yellow-300 animate-pulse whitespace-nowrap">
+                          {STATUS_LABELS[a.status] || a.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       <Dialog open={qcDialogOpen} onOpenChange={setQCDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Proses QC</DialogTitle>
             <DialogDescription>
@@ -495,28 +496,24 @@ export default function QCOverviewPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="successQty">QC Pass (Pcs)</Label>
-                <Input
+                <FormattedNumberInput
                   id="successQty"
-                  type="number"
-                  min="0"
                   placeholder="0"
                   value={qcForm.successQty}
-                  onChange={(e) => setQcForm({ ...qcForm, successQty: e.target.value })}
+                  onValueChange={(v) => setQcForm({ ...qcForm, successQty: v })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rejectQty">QC Reject (Pcs)</Label>
-                <Input
+                <FormattedNumberInput
                   id="rejectQty"
-                  type="number"
-                  min="0"
                   placeholder="0"
                   value={qcForm.rejectQty}
-                  onChange={(e) => setQcForm({ ...qcForm, rejectQty: e.target.value })}
+                  onValueChange={(v) => setQcForm({ ...qcForm, rejectQty: v })}
                 />
               </div>
             </div>
@@ -526,7 +523,7 @@ export default function QCOverviewPage() {
                 <Label htmlFor="rejectReason">Alasan Reject</Label>
                 <select
                   id="rejectReason"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="flex h-7 w-full rounded-md border border-input bg-background px-3 text-sm"
                   value={qcForm.rejectReason}
                   onChange={(e) => setQcForm({ ...qcForm, rejectReason: e.target.value })}
                 >
@@ -546,6 +543,7 @@ export default function QCOverviewPage() {
                 value={qcForm.notes}
                 onChange={(e) => setQcForm({ ...qcForm, notes: e.target.value })}
                 rows={3}
+                className="text-base"
               />
             </div>
 
@@ -557,11 +555,11 @@ export default function QCOverviewPage() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setQCDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setQCDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto">
               Batal
             </Button>
-            <Button onClick={handleSubmitQC} disabled={submitting}>
+            <Button onClick={handleSubmitQC} disabled={submitting} className="min-h-[44px] w-full sm:w-auto">
               {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
               Simpan QC Report
             </Button>

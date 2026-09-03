@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { PageHeader } from "@/components/shared"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { EnvelopeIcon, DevicePhoneMobileIcon, ArrowPathIcon, ExclamationCircleIcon, ServerStackIcon, CheckCircleIcon, XCircleIcon, BellAlertIcon } from "@heroicons/react/24/outline"
+import { EnvelopeIcon, DevicePhoneMobileIcon, ExclamationCircleIcon, ServerStackIcon, CheckCircleIcon, XCircleIcon, BellAlertIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 import { usePushNotification } from "@/hooks/usePushNotification"
 
@@ -60,7 +61,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      if (user.role !== "ADMIN") {
+      if (user.role !== "ADMIN" && user.role !== "SUPERADMIN") {
         router.push("/dashboard")
         return
       }
@@ -282,7 +283,7 @@ export default function NotificationsPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <PageHeader title="Notifikasi" description="Memuat..." />
         <div className="flex items-center justify-center py-12">
-          <ArrowPathIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Spinner className="size-8 text-muted-foreground" />
         </div>
       </div>
     )
@@ -301,7 +302,7 @@ export default function NotificationsPage() {
           >
             {testSending ? (
               <>
-                <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner data-icon="inline-start" />
                 Mengirim...
               </>
             ) : (
@@ -370,7 +371,7 @@ export default function NotificationsPage() {
               >
                 {smtpTesting ? (
                   <>
-                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                    <Spinner data-icon="inline-start" />
                     Menguji...
                   </>
                 ) : (
@@ -383,7 +384,7 @@ export default function NotificationsPage() {
               >
                 {smtpSaving ? (
                   <>
-                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                    <Spinner data-icon="inline-start" />
                     Menyimpan...
                   </>
                 ) : (
@@ -445,7 +446,7 @@ export default function NotificationsPage() {
                     >
                       {pushSubLoading ? (
                         <>
-                          <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                          <Spinner data-icon="inline-start" />
                           Meminta Izin...
                         </>
                       ) : (
@@ -483,7 +484,7 @@ export default function NotificationsPage() {
               >
                 {pushSaving ? (
                   <>
-                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
+                    <Spinner data-icon="inline-start" />
                     Menyimpan...
                   </>
                 ) : (

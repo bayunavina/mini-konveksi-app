@@ -1,3 +1,4 @@
+export const ROLE_SUPERADMIN = "SUPERADMIN";
 export const ROLE_ADMIN = "ADMIN";
 export const ROLE_GUDANG = "GUDANG";
 export const ROLE_OPERATOR = "OPERATOR";
@@ -8,6 +9,7 @@ export const ROLE_KARYAWAN = "KARYAWAN";
 export const ROLE_VIEWER = "VIEWER";
 
 export const ROLES = [
+  ROLE_SUPERADMIN,
   ROLE_ADMIN,
   ROLE_GUDANG,
   ROLE_OPERATOR,
@@ -21,6 +23,7 @@ export const ROLES = [
 export type Role = typeof ROLES[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
+  [ROLE_SUPERADMIN]: "Super Admin",
   [ROLE_ADMIN]: "Administrator",
   [ROLE_GUDANG]: "Operator Gudang",
   [ROLE_OPERATOR]: "Operator Produksi",
@@ -32,14 +35,15 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export const ROLE_COLORS: Record<Role, string> = {
-  [ROLE_ADMIN]: "bg-red-100 text-red-800",
-  [ROLE_GUDANG]: "bg-blue-100 text-blue-800",
-  [ROLE_OPERATOR]: "bg-green-100 text-green-800",
-  [ROLE_QC]: "bg-purple-100 text-purple-800",
-  [ROLE_KEUANGAN]: "bg-yellow-100 text-yellow-800",
-  [ROLE_MANAGER]: "bg-indigo-100 text-indigo-800",
-  [ROLE_KARYAWAN]: "bg-teal-100 text-teal-800",
-  [ROLE_VIEWER]: "bg-gray-100 text-gray-800",
+  [ROLE_SUPERADMIN]: "bg-destructive/10 text-destructive border border-destructive/30",
+  [ROLE_ADMIN]: "bg-destructive/10 text-destructive",
+  [ROLE_GUDANG]: "bg-brand-primary/10 text-brand-primary",
+  [ROLE_OPERATOR]: "bg-success-light text-success-foreground",
+  [ROLE_QC]: "bg-accent text-accent-foreground",
+  [ROLE_KEUANGAN]: "bg-warning-light text-warning-foreground",
+  [ROLE_MANAGER]: "bg-brand-primary/10 text-brand-primary",
+  [ROLE_KARYAWAN]: "bg-brand-primary/10 text-brand-primary",
+  [ROLE_VIEWER]: "bg-muted text-muted-foreground",
 };
 
 export const UNIT_LUSIN = "LUSIN";
@@ -116,3 +120,18 @@ export const APP_DESCRIPTION = "Sistem ERP untuk Manajemen Produksi Konveksi";
 export const MAX_PHOTO_UPLOAD = 10;
 export const MAX_PHOTO_SIZE_MB = 5;
 export const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
+
+// Finance / Cost Categories
+export const DIRECT_CATEGORIES = new Set(["BBL", "ACC", "TKL", "TKL-P", "OVP", "PKG"]);
+export const INDIRECT_CATEGORIES = new Set(["GTL", "LST", "SEWA", "MTC", "BPJS", "KON", "ADM", "MKT"]);
+// Legacy category codes (from old localStorage master) — kept for backward compat
+export const LEGACY_DIRECT_CATEGORIES = new Set(["MATERIAL", "BBL", "ACC", "TKL", "TKL-P", "OVP", "PKG"]);
+
+export const isDirectCategory = (code: string) => DIRECT_CATEGORIES.has(code) || LEGACY_DIRECT_CATEGORIES.has(code);
+export const isIndirectCategory = (code: string) => INDIRECT_CATEGORIES.has(code);
+
+export const MTC_PER_PCS = 7500;
+export const REJECT_RATE_THRESHOLD = 0.05;
+export const LOW_STOCK_THRESHOLD = 0.2;
+
+export const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL || "erpkonveksi@gmail.com";

@@ -22,6 +22,13 @@
       "when": 1774478972272,
       "tag": "0002_bitter_justice",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788338138253,
+      "tag": "0003_add_qrcode_to_employees_joborders",
+      "breakpoints": true
     }
   ]
 }

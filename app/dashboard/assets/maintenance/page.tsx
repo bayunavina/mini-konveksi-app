@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
@@ -34,7 +37,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { ArrowLeftIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon, ArrowPathIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
 import { formatDate, formatDateLong } from "@/lib/utils"
@@ -229,7 +232,7 @@ export default function MaintenancePage() {
                 Kembali
               </Link>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button variant="outline" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -306,7 +309,7 @@ export default function MaintenancePage() {
               />
               <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="dark:bg-[#304ffe] dark:hover:bg-[#304ffe]/80">
+                  <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
                     <PlusIcon className="mr-2 h-4 w-4" />
                     Jadwal Baru
                   </Button>
@@ -351,11 +354,10 @@ export default function MaintenancePage() {
 
                   <div className="space-y-2">
                     <Label>Tanggal Terjadwal</Label>
-                    <Input
-                      type="date"
-                      lang="id"
+                    <DatePicker
                       value={formData.scheduledDate}
-                      onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                      onChange={(date) => setFormData({ ...formData, scheduledDate: date })}
+                      placeholder="Pilih tanggal jadwal"
                     />
                   </div>
 
@@ -383,7 +385,7 @@ export default function MaintenancePage() {
                     Batal
                   </Button>
                   <Button onClick={handleCreateSchedule} disabled={!formData.assetId || !formData.scheduledDate || submitting}>
-                    {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+                    {submitting && <Spinner data-icon="inline-start" />}
                     <WrenchScrewdriverIcon className="mr-2 h-4 w-4" />
                     Simpan Jadwal
                   </Button>
@@ -431,7 +433,7 @@ export default function MaintenancePage() {
                       {formatDate(record.completedDate || record.scheduledDate)}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[record.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[record.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[record.status] || record.status}
                       </Badge>
                     </TableCell>
@@ -505,7 +507,7 @@ export default function MaintenancePage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={STATUS_COLORS[selectedMaintenance.status] || "bg-gray-100"}>
+                  <Badge className={`${STATUS_COLORS[selectedMaintenance.status] || "bg-gray-100"}`}>
                     {STATUS_LABELS[selectedMaintenance.status] || selectedMaintenance.status}
                   </Badge>
                 </div>
@@ -594,20 +596,18 @@ export default function MaintenancePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Tanggal Terjadwal</Label>
-                <Input
-                  type="date"
-                  lang="id"
+                <DatePicker
                   value={editFormData.scheduledDate}
-                  onChange={(e) => setEditFormData({ ...editFormData, scheduledDate: e.target.value })}
+                  onChange={(date) => setEditFormData({ ...editFormData, scheduledDate: date })}
+                  placeholder="Pilih tanggal jadwal"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Tanggal Selesai</Label>
-                <Input
-                  type="date"
-                  lang="id"
+                <DatePicker
                   value={editFormData.completedDate}
-                  onChange={(e) => setEditFormData({ ...editFormData, completedDate: e.target.value })}
+                  onChange={(date) => setEditFormData({ ...editFormData, completedDate: date })}
+                  placeholder="Pilih tanggal selesai"
                 />
               </div>
             </div>
@@ -621,11 +621,10 @@ export default function MaintenancePage() {
             </div>
             <div className="space-y-2">
               <Label>Biaya</Label>
-              <Input
-                type="number"
+              <FormattedNumberInput
                 placeholder="0"
                 value={editFormData.cost}
-                onChange={(e) => setEditFormData({ ...editFormData, cost: e.target.value })}
+                onValueChange={(v) => setEditFormData({ ...editFormData, cost: v })}
               />
             </div>
             <div className="space-y-2">
@@ -642,7 +641,7 @@ export default function MaintenancePage() {
               Batal
             </Button>
             <Button onClick={handleUpdate} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Simpan Perubahan
             </Button>
           </DialogFooter>
@@ -666,7 +665,7 @@ export default function MaintenancePage() {
               Batal
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Spinner data-icon="inline-start" />}
               Hapus
             </Button>
           </DialogFooter>

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { PageHeader } from "@/components/shared"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
@@ -33,7 +34,7 @@ interface SalaryClaim {
 const salaryChartConfig: ChartConfig = {
   amount: {
     label: "Total Gaji",
-    color: "#304ffe",
+    color: "var(--brand-primary)",
   },
 }
 
@@ -62,6 +63,12 @@ export default function KaryawanChartGajiPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString())
 
   const { data: salaryClaims, loading } = useFetch<SalaryClaim[]>(user?.employeeId ? `/api/admin/salary-claims?employeeId=${user.employeeId}` : null)
+
+  useEffect(() => {
+    if (!sessionLoading && user && user.role !== "KARYAWAN") {
+      router.push("/dashboard")
+    }
+  }, [user, sessionLoading, router])
 
   const filteredSalaryClaims = useMemo(() => {
     if (!salaryClaims) return []
@@ -130,46 +137,49 @@ export default function KaryawanChartGajiPage() {
   if (sessionLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }
 
-  if (user?.role !== "KARYAWAN") {
-    router.push("/dashboard")
-    return null
+  if (!sessionLoading && user?.role !== "KARYAWAN") {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <Spinner className="size-8 text-primary" />
+      </div>
+    )
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-3 sm:space-y-4 p-3 sm:p-6 pt-4">
       <PageHeader
         title="Chart Gaji"
         description={`Riwayat klaim gaji ${user?.name || "Karyawan"}`}
       />
 
       {/* Total Gaji Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Gaji</CardTitle>
-          <BanknotesIcon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {loading ? "-" : formatCurrency(totalMonthlySalary)}
+      <Card className="p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total Gaji</p>
+            <p className="text-xl sm:text-2xl font-bold mt-1">
+              {loading ? "-" : formatCurrency(totalMonthlySalary)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {filteredSalaryClaims.length} klaim • {currentMonthLabel} {selectedYear}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {filteredSalaryClaims.length} klaim • {currentMonthLabel} {selectedYear}
-          </p>
-        </CardContent>
+          <BanknotesIcon className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground shrink-0" />
+        </div>
       </Card>
 
       {/* Chart Card */}
       <Card className="h-auto">
-        <CardHeader className="pb-2 px-4 pt-4">
-          <div className="flex items-center justify-between gap-3">
+        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle className="text-sm sm:text-base">Grafik Gaji per Minggu</CardTitle>
-              <CardDescription className="text-[10px] sm:text-xs hidden sm:block">
+              <CardDescription className="text-xs hidden sm:block">
                 Distribusi klaim gaji dalam {currentMonthLabel} {selectedYear}
               </CardDescription>
             </div>
@@ -177,7 +187,7 @@ export default function KaryawanChartGajiPage() {
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="text-xs border rounded px-2 py-1 bg-background"
+                className="text-base border rounded px-2 py-2 bg-background min-h-[44px]"
               >
                 {MONTHS.map((month) => (
                   <option key={month.value} value={month.value}>
@@ -188,7 +198,7 @@ export default function KaryawanChartGajiPage() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="text-xs border rounded px-2 py-1 bg-background"
+                className="text-base border rounded px-2 py-2 bg-background min-h-[44px]"
               >
                 {[2025, 2026, 2027].map((year) => (
                   <option key={year} value={year.toString()}>
@@ -199,7 +209,7 @@ export default function KaryawanChartGajiPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-4 py-2">
+        <CardContent className="p-4 sm:p-6">
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-[200px] w-full" />
@@ -211,10 +221,10 @@ export default function KaryawanChartGajiPage() {
               <p className="text-xs">Tidak ada klaim gaji untuk periode ini</p>
             </div>
           ) : (
-            <ChartContainer config={salaryChartConfig} className="h-[160px] sm:h-[200px] lg:h-[240px] w-full">
+            <ChartContainer config={salaryChartConfig} className="h-[180px] sm:h-[220px] lg:h-[260px] w-full">
               <BarChart
                 data={chartData}
-                margin={{ top: 5, left: 20, right: 10, bottom: 5 }}
+                margin={{ top: 5, left: 10, right: 10, bottom: 5 }}
               >
                 <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
@@ -237,7 +247,7 @@ export default function KaryawanChartGajiPage() {
                 />
                 <Bar 
                   dataKey="amount" 
-                  fill="#304ffe" 
+                  fill="var(--brand-primary)" 
                   radius={3}
                 />
               </BarChart>
@@ -245,10 +255,10 @@ export default function KaryawanChartGajiPage() {
           )}
         </CardContent>
         {filteredSalaryClaims.length > 0 && (
-          <CardFooter className="flex-col items-start gap-2 px-4 py-3 border-t text-xs sm:text-sm">
-            <div className="flex items-center gap-4 w-full">
+          <CardFooter className="flex-col items-start gap-2 p-4 sm:p-6 border-t text-xs sm:text-sm">
+            <div className="flex flex-wrap items-center gap-4 w-full">
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]" style={{ backgroundColor: "#304ffe" }} />
+                <div className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]" style={{ backgroundColor: "var(--brand-primary)" }} />
                 <span className="text-muted-foreground">Total Gaji:</span>
                 <span className="font-semibold text-foreground">{formatCurrency(totalMonthlySalary)}</span>
               </div>

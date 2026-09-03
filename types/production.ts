@@ -22,15 +22,15 @@ export const JOB_ORDER_STATUS_LABELS: Record<JobOrderStatus, string> = {
 };
 
 export const JOB_ORDER_STATUS_COLORS: Record<JobOrderStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-800",
-  APPROVED: "bg-blue-100 text-blue-800",
-  IN_PROGRESS: "bg-yellow-100 text-yellow-800",
-  QC_PENDING: "bg-orange-100 text-orange-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  REJECTED: "bg-red-100 text-red-800",
-  CANCELLED: "bg-gray-100 text-gray-600",
-  HOLD: "bg-purple-100 text-purple-800",
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  DRAFT: "bg-muted text-muted-foreground",
+  APPROVED: "bg-brand-primary/10 text-brand-primary",
+  IN_PROGRESS: "bg-warning-light text-warning-foreground",
+  QC_PENDING: "bg-warning-light text-warning-foreground",
+  COMPLETED: "bg-success-light text-success-foreground",
+  REJECTED: "bg-destructive/10 text-destructive",
+  CANCELLED: "bg-muted text-muted-foreground",
+  HOLD: "bg-accent text-accent-foreground",
+  PENDING: "bg-warning-light text-warning-foreground border-warning/30",
 };
 
 export interface JobOrder {
@@ -54,6 +54,9 @@ export interface JobOrder {
   employee?: {
     name: string;
   } | null;
+  hppEstimated?: number;
+  hppActual?: number;
+  hppPerPcs?: number;
 }
 
 export interface ProductionReport {

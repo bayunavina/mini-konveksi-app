@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { TimePicker } from "@/components/ui/time-picker"
 import { Switch } from "@/components/ui/switch"
 import {
   Select,
@@ -282,18 +283,16 @@ export default function GeneralPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Jam Masuk</Label>
-              <Input
-                type="time"
+              <TimePicker
                 value={settings.startWorkHour}
-                onChange={(e) => setSettings({ ...settings, startWorkHour: e.target.value })}
+                onChange={(v) => setSettings({ ...settings, startWorkHour: v })}
               />
             </div>
             <div className="space-y-2">
               <Label>Jam Pulang</Label>
-              <Input
-                type="time"
+              <TimePicker
                 value={settings.endWorkHour}
-                onChange={(e) => setSettings({ ...settings, endWorkHour: e.target.value })}
+                onChange={(v) => setSettings({ ...settings, endWorkHour: v })}
               />
             </div>
           </div>

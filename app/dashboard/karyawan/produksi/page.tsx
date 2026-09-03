@@ -152,18 +152,18 @@ export default function KaryawanProduksiPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-6 pt-4">
+    <div className="flex-1 space-y-3 sm:space-y-4 p-3 sm:p-6 pt-4">
       <PageHeader
         title="Produksi Saya"
         description="Daftar job order yang dikerjakan"
       />
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle>Daftar Job Order</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
+        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-base sm:text-lg">Daftar Job Order</CardTitle>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => refetch()}>
                 Refresh
               </Button>
               <ExportPrint
@@ -185,9 +185,9 @@ export default function KaryawanProduksiPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
-            <div className="relative w-full sm:max-w-sm">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="relative w-full">
               <Input
                 type="search"
                 placeholder="Cari JO, produk, atau SKU..."
@@ -198,14 +198,14 @@ export default function KaryawanProduksiPage() {
                 }}
                 onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full"
+                className="w-full text-base min-h-[44px]"
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg">
+                <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg overflow-hidden">
                   {suggestions.map((sug, idx) => (
                     <button
                       key={idx}
-                      className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                      className="w-full text-left px-4 py-3 hover:bg-accent text-sm min-h-[44px]"
                       onClick={() => {
                         setSearchQuery(sug)
                         setShowSuggestions(false)
@@ -227,58 +227,68 @@ export default function KaryawanProduksiPage() {
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground border rounded-lg bg-muted/20">
-              <p>Belum ada Job Order ditemukan.</p>
+              <p className="text-sm">Belum ada Job Order ditemukan.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">No</TableHead>
-                  <TableHead>Nomor JO</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Waktu</TableHead>
-                  <TableHead>Produk / SKU</TableHead>
-                  <TableHead>Target / Selesai</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((item) => (
-                  <TableRow key={item.no}>
-                    <TableCell className="font-medium">{item.nomor}</TableCell>
-                    <TableCell className="font-medium text-primary">{item.no}</TableCell>
-                    <TableCell>{item.tanggal}</TableCell>
-                    <TableCell>{item.waktu}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">{item.produk}</span>
-                        <span className="text-xs text-muted-foreground">{item.sku}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {item.selesai} / {item.target}
-                    </TableCell>
-                    <TableCell>
-                      <div className="w-[80px] flex items-center gap-2">
-                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary"
-                            style={{ width: `${Math.min((item.selesai / (item.target || 1)) * 100, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs">{Math.round((item.selesai / (item.target || 1)) * 100)}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(item.status)}>
-                        {getStatusLabel(item.status)}
-                      </Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-10 p-2 text-xs">No</TableHead>
+                    <TableHead className="p-2 text-xs whitespace-nowrap">Nomor JO</TableHead>
+                    <TableHead className="p-2 text-xs hidden md:table-cell">Tanggal</TableHead>
+                    <TableHead className="p-2 text-xs hidden lg:table-cell">Waktu</TableHead>
+                    <TableHead className="p-2 text-xs">Produk</TableHead>
+                    <TableHead className="p-2 text-xs">Target</TableHead>
+                    <TableHead className="p-2 text-xs hidden md:table-cell">Progress</TableHead>
+                    <TableHead className="p-2 text-xs">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow key={item.no}>
+                      <TableCell className="font-medium p-2 text-xs">{item.nomor}</TableCell>
+                      <TableCell className="font-medium text-primary p-2 text-xs whitespace-nowrap">{item.no}</TableCell>
+                      <TableCell className="p-2 text-xs hidden md:table-cell">{item.tanggal}</TableCell>
+                      <TableCell className="p-2 text-xs hidden lg:table-cell">{item.waktu}</TableCell>
+                      <TableCell className="p-2">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-xs truncate-1 max-w-[120px]">{item.produk}</span>
+                          <span className="text-[10px] text-muted-foreground">{item.sku}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-2 text-xs">
+                        <div className="flex flex-col">
+                          <span>{item.selesai} / {item.target}</span>
+                          <div className="md:hidden w-full h-1 bg-muted rounded-full overflow-hidden mt-1">
+                            <div 
+                              className="h-full bg-primary" 
+                              style={{ width: `${Math.min((item.selesai / (item.target || 1)) * 100, 100)}%` }} 
+                            />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-2 hidden md:table-cell">
+                        <div className="flex items-center gap-2 min-w-[100px]">
+                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary"
+                              style={{ width: `${Math.min((item.selesai / (item.target || 1)) * 100, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs whitespace-nowrap">{Math.round((item.selesai / (item.target || 1)) * 100)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Badge className={`${getStatusColor(item.status)} whitespace-nowrap`}>
+                          {getStatusLabel(item.status)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

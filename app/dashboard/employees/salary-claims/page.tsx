@@ -30,7 +30,7 @@ import {
 } from "@heroicons/react/24/outline"
 import { ExportPrint } from "@/components/shared/export-print"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 import { useRouter } from "next/navigation"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { formatDate } from "@/lib/utils"
@@ -83,19 +83,21 @@ export default function SalaryClaimsPage() {
   const [processing, setProcessing] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
-  const fetchClaims = async () => {
+  const fetchClaims = async (signal?: AbortSignal) => {
     setLoading(true)
     try {
-      const url = statusFilter === "all" 
-        ? "/api/admin/salary-claims" 
+      const url = statusFilter === "all"
+        ? "/api/admin/salary-claims"
         : `/api/admin/salary-claims?status=${statusFilter}`
-      const response = await fetch(url)
+      const response = await fetch(url, { signal })
       if (response.ok) {
         const result = await response.json()
         setClaims(Array.isArray(result) ? result : [])
       }
     } catch (error) {
-      console.error("Error fetching claims:", error)
+      if ((error as { name?: string })?.name !== "AbortError") {
+        console.error("Error fetching claims:", error)
+      }
     } finally {
       setLoading(false)
     }
@@ -103,21 +105,32 @@ export default function SalaryClaimsPage() {
 
   useEffect(() => {
     if (!isLoading && user?.role === "ADMIN") {
-      fetchClaims()
+      const controller = new AbortController()
+      fetchClaims(controller.signal)
+      return () => controller.abort()
     }
   }, [statusFilter, isLoading, user?.role])
+
+  useEffect(() => {
+    if (!isLoading && user && user.role !== "ADMIN" && user.role !== "SUPERADMIN") {
+      router.push("/dashboard")
+    }
+  }, [user, isLoading, router])
 
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Spinner className="size-8 text-primary" />
       </div>
     )
   }
 
-  if (user?.role !== "ADMIN") {
-    router.push("/dashboard")
-    return null
+  if (!isLoading && user?.role !== "ADMIN" && user?.role !== "SUPERADMIN") {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <Spinner className="size-8 text-primary" />
+      </div>
+    )
   }
 
   const handleApprove = async (claim: SalaryClaim) => {
@@ -310,11 +323,11 @@ export default function SalaryClaimsPage() {
           disabled={syncing}
         >
           {syncing ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <ArrowPathIcon className="mr-2 h-4 w-4" />
-          )}
-          Sync Finance
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <ArrowPathIcon className="mr-2 h-4 w-4" />
+            )}
+            Sync Finance
         </Button>
       </div>
 
@@ -489,7 +502,7 @@ export default function SalaryClaimsPage() {
                       {formatCurrency(parseFloat(claim.totalSalary || "0"))}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={STATUS_COLORS[claim.status] || "bg-gray-100"}>
+                      <Badge className={`${STATUS_COLORS[claim.status] || "bg-gray-100"}`}>
                         {STATUS_LABELS[claim.status] || claim.status}
                       </Badge>
                     </TableCell>
@@ -508,7 +521,7 @@ export default function SalaryClaimsPage() {
                             title="Setujui"
                           >
                             {processing ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Spinner data-icon="inline-start" />
                             ) : (
                               <CheckIcon className="h-4 w-4" />
                             )}

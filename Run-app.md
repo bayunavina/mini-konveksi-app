@@ -1,8 +1,8 @@
-# Plan for Running Mini Konveksi App
+# Panduan Menjalankan Mini Konveksi App
 
 ## Arsitektur Aplikasi
 
-Aplikasi ini menggunakan **Next.js monorepo architecture** - frontend dan backend adalah satu server yang sama:
+Aplikasi ini menggunakan **Next.js monorepo architecture** - frontend dan backend dalam satu server yang sama:
 
 | Komponen              | Lokasi       | Port      |
 | --------------------- | ------------ | --------- |
@@ -78,11 +78,19 @@ npm run dev
 | Script                  | Fungsi                           |
 | ----------------------- | -------------------------------- |
 | `npm run db:up`       | Start PostgreSQL (port 5432)     |
+| `npm run db:down`     | Stop PostgreSQL                  |
 | `npm run db:dev`      | Start PostgreSQL dev (port 5433) |
 | `npm run db:push`     | Push schema ke database          |
+| `npm run db:migrate`  | Jalankan migration database      |
+| `npm run db:studio`   | Buka database GUI (Drizzle)      |
 | `npm run dev`         | Start Next.js dev server         |
+| `npm run build`       | Build untuk produksi             |
+| `npm run start`       | Start production server          |
+| `npm run lint`        | Jalankan ESLint                  |
 | `npm run docker:up`   | Start full stack (app + db)      |
 | `npm run docker:down` | Stop all containers              |
+| `npm run docker:logs` | Lihat logs container             |
+| `npm run seed:admin`  | Seed akun superadmin             |
 
 ---
 
@@ -101,62 +109,46 @@ npm run db:up
 # 4. Push database schema
 npm run db:push
 
-# 5. Start development server
+# 5. Seed superadmin
+npm run seed:admin
+
+# 6. Start development server
 npm run dev
 ```
 
 Buka browser di **http://localhost:3000**
 
-# Superadmin (Default Akun)
+---
 
-erpkonveksi@gmail.com
-erpkonveksi123!
+## Akun Default
 
-# user Karyawan
+### Superadmin
+- Email: `erpkonveksi@gmail.com`
+- Password: `erpkonveksi123!`
 
-karyawan@konveksi.com
-Karyawan123!
+### Karyawan
+- Email: `karyawan@konveksi.com`
+- Password: `Karyawan123!`
 
-# User QC
+### User QC
+- Email: `qc@konveksi.com`
+- Password: `QC123!`
 
-qc@konveksi.com
-QC123!
+### User Gudang
+- Email: `gudang@konveksi.com`
+- Password: `Gudang123!`
 
-# User gudang
-
-gudang@konveksi.com
-Gudang123!
-
-added 1 package, and audited 654 packages in 7s
-167 packages are looking for funding
-  run `npm fund` for details
-14 vulnerabilities (7 moderate, 7 high)
-To address issues that do not require attention, run:
-  npm audit fix
-To address all issues possible (including breaking changes), run:
-  npm audit fix --force
-Some issues need review, and may require choosing
-a different dependency.
-Run `npm audit` for details.
-
-Promp Update Next JS
-
-# Prompt Deploy ke Versi Stabil
+> Akun di atas disediakan oleh script seed (`scripts/seed.ts`). Gunakan `npm run seed:admin` jika akun superadmin ingin dibuat ulang/direset, dan tambahkan user lain melalui menu **Settings → Users** di dashboard.
 
 ---
 
-# DEPLOY PRODUCTION - Mini Konveksi ERP
-
-## Langkah Pertama: Upgrade ke Versi Stabil
-
-Jalankan command ini di terminal project:
+## Deploy Produksi
 
 ```bash
-# Stop dev server terlebih dahulu (Ctrl+C)
-# Install versi stabil
-npm install next@15 react@18 react-dom@18
-# Install ulang dependencies untuk kompatibilitas
-npm install
-# Verifikasi versi
-npm list next react react-dom
+# Build & start full stack (app + database)
+npm run deploy
+# atau
+npm run docker:up
 ```
+
+> Sebelum deploy, pastikan `.env` sudah diisi dengan nilai produksi (`DATABASE_URL`, `BETTER_AUTH_SECRET`, dll). Kredensial database produksi di `docker-compose.yaml` menggunakan `konveksi_user` / `konveksi_password` / `konveksi_db`.
