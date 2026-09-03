@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -38,6 +38,7 @@ interface GeneralSettings {
 const COMPANY_STORAGE_KEY = "company_info"
 
 export default function GeneralPage() {
+  const router = useRouter()
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
     name: "PT Konveksi Maju Jaya",
     address: "Jl. Industri No. 123, Jakarta Pusat",
@@ -140,11 +141,9 @@ export default function GeneralPage() {
         description="Konfigurasi sistem dan informasi perusahaan"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/settings">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard/settings")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Button onClick={handleSave} disabled={saveStatus === "saving"}>
               {saveStatus === "saving" ? "Menyimpan..." : saveStatus === "saved" ? "Tersimpan!" : "Simpan Perubahan"}

@@ -2,7 +2,7 @@
 
 import { memo, useState, useEffect, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -515,6 +515,7 @@ const StatsOverview = memo(function StatsOverview({ skuTotal, supplierTotal, cos
 // Server-side pagination + search untuk skalabilitas 1000+ baris
 
 export default function MasterPage() {
+  const router = useRouter()
   const queryClient = useQueryClient()
 
   const refetchSkus = useCallback(() => queryClient.invalidateQueries({ queryKey: ["master-skus"] }), [queryClient])
@@ -627,12 +628,12 @@ export default function MasterPage() {
         title="Data Master"
         description="Kelola SKU, Supplier, dan Kategori Biaya"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/settings">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/settings")}>
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               Kembali
-            </Link>
-          </Button>
+            </Button>
+          </div>
         }
       />
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -44,6 +45,7 @@ interface QCReport {
 }
 
 export default function QCReportPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [dateFilter, setDateFilter] = useState<string>("all")
@@ -347,7 +349,7 @@ export default function QCReportPage() {
               <ArrowDownTrayIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Export</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.location.href = "/dashboard/qc"} className="min-h-[44px] px-3">
+            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/qc")} className="min-h-[44px] px-3">
               <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Kembali</span>
             </Button>

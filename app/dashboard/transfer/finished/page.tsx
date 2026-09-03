@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -58,6 +59,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function FinishedTransferPage() {
+  const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null)
 
@@ -93,11 +95,9 @@ export default function FinishedTransferPage() {
         description="Transfer barang jadi dari produksi ke gudang"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/transfer">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard/transfer")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Button asChild>
               <Link href="/dashboard/transfer/finished/new">

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -81,6 +81,7 @@ interface Assignment {
 }
 
 export default function AssignmentsPage() {
+  const router = useRouter()
   const { formatCurrency, currencySymbol } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -209,12 +210,10 @@ export default function AssignmentsPage() {
         title="Assignment Produksi"
         description="Assign job produksi ke karyawan"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/production">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/production")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Button onClick={() => setAddDialogOpen(true)}>
               <PlusIcon className="mr-2 h-4 w-4" />

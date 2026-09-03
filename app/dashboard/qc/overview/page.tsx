@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -89,6 +90,7 @@ const REJECT_REASONS = [
 ]
 
 export default function QCOverviewPage() {
+  const router = useRouter()
   const { user } = useSessionWithRole()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -325,7 +327,7 @@ export default function QCOverviewPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => window.location.href = "/dashboard/qc"} className="min-h-[44px] px-3">
+          <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/qc")} className="min-h-[44px] px-3">
             <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Kembali</span>
           </Button>

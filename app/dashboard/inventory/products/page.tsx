@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -65,6 +65,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function ProductsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -157,12 +158,10 @@ export default function ProductsPage() {
         title="Daftar Produk"
         description="Kelola stok bahan baku berdasarkan produk"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/inventory">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/inventory")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <ExportPrint
               title="Daftar Produk"

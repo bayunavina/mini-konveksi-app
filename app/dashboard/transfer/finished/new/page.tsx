@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -124,11 +123,9 @@ export default function NewFinishedTransferPage() {
         description="Transfer barang jadi dari produksi ke gudang"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/transfer/finished">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard/transfer/finished")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
           </div>
         }

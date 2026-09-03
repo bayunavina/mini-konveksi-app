@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -83,6 +83,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default function MaintenancePage() {
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
@@ -226,11 +227,9 @@ export default function MaintenancePage() {
         description="Kelola jadwal perawatan dan perbaikan aset"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/assets">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard/assets")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Button variant="outline" onClick={() => refetch()}>
               Refresh

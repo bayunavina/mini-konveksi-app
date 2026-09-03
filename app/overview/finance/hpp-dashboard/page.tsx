@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -44,6 +44,7 @@ interface HppDashboardData {
 }
 
 export default function HppDashboardPage() {
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
   const { data, loading } = useFetch<HppDashboardData>(`/api/hpp-dashboard?period=${period}`)
@@ -67,11 +68,9 @@ export default function HppDashboardPage() {
         description="HPP (Harga Pokok Produksi) per SKU per periode"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/overview/finance">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/overview/finance")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger className="w-48">

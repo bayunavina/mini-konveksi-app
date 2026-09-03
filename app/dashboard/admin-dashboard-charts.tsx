@@ -791,12 +791,6 @@ export function ProduksiProgressChart({ produksiMasuk, barangJadi, sisaStok, yea
                     <Cell fill={RED_COLOR} strokeWidth={0} />
                   </Pie>
                 </PieChart>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-lg sm:text-xl font-bold text-foreground">{total.toLocaleString()}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Total</p>
-                  </div>
-                </div>
               </>
             )}
           </div>

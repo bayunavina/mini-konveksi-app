@@ -355,11 +355,9 @@ export default function JobOrderDetailPage({ params }: { params: Promise<{ joNum
           title="Error"
           description={error || "Job order not found"}
         />
-        <Button asChild>
-          <Link href="/dashboard/produksi">
-            <ArrowLeftIcon className="mr-2 h-4 w-4" />
-            Kembali
-          </Link>
+        <Button onClick={() => router.push("/dashboard/produksi")}>
+          <ArrowLeftIcon className="mr-2 h-4 w-4" />
+          Kembali
         </Button>
       </div>
     )

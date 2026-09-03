@@ -99,12 +99,6 @@ interface QCReport {
   createdAt?: string
 }
 
-interface Reject {
-  id: string
-  quantity: number
-  unit: string
-}
-
 interface Maintenance {
   id: string
   status: string
@@ -204,7 +198,6 @@ export function AdminDashboard() {
   const { data: transactions } = useFetch<Transaction[]>("/api/transactions")
   const { data: employees } = useFetch<Employee[]>("/api/employees")
   const { data: qcReports } = useFetch<QCReport[]>("/api/qc-reports")
-  const { data: rejects } = useFetch<Reject[]>("/api/rejects")
   const { data: maintenance } = useFetch<Maintenance[]>("/api/assets/maintenance")
 
   const [financeYear, setFinanceYear] = useState(new Date().getFullYear())
@@ -260,7 +253,6 @@ export function AdminDashboard() {
             ...prev, 
             produksiMasuk: data.masukProduksi || 0,
             finishedGoods: data.lolosQC || 0,
-            qcSukses: data.lolosQC || 0,
           }))
         }
       } catch (error) {
@@ -394,16 +386,6 @@ export function AdminDashboard() {
   }, [employees])
 
   useEffect(() => {
-    if (rejects) {
-      const totalRejectQty = rejects.reduce((sum, r) => sum + r.quantity, 0)
-      setStats(prev => ({ 
-        ...prev, 
-        activeJobs: totalRejectQty 
-      }))
-    }
-  }, [rejects])
-
-  useEffect(() => {
     if (maintenance) {
       const pending = maintenance.filter(m => m.status === "PENDING").length
       setStats(prev => ({ 
@@ -498,7 +480,7 @@ export function AdminDashboard() {
         <CompactStat title="Pers. Kasbon" value={stats.persetujuanKasbon} icon={BanknotesIcon} iconColor="text-teal-600" href="/dashboard/employees/advances" delay={270} />
         <CompactStat title="Maintenance" value={stats.maintenancePending} icon={WrenchIcon} iconColor="text-orange-600" href="/dashboard/assets/maintenance" delay={280} />
         <CompactStat title="Bahan Baku Stok" value={stats.bahanBakuStok.toLocaleString()} icon={BeakerIcon} iconColor="text-[var(--chart-blue)]" href="/dashboard/inventory/materials" delay={300} />
-        <CompactStat title="Bahan Baku Terpakai" value={stats.bahanBakuTerpakai.toLocaleString()} icon={BeakerIcon} iconColor="text-orange-600" href="/dashboard/inventory/products" delay={350} />
+        <CompactStat title="Bahan Baku Terpakai" value={stats.bahanBakuTerpakai.toLocaleString()} icon={BeakerIcon} iconColor="text-orange-600" href="/dashboard/inventory/materials" delay={350} />
       </div>
 
       {/* Charts Row 1 - Keuangan */}

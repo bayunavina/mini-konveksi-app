@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -101,6 +101,7 @@ interface TransferFormItem {
 }
 
 export default function OutgoingPage() {
+  const router = useRouter()
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null)
@@ -239,11 +240,9 @@ export default function OutgoingPage() {
         description="Kelola transfer barang keluar"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/transfer">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard/transfer")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
           </div>
         }

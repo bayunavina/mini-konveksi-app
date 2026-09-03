@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -84,6 +85,7 @@ interface TeamDetail extends Team {
 }
 
 export default function TeamsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [addOpen, setAddOpen] = useState(false)
@@ -241,11 +243,9 @@ export default function TeamsPage() {
         description="Kelola tim produksi, ketua tim, dan pembagian anggota"
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/employees">
+            <Button variant="outline" onClick={() => router.push("/dashboard/employees")}>
                 <ArrowLeft data-icon="inline-start" />
                 Kembali
-              </Link>
             </Button>
             <Button onClick={openAdd}>
               <Plus data-icon="inline-start" />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +52,7 @@ interface Assignment {
 }
 
 export default function EmployeeProgressPage() {
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
@@ -144,11 +145,9 @@ export default function EmployeeProgressPage() {
         title="Update Progress Produksi"
         description="Update progres penjahitan yang Anda kerjakan"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/production">
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
+          <Button variant="outline" onClick={() => router.push("/dashboard/production")}>
+            <ArrowLeftIcon className="mr-2 h-4 w-4" />
+            Kembali
           </Button>
         }
       />

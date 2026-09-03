@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -74,6 +74,7 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export default function UsersPage() {
+  const router = useRouter()
   const [users, setUsers] = useState<Employee[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
@@ -357,12 +358,12 @@ export default function UsersPage() {
         title="User & Role"
         description="Kelola user dan role akses"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/settings">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/settings")}>
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               Kembali
-            </Link>
-          </Button>
+            </Button>
+          </div>
         }
       />
 

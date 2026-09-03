@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -89,6 +89,7 @@ interface BalanceSummary {
 }
 
 export default function BalancePage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("material")
   const [searchMaterial, setSearchMaterial] = useState("")
   const [searchProduction, setSearchProduction] = useState("")
@@ -133,11 +134,9 @@ export default function BalancePage() {
         description="Rekapan keseimbangan qty: masuk, proses, keluar — deteksi deviasi"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Dashboard
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Dashboard
             </Button>
             <Button variant="outline" onClick={refetchAll}>
               <ArrowPathIcon className="mr-2 h-4 w-4" />

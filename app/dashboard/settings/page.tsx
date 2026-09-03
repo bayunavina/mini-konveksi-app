@@ -522,10 +522,10 @@ export default function SettingsPage() {
               Factory Reset
             </h4>
             <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-              Factory Reset akan menghapus <strong>semua data bisnis</strong> termasuk transaksi, job order, produk, inventory, dan laporan.
-              Akun superadmin (<code className="bg-red-100 dark:bg-red-900 px-1 rounded">erpkonveksi@gmail.com</code>) akan dipertahankan agar Anda tetap bisa login.
-              <strong> Lakukan backup terlebih dahulu!</strong>
-            </p>
+  Factory Reset akan menghapus <strong>semua data bisnis</strong> termasuk transaksi, job order, produk, inventory, dan laporan.
+  Akun superadmin (<code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">erpkonveksi@gmail.com</code>) akan dipertahankan agar Anda tetap bisa login.
+  <strong> Lakukan backup terlebih dahulu!</strong>
+</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -569,14 +569,14 @@ export default function SettingsPage() {
               </div>
 
               <Button
-                variant="destructive"
-                disabled={confirmText !== CONFIRM_TEXT || factoryLoading}
-                onClick={() => setShowFactoryDialog(true)}
-                className="w-full"
-              >
-                <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
-                {factoryLoading ? "Memproses..." : `Reset ${scopeLabels[factoryScope] || factoryScope}`}
-              </Button>
+  variant="destructive"
+  disabled={confirmText !== CONFIRM_TEXT || factoryLoading}
+  onClick={() => setShowFactoryDialog(true)}
+  className="w-full"
+  >
+  <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
+  {factoryLoading ? "Memproses..." : <span className="text-red-500 dark:text-yellow-400">{`Reset ${scopeLabels[factoryScope] || factoryScope}`}</span>}
+  </Button>
               <p className="text-xs text-muted-foreground text-center">Butuh akses Admin. Hanya admin yang dapat melakukan factory reset.</p>
             </div>
 

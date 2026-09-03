@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -84,6 +85,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 export default function FinancePage() {
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -189,7 +191,7 @@ export default function FinancePage() {
         title="Keuangan"
         description="Kelola keuangan dan transaksi"
         actions={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => refetch()}>
               Refresh
             </Button>
@@ -203,11 +205,9 @@ export default function FinancePage() {
                 Reset Data
               </Button>
             )}
-            <Button asChild className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
-              <Link href="/overview/finance/transactions">
-                <BanknotesIcon className="mr-2 h-4 w-4" />
-                Transaksi Baru
-              </Link>
+            <Button onClick={() => router.push("/overview/finance/transactions")} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+              <BanknotesIcon className="mr-2 h-4 w-4" />
+              Transaksi Baru
             </Button>
           </div>
         }

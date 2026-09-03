@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -75,6 +75,7 @@ interface SalaryRecord {
 }
 
 export default function SalaryPage() {
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -183,12 +184,10 @@ export default function SalaryPage() {
         title="Kalkulasi Gaji Produksi"
         description="Kalkulasi gaji berdasarkan qty yang selesai dan reject"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/production">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/production")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <Button onClick={() => setCalculateDialogOpen(true)}>
               <CurrencyDollarIcon className="mr-2 h-4 w-4" />

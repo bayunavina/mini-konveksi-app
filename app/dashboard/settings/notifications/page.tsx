@@ -295,20 +295,22 @@ export default function NotificationsPage() {
         title="Notifikasi"
         description="Pengaturan notifikasi aplikasi"
         actions={
-          <Button 
-            variant="outline" 
-            onClick={handleTestEmail}
-            disabled={testSending || !settings.emailOrderComplete}
-          >
-            {testSending ? (
-              <>
-                <Spinner data-icon="inline-start" />
-                Mengirim...
-              </>
-            ) : (
-              'Kirim Email Test'
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleTestEmail}
+              disabled={testSending || !settings.emailOrderComplete}
+            >
+              {testSending ? (
+                <>
+                  <Spinner data-icon="inline-start" />
+                  Mengirim...
+                </>
+              ) : (
+                'Kirim Email Test'
+              )}
+            </Button>
+          </div>
         }
       />
 

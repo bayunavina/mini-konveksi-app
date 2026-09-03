@@ -149,10 +149,12 @@ export default function LogAktivitasPage() {
         title="Log Aktivitas"
         description="Riwayat aktivitas sistem"
         actions={
-          <Button onClick={fetchLogs} variant="outline" size="sm">
-            <ArrowPathIcon className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={fetchLogs} variant="outline" size="sm">
+              <ArrowPathIcon className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         }
       />
 

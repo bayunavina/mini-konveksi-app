@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useMemo } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -112,6 +112,7 @@ interface TransferFormItem {
 }
 
 export default function IncomingPage() {
+  const router = useRouter()
   const [photos, setPhotos] = useState<PhotoItem[]>([])
   const [condition, setCondition] = useState<"GOOD" | "DAMAGED" | "INCOMPLETE">("GOOD")
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
@@ -444,11 +445,9 @@ export default function IncomingPage() {
         description="Terima barang transfer / bahan baku"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/transfer">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/dashboard/transfer")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
           </div>
         }

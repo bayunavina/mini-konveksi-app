@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -48,6 +48,7 @@ interface MonthlyReport {
 }
 
 export default function ReportsPage() {
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([])
@@ -138,11 +139,9 @@ export default function ReportsPage() {
         description="Laporan dan analisis keuangan"
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/overview/finance">
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Kembali
-              </Link>
+            <Button variant="outline" onClick={() => router.push("/overview/finance")}>
+              <ArrowLeftIcon className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
             <ExportPrint
               title="Laporan Keuangan"

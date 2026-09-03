@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -64,6 +65,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function TransferPage() {
+  const router = useRouter()
   const { data: transfers, loading, error, refetch } = useFetch<Transfer[]>("/api/transfers")
   const [stats, setStats] = useState({ incoming: 0, outgoing: 0, finished: 0, total: 0 })
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -94,11 +96,9 @@ export default function TransferPage() {
         title="Transfer"
         description="Kelola transfer barang antar gudang"
         actions={
-          <Button asChild className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
-            <Link href="/dashboard/transfer/new">
-              <TruckIcon className="mr-2 h-4 w-4" />
-              Transfer Baru
-            </Link>
+          <Button onClick={() => router.push("/dashboard/transfer/new")} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+            <TruckIcon className="mr-2 h-4 w-4" />
+            Transfer Baru
           </Button>
         }
       />

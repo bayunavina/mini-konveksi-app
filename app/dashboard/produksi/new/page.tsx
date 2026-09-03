@@ -208,11 +208,9 @@ export default function NewJobOrderPage() {
         title="Job Order Baru"
         description="Buat job order produksi dan assign ke karyawan"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/produksi">
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
+          <Button variant="outline" onClick={() => router.push("/dashboard/produksi")}>
+            <ArrowLeftIcon className="mr-2 h-4 w-4" />
+            Kembali
           </Button>
         }
       />
