@@ -92,7 +92,7 @@ export default function FinishedTransferPage() {
         title="Barang Jadi"
         description="Transfer barang jadi dari produksi ke gudang"
         actions={
-          <>
+          <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/dashboard/transfer">
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -105,7 +105,7 @@ export default function FinishedTransferPage() {
                 Transfer Baru
               </Link>
             </Button>
-          </>
+          </div>
         }
       />
 

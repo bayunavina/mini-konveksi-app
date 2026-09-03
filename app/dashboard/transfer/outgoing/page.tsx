@@ -238,12 +238,14 @@ export default function OutgoingPage() {
         title="Barang Keluar"
         description="Kelola transfer barang keluar"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/transfer">
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/transfer">
+                <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                Kembali
+              </Link>
+            </Button>
+          </div>
         }
       />
 

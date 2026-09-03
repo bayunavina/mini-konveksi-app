@@ -114,12 +114,14 @@ export default function NewTransferPage() {
         title="Transfer Baru"
         description="Buat transfer barang antar gudang"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/transfer">
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/transfer">
+                <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                Kembali
+              </Link>
+            </Button>
+          </div>
         }
       />
 

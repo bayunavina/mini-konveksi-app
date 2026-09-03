@@ -443,14 +443,14 @@ export default function IncomingPage() {
         title="Barang Masuk"
         description="Terima barang transfer / bahan baku"
         actions={
-          <>
+          <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/dashboard/transfer">
                 <ArrowLeftIcon className="mr-2 h-4 w-4" />
                 Kembali
               </Link>
             </Button>
-          </>
+          </div>
         }
       />
 

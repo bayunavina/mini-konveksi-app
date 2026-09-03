@@ -123,12 +123,14 @@ export default function NewFinishedTransferPage() {
         title="Transfer Barang Jadi Baru"
         description="Transfer barang jadi dari produksi ke gudang"
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/transfer/finished">
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/transfer/finished">
+                <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                Kembali
+              </Link>
+            </Button>
+          </div>
         }
       />
 
