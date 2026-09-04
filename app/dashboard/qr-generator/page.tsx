@@ -10,7 +10,8 @@ import { BarcodeGenerator, BatchBarcodeGenerator } from "@/components/qr-generat
 import { Button } from "@/components/ui/button"
 import { useFetch } from "@/hooks/useFetch"
 import { generateMaterialLotQR, generateEmployeeQR, generateJobOrderQR } from "@/lib/qr-payload"
-import { QrCodeIcon, RectangleStackIcon, ListBulletIcon } from "@heroicons/react/24/outline"
+import { QrCodeIcon, RectangleStackIcon, ListBulletIcon, InformationCircleIcon } from "@heroicons/react/24/outline"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
 
 export default function QRGeneratorPage() {
@@ -83,7 +84,7 @@ export default function QRGeneratorPage() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
         title="QR/Barcode Generator"
-        description="Generate QR Code dan Barcode untuk lot bahan dan SKU produk"
+        description="Generate QR untuk lot bahan baku, karyawan, dan job order; barcode untuk kode bahan baku"
       />
 
       <Tabs defaultValue="qr" className="space-y-4">
@@ -103,6 +104,44 @@ export default function QRGeneratorPage() {
         </TabsList>
 
         <TabsContent value="qr" className="space-y-4">
+          <Alert className="border-brand-primary/30 bg-brand-primary/5">
+            <InformationCircleIcon />
+            <AlertTitle>Apa yang di-generate di sini?</AlertTitle>
+            <AlertDescription>
+              <p>
+                Pilih tipe entity dan record dari database, lalu klik{" "}
+                <span className="font-medium text-foreground">Generate QR</span>. Format payload (JSON) disusun
+                otomatis dari data — kamu <span className="font-medium text-foreground">tidak perlu menulis JSON manual</span>.
+              </p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>
+                  <span className="font-medium text-foreground">Bahan Baku (Lot)</span> — ditempel di fisik
+                  bahan. Saat discan di <em>Produksi Baru</em>, lot dan stok batch langsung terpilih.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">Karyawan (Badge)</span> — ditempel di badge.
+                  Scan untuk menandai siapa yang mengerjakan produksi.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">Job Order</span> — scan untuk membuka detail
+                  pesanan kerja yang dimaksud.
+                </li>
+              </ul>
+              <p>
+                <span className="font-medium text-foreground">QR Lot vs Barcode Bahan Baku:</span> QR Lot (di sini)
+                dipakai untuk scan di <em>Produksi Baru</em> dan <em>Inventori Bahan</em>. Barcode Bahan Baku
+                (tab <strong>Barcode</strong>) dipakai untuk scan di <em>Transfer</em> dan <em>Inventori Produk</em>.
+              </p>
+              <p>
+                <span className="font-medium text-foreground">LOT vs Bahan Baku:</span> Bahan Baku adalah jenis
+                materi yang diolah (mis. <code className="font-mono">KAIN-KATUN-001</code>, disimpan dengan kode SKU),
+                sedangkan Lot adalah batch atau penerimaan spesifik bahan itu (mis. <code className="font-mono">BB-…</code>).
+                Satu bahan baku bisa memiliki banyak lot — itulah kenapa <code className="font-mono">code</code> di QR
+                memakai nomor Lot, supaya batch mana yang dipakai selalu jelas.
+              </p>
+            </AlertDescription>
+          </Alert>
+
           <Card>
             <CardHeader>
               <CardTitle>Generate QR Code (Data Real)</CardTitle>
@@ -131,7 +170,9 @@ export default function QRGeneratorPage() {
                       <SelectTrigger><SelectValue placeholder="Pilih lot..." /></SelectTrigger>
                       <SelectContent>
                         {(lots || []).map(lot => (
-                          <SelectItem key={lot.id} value={lot.id}>{lot.lotNumber} - {lot.product?.name || "-"}</SelectItem>
+                          <SelectItem key={lot.id} value={lot.id}>
+                            {lot.lotNumber} • {lot.product?.code || "-"} ({lot.product?.name || "-"})
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -173,16 +214,27 @@ export default function QRGeneratorPage() {
 
               <QRCodeGenerator
                 value={qrValue}
-                onChange={setQRValue}
                 size={250}
                 showDownload
                 showPrint
+                showEdit={false}
               />
               <div className="space-y-2">
-                <p className="text-sm font-medium">Format Data QR (JSON):</p>
-                <pre className="p-3 bg-muted rounded-lg text-xs overflow-auto">
-                  {qrValue || '{"type": "MATERIAL_LOT|EMPLOYEE|JOB_ORDER", "id": "uuid", "code": "...", "name": "..."}'}
-                </pre>
+                <p className="text-sm font-medium">Pratinjau Payload (dibaca scanner):</p>
+                {qrValue ? (
+                  <pre className="p-3 bg-muted rounded-lg text-xs overflow-auto">{qrValue}</pre>
+                ) : (
+                  <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground border border-dashed">
+                    Belum ada data. Pilih tipe entity &amp; record di atas, lalu klik{" "}
+                    <span className="font-medium text-foreground">Generate QR</span> — format payload dibuat otomatis.
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Arti field: <code className="font-mono">type</code> = jenis entity ·{" "}
+                  <code className="font-mono">id</code> = ID unik di database ·{" "}
+                  <code className="font-mono">code</code> = nomor lot / ID karyawan / nomor JO ·{" "}
+                  <code className="font-mono">name</code> = nama tampilan.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -206,15 +258,15 @@ export default function QRGeneratorPage() {
         <TabsContent value="barcode" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Generate Barcode SKU</CardTitle>
+              <CardTitle>Generate Barcode Bahan Baku</CardTitle>
               <CardDescription>
-                Generate barcode untuk SKU produk menggunakan Code128
+                Generate barcode untuk kode bahan baku menggunakan Code128
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Button onClick={() => handleGenerateFromForm("sku")} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
-                  Generate Sample SKU
+                  Generate Sample Bahan Baku
                 </Button>
               </div>
               <BarcodeGenerator

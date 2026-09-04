@@ -32,13 +32,13 @@ export function SkuAddDialog() {
         body: JSON.stringify({ code: form.code, name: form.name, category: form.category, price: parseInt(form.price) || 0, unit: "Pcs" }),
       })
       if (response.ok) {
-        toast.success("SKU berhasil ditambahkan")
+        toast.success("Bahan baku berhasil ditambahkan")
         queryClient.invalidateQueries({ queryKey: ["master-skus"] })
         setOpen(false)
         setForm({ code: "", name: "", category: "", price: "" })
       } else {
         const err = await response.json().catch(() => ({}))
-        toast.error(err.error || "Gagal menambahkan SKU")
+        toast.error(err.error || "Gagal menambahkan bahan baku")
       }
     } catch {
       toast.error("Terjadi kesalahan")
@@ -48,18 +48,18 @@ export function SkuAddDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80"><PlusIcon className="mr-2 h-4 w-4" />Tambah SKU</Button>
+        <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80"><PlusIcon className="mr-2 h-4 w-4" />Tambah Bahan Baku</Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Tambah SKU Baru</DialogTitle>
-          <DialogDescription>Masukkan data SKU</DialogDescription>
+          <DialogTitle>Tambah Bahan Baku Baru</DialogTitle>
+          <DialogDescription>Masukkan data bahan baku</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>SKU</Label>
-              <Input placeholder="SKU-xxx" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+              <Label>Kode Bahan Baku</Label>
+              <Input placeholder="KAIN-KATUN-001" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Kategori</Label>
@@ -67,8 +67,8 @@ export function SkuAddDialog() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Produk</Label>
-            <Input placeholder="Nama produk..." value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Label>Nama Bahan Baku</Label>
+            <Input placeholder="Nama bahan baku..." value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label>Harga</Label>

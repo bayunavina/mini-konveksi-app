@@ -20,7 +20,7 @@
 | **C4** | /api/balance/summary | `app/api/balance/summary/route.ts` (baru) | ✅ done |
 | **D1** | /dashboard/balance/page.tsx | `app/dashboard/balance/page.tsx` (baru, 10.8kB) | ✅ done — 4 tabs: Material, Produksi, Stok, Deviasi + ExportPrint |
 | **E1** | ScanButton produksi/new | `app/dashboard/produksi/new/page.tsx` | ✅ done — scan lot QR + employee badge |
-| **E2** | ScanButton inventory/products & transfer/outgoing | `app/dashboard/inventory/products/page.tsx`, `app/dashboard/transfer/outgoing/page.tsx` | ✅ done — scan SKU |
+| **E2** | ScanButton stok barang jadi & transfer/outgoing | `app/dashboard/inventory/finished/page.tsx`, `app/dashboard/transfer/outgoing/page.tsx` | ✅ done — scan kode produk |
 | **E3** | qr-generator DB-driven | `app/dashboard/qr-generator/page.tsx` | ✅ done — pilih dari DB real, format konsisten via B1 |
 | **F** | Navigation | `components/layout/konveksi-sidebar.tsx`, `components/layout/dashboard-header.tsx` | ✅ done — Balance Report di sidebar ADMIN + command palette |
 | **V** | build & typecheck | `npm run build` | ✅ passed |
@@ -46,14 +46,14 @@ npx drizzle-kit push
 |------|---------|----------|
 | QC rounding | Buat JO dengan 2 assignment (target 60:40), QC success 7 reject 3 | Σ allocated success=7, reject=3 (assignment terakhir 3+1, bukan 4+2) |
 | Reject sign | QC dengan rejectQty 5 | `inventoryStock` Gudang Reject +5, `inventoryMovements` type REJECT qty +5 |
-| Warehouse fallback | Rename Gudang Bahan Jadi → QC success tetap masuk (fallback warehouse) | Tidak silent skip |
+| Fallback gudang | Rename Gudang Bahan Jadi → QC success tetap masuk (fallback gudang) | Tidak silent skip |
 | Reject approve | Approve reject quantity 10 | `jobOrders.rejectedQty +=10` (bukan overwrite), `inventoryStock` +10 |
 | Transfer partial | Transfer 2 items, source stock cukup untuk 1 saja | status → IN_PROGRESS, response `failedItems` berisi item gagal |
 | Balance API | GET /api/balance/summary, /material-lots, /production, /stock | Tidak error, summary sesuai data |
 | Balance UI | Buka /dashboard/balance, cek 4 tabs, search, Export CSV/Print | Tabel rapi, selisih merah jika deviasi |
 | Scan lot | Di produksi/new klik Scan Lot → scan QR `BB-...` atau `MAT-...` | Auto-select lot + toast |
 | Scan employee | Di produksi/new klik Scan → scan badge EMP-... | Auto-select karyawan |
-| Scan SKU | Di inventory/products → Scan → scan SKU Code128 | Auto-select SKU |
+| Scan kode | Di Stok → Barang Jadi → Scan → scan barcode kode produk | Auto-select produk |
 | QR Generator | Pilih MATERIAL_LOT → lot real → Generate QR → scan di produksi/new | Format JSON konsisten `{"type":"MATERIAL_LOT","id":...}` |
 
 ### 2. Investigasi Data Lama
@@ -98,7 +98,7 @@ npx drizzle-kit push
 
 **Barcode (E):**
 - `app/dashboard/produksi/new/page.tsx`
-- `app/dashboard/inventory/products/page.tsx`
+- `app/dashboard/inventory/finished/page.tsx`
 - `app/dashboard/transfer/outgoing/page.tsx`
 - `app/dashboard/qr-generator/page.tsx`
 

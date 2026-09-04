@@ -187,7 +187,7 @@ export function SKUPieChart({ data, dataKey, nameKey }: PieChartProps) {
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0 px-4 pt-4">
-        <CardTitle className="text-sm sm:text-base">SKU Diproduksi</CardTitle>
+        <CardTitle className="text-sm sm:text-base">Produk Diproduksi</CardTitle>
         <CardDescription className="text-[10px] sm:text-xs hidden sm:block">Distribusi JO</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center py-4 px-4 gap-3">

@@ -220,7 +220,7 @@ export default function ProduksiPage() {
                   { key: "joNumber", label: "Nomor JO" },
                   { key: "tanggal", label: "Tanggal" },
                   { key: "productName", label: "Produk" },
-                  { key: "productSku", label: "SKU" },
+                  { key: "productSku", label: "Kode" },
                   { key: "employeeName", label: "Karyawan" },
                   { key: "targetQty", label: "Target" },
                   { key: "completedQty", label: "Selesai" },
@@ -248,7 +248,7 @@ export default function ProduksiPage() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
             <Input
               type="search"
-              placeholder="Cari nomor JO, SKU, atau karyawan..."
+              placeholder="Cari nomor JO, kode, atau karyawan..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full sm:max-w-sm"
@@ -282,7 +282,7 @@ export default function ProduksiPage() {
                 <TableRow>
                   <TableHead>Nomor JO</TableHead>
                   <TableHead>Tanggal</TableHead>
-                  <TableHead>Produk / SKU</TableHead>
+                  <TableHead>Produk / Kode</TableHead>
                   <TableHead>Nama Karyawan</TableHead>
                   <TableHead>Target / Selesai</TableHead>
                   <TableHead>HPP Est</TableHead>

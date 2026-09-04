@@ -295,7 +295,7 @@ export default function SettingsPage() {
                   Data Master
                   <ArrowRightIcon className="h-4 w-4" />
                 </CardTitle>
-                <CardDescription>SKU, Supplier, Kategori Biaya</CardDescription>
+                <CardDescription>Bahan Baku, Supplier, Kategori Biaya</CardDescription>
               </CardHeader>
             </Card>
           </Link>

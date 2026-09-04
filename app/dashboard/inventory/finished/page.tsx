@@ -134,7 +134,7 @@ export default function FinishedGoodsPage() {
               filename="barang-jadi"
               columns={[
                 { key: "joNumber", label: "No. JO" },
-                { key: "sku", label: "SKU" },
+                { key: "sku", label: "Kode" },
                 { key: "name", label: "Nama Produk" },
                 { key: "qty", label: "Quantity" },
                 { key: "date", label: "Tanggal QC" },
@@ -168,7 +168,7 @@ export default function FinishedGoodsPage() {
                 <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Cari JO, SKU..."
+                  placeholder="Cari JO, Kode..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
@@ -191,7 +191,7 @@ export default function FinishedGoodsPage() {
                           s.type === "productName" ? "bg-green-100 text-green-700" :
                           "bg-gray-100 text-gray-700"
                         }`}>
-                          {s.type === "joNumber" ? "JO" : s.type === "productName" ? "Produk" : "SKU"}
+                          {s.type === "joNumber" ? "JO" : s.type === "productName" ? "Produk" : "Kode"}
                         </span>
                         <span className="font-medium">{s.label}</span>
                       </button>
@@ -224,7 +224,7 @@ export default function FinishedGoodsPage() {
               <TableHeader>
                 <TableRow className="bg-muted/50 border-b">
                   <TableHead>No. JO</TableHead>
-                  <TableHead>SKU</TableHead>
+                  <TableHead>Kode</TableHead>
                   <TableHead>Nama Produk</TableHead>
                   <TableHead className="text-center">Quantity</TableHead>
                   <TableHead>Tanggal QC</TableHead>
@@ -296,7 +296,7 @@ export default function FinishedGoodsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">SKU</p>
+                  <p className="text-sm text-muted-foreground">Kode</p>
                   <p className="font-mono font-medium">
                     {selectedItem.product?.sku || "-"}
                   </p>

@@ -19,7 +19,7 @@ Sistem ERP untuk manajemen produksi konveksi berbasis web. Dibangun dengan **Nex
 ## Fitur Utama
 
 - 🔐 **Autentikasi & Peran (Role-Based):** ADMIN, OPERATOR, GUDANG, QC, KEUANGAN, MANAGER, KARYAWAN, VIEWER
-- 📦 **Inventory:** Master SKU, bahan baku (material lots), produk jadi, barang reject, stok per gudang
+- 📦 **Inventory:** Bahan baku (material lots), produk jadi, barang reject, stok per gudang
 - 🏭 **Produksi:** Job Order (JO), penugasan produksi, progress, log produksi
 - ✅ **Quality Control:** Laporan QC, input reject, scan hasil produksi
 - 🔄 **Transfer Barang:** Transfer antar gudang (incoming/outgoing/finished)

@@ -121,7 +121,7 @@ const navigationData = {
       ],
     },
     {
-      title: "Warehouse",
+      title: "Stok",
       url: "/dashboard/inventory",
       icon: ArchiveBoxIcon,
       submenu: [
@@ -139,7 +139,7 @@ const navigationData = {
         { title: "Overview", url: "/dashboard/transfer" },
         { title: "Barang Keluar", url: "/dashboard/transfer/outgoing" },
         { title: "Barang Masuk", url: "/dashboard/transfer/incoming" },
-        { title: "Setup Gudang", url: "/dashboard/transfer/warehouses", roles: ["ADMIN"] as UserRole[] },
+        { title: "Master Gudang", url: "/dashboard/transfer/warehouses", roles: ["ADMIN"] as UserRole[] },
       ],
     },
     {
@@ -586,7 +586,7 @@ export function KonveksiSidebar() {
                     <span className="font-mono font-bold text-lg">{selectedTransfer.transferNumber}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">SKU:</span>
+                    <span className="text-sm text-muted-foreground">Kode:</span>
                     <span className="font-mono font-medium">
                       {selectedTransfer.items?.map((item) => {
                         const sku = skuMaster?.find(s => s.id === item.productId || s.code === item.skuCode)

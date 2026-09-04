@@ -287,7 +287,7 @@ export default function IncomingPage() {
     
     const sku = skuMaster?.find(s => s.id === selectedProduct)
     if (!sku) {
-      toast.error("SKU tidak ditemukan")
+      toast.error("Produk tidak ditemukan")
       return
     }
 
@@ -590,7 +590,7 @@ export default function IncomingPage() {
                 columns={[
                   { key: "transferNumber", label: "No. Transfer" },
                   { key: "createdAt", label: "Tanggal" },
-                  { key: "sku", label: "SKU" },
+                  { key: "sku", label: "Kode" },
                   { key: "product", label: "Produk" },
                   { key: "quantity", label: "Jumlah" },
                   { key: "warehouse", label: "Ke Gudang" },
@@ -632,7 +632,7 @@ export default function IncomingPage() {
                 <TableRow>
                   <TableHead>No. Transfer</TableHead>
                   <TableHead>Tanggal</TableHead>
-                  <TableHead>SKU</TableHead>
+                  <TableHead>Kode</TableHead>
                   <TableHead>Produk</TableHead>
                   <TableHead className="text-center">Jumlah</TableHead>
                   <TableHead>Ke Gudang</TableHead>
@@ -934,7 +934,7 @@ export default function IncomingPage() {
                   <span className="font-mono font-bold text-sm break-all">{selectedTransfer.transferNumber}</span>
                 </div>
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm text-muted-foreground shrink-0">SKU:</span>
+                  <span className="text-sm text-muted-foreground shrink-0">Kode:</span>
                   <span className="font-mono font-medium text-sm break-all">
                     {selectedTransfer.items?.map((item) => {
                       const sku = skuMaster?.find(s => s.id === item.productId || s.code === item.skuCode)

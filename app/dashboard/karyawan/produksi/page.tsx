@@ -170,7 +170,7 @@ export default function KaryawanProduksiPage() {
                 columns={[
                   { key: "no", label: "Nomor JO" },
                   { key: "produk", label: "Produk" },
-                  { key: "sku", label: "SKU" },
+                  { key: "sku", label: "Kode" },
                   { key: "target", label: "Target" },
                   { key: "selesai", label: "Selesai" },
                   { key: "status", label: "Status" },
@@ -190,7 +190,7 @@ export default function KaryawanProduksiPage() {
             <div className="relative w-full">
               <Input
                 type="search"
-                placeholder="Cari JO, produk, atau SKU..."
+                placeholder="Cari JO, produk, atau kode..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value)

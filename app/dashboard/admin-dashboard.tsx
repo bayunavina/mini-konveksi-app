@@ -432,15 +432,15 @@ export function AdminDashboard() {
           delay={50}
         />
         <StatCard
-          title="Total SKU"
+          title="Total Bahan Baku"
           value={stats.totalProducts}
           icon={ArchiveBoxIcon}
           iconColor="text-[var(--chart-blue)]"
           delay={100}
-          href="/dashboard/inventory/products"
+          href="/dashboard/inventory/materials"
         />
         <StatCard
-          title="Finished Goods"
+          title="Barang Jadi"
           value={stats.totalStock.toLocaleString()}
           icon={CubeIcon}
           iconColor="text-[var(--chart-blue)]"

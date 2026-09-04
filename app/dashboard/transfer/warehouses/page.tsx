@@ -199,7 +199,7 @@ export default function WarehousesPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
-        title="Setup Gudang"
+        title="Master Gudang"
         description="Kelola gudang dan kapasitas penyimpanan"
         actions={
           <div className="flex gap-2">

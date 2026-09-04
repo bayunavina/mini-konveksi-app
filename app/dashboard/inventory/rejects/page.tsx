@@ -230,7 +230,7 @@ export default function RejectsPage() {
               filename="data-reject"
               columns={[
                 { key: "joNumber", label: "No. JO" },
-                { key: "sku", label: "SKU" },
+                { key: "sku", label: "Kode" },
                 { key: "productName", label: "Nama" },
                 { key: "quantity", label: "Jumlah" },
                 { key: "reason", label: "Alasan" },
@@ -309,7 +309,7 @@ export default function RejectsPage() {
               <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Cari JO, SKU, atau alasan..."
+                placeholder="Cari JO, kode, atau alasan..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
@@ -372,7 +372,7 @@ export default function RejectsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>No. JO</TableHead>
-                  <TableHead>SKU</TableHead>
+                  <TableHead>Kode</TableHead>
                   <TableHead>Nama</TableHead>
                   <TableHead>Jumlah</TableHead>
                   <TableHead>Alasan</TableHead>
@@ -485,7 +485,7 @@ export default function RejectsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">SKU</p>
+                <p className="text-sm text-muted-foreground">Kode</p>
                 <p className="font-mono font-medium">{selectedReject?.product?.sku || "-"}</p>
               </div>
               <div>

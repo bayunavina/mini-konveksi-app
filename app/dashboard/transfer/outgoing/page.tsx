@@ -369,7 +369,7 @@ export default function OutgoingPage() {
                               setSelectedProduct(found.id)
                               toast.success(`Produk terpilih: ${found.code}`)
                             } else {
-                              toast.error(`SKU tidak ditemukan: ${code}`)
+                              toast.error(`Produk tidak ditemukan: ${code}`)
                             }
                           }}
                         />

@@ -240,7 +240,7 @@ export default function NewTransferPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>SKU</TableHead>
+                <TableHead>Kode</TableHead>
                 <TableHead>Nama</TableHead>
                 <TableHead>Jumlah</TableHead>
                 <TableHead className="text-center">Aksi</TableHead>

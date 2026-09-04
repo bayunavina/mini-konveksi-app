@@ -334,7 +334,7 @@ export function GudangDashboard() {
                 <div key={item.id} className="flex items-center justify-between p-2.5 sm:p-3 border rounded-xl hover:bg-muted/50 transition-colors gap-2 min-h-[52px] sm:min-h-[60px]">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-xs sm:text-sm truncate">{item.product?.name || "-"}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">SKU: {item.product?.sku || "-"}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Kode: {item.product?.sku || "-"}</p>
                   </div>
                   <div className="text-right mr-1 sm:mr-2 shrink-0">
                     <p className="text-sm sm:text-lg font-bold text-accent-foreground dark:text-accent-foreground">{item.successQty}</p>

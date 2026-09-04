@@ -193,7 +193,7 @@ export default function TransferPage() {
             <Card className="hover:bg-accent transition-colors cursor-pointer">
               <CardHeader>
                 <CardTitle className="text-base flex items-center justify-between">
-                  Setup Gudang
+                  Master Gudang
                   <ArrowRightIcon className="h-4 w-4" />
                 </CardTitle>
                 <CardDescription>Kelola data gudang</CardDescription>

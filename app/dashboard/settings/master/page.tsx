@@ -255,14 +255,14 @@ const SkuTab = memo(function SkuTab({ onToggle, onDelete }: SkuTabProps) {
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
-            <CardTitle>Daftar SKU</CardTitle>
-            <CardDescription>Kelola Stock Keeping Unit</CardDescription>
+            <CardTitle>Daftar Bahan Baku</CardTitle>
+            <CardDescription>Kelola bahan baku produksi</CardDescription>
           </div>
           <SkuAddDialog />
         </div>
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Cari SKU (kode, nama, kategori)..." value={state.search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="pl-9" placeholder="Cari bahan baku (kode, nama, kategori)..." value={state.search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </CardHeader>
       <CardContent className="p-0 sm:p-6">
@@ -272,15 +272,15 @@ const SkuTab = memo(function SkuTab({ onToggle, onDelete }: SkuTabProps) {
           ) : skus.length === 0 ? (
             <div className="py-12 text-center border rounded-lg border-dashed bg-muted/30">
               <BeakerIcon className="mx-auto h-10 w-10 text-muted-foreground/40" />
-              <p className="mt-3 text-sm font-medium">{state.search ? "Tidak ada hasil pencarian" : "Belum ada SKU di database"}</p>
-              <p className="text-xs text-muted-foreground mt-1">{state.search ? "Coba kata kunci lain" : "Klik Tambah SKU untuk menambahkan data, atau tunggu auto-seed selesai."}</p>
+              <p className="mt-3 text-sm font-medium">{state.search ? "Tidak ada hasil pencarian" : "Belum ada bahan baku di database"}</p>
+              <p className="text-xs text-muted-foreground mt-1">{state.search ? "Coba kata kunci lain" : "Klik Tambah Bahan Baku untuk menambahkan data, atau tunggu auto-seed selesai."}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">SKU</TableHead>
-                  <TableHead className="whitespace-nowrap">Produk</TableHead>
+                  <TableHead className="whitespace-nowrap">Kode</TableHead>
+                  <TableHead className="whitespace-nowrap">Nama Bahan Baku</TableHead>
                   <TableHead className="whitespace-nowrap">Kategori</TableHead>
                   <TableHead className="whitespace-nowrap">Harga</TableHead>
                   <TableHead className="whitespace-nowrap">Status</TableHead>
@@ -476,13 +476,13 @@ const StatsOverview = memo(function StatsOverview({ skuTotal, supplierTotal, cos
     <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
       <Card>
         <CardHeader className="pb-2">
-          <CardDescription>Total SKU</CardDescription>
+          <CardDescription>Total Bahan Baku</CardDescription>
           <CardTitle className="text-2xl">
             {skuTotal}
             <span className="text-sm font-normal text-muted-foreground"> ({skuActiveInPage} aktif di halaman ini)</span>
           </CardTitle>
         </CardHeader>
-        <CardContent><p className="text-xs text-muted-foreground">Stock Keeping Unit produksi</p></CardContent>
+        <CardContent><p className="text-xs text-muted-foreground">Jenis bahan baku produksi</p></CardContent>
       </Card>
       <Card>
         <CardHeader className="pb-2">
@@ -569,7 +569,7 @@ export default function MasterPage() {
             refetchSuppliers()
             refetchCostCategories()
             const created = result.skus.created + result.suppliers.created + result.costCategories.created
-            if (created > 0) toast.success(`Data master dimuat: ${result.skus.created} SKU, ${result.suppliers.created} supplier, ${result.costCategories.created} kategori biaya`)
+            if (created > 0) toast.success(`Data master dimuat: ${result.skus.created} bahan baku, ${result.suppliers.created} supplier, ${result.costCategories.created} kategori biaya`)
           }
         })
         .catch(() => toast.error("Gagal memuat data master"))
@@ -582,7 +582,7 @@ export default function MasterPage() {
   const handleToggleSKU = useCallback(async (id: string, currentStatus: boolean) => {
     try {
       const response = await fetch(`/api/master-skus/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !currentStatus }) })
-      if (response.ok) { toast.success("Status SKU berhasil diupdate"); refetchSkus() } else { toast.error("Gagal mengupdate status") }
+      if (response.ok) { toast.success("Status bahan baku berhasil diupdate"); refetchSkus() } else { toast.error("Gagal mengupdate status") }
     } catch { toast.error("Terjadi kesalahan") }
   }, [refetchSkus])
 
@@ -598,7 +598,7 @@ export default function MasterPage() {
       let errorMsg = ""
       if (deleteTarget.type === "SKU") {
         const response = await fetch(`/api/master-skus/${deleteTarget.id}`, { method: "DELETE" })
-        if (response.ok) { success = true; refetchSkus() } else errorMsg = "Gagal menghapus SKU"
+        if (response.ok) { success = true; refetchSkus() } else errorMsg = "Gagal menghapus bahan baku"
       } else if (deleteTarget.type === "SUPPLIER") {
         const response = await fetch(`/api/suppliers/${deleteTarget.id}`, { method: "DELETE" })
         if (response.ok) { success = true; refetchSuppliers() }
@@ -608,7 +608,7 @@ export default function MasterPage() {
         if (response.ok) { success = true; refetchCostCategories() }
         else { const err = await response.json().catch(() => ({})); errorMsg = err.error || "Gagal menghapus kategori biaya" }
       }
-      if (success) toast.success(`${deleteTarget.type} berhasil dihapus`)
+      if (success) toast.success(deleteTarget.type === "SKU" ? "Bahan baku berhasil dihapus" : `${deleteTarget.type === "SUPPLIER" ? "Supplier" : "Kategori biaya"} berhasil dihapus`)
       else toast.error(errorMsg)
     } catch { toast.error("Terjadi kesalahan") }
     finally { setDeleteDialogOpen(false); setDeleteTarget(null) }
@@ -626,7 +626,7 @@ export default function MasterPage() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
         title="Data Master"
-        description="Kelola SKU, Supplier, dan Kategori Biaya"
+        description="Kelola Bahan Baku, Supplier, dan Kategori Biaya"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => router.push("/dashboard/settings")}>
@@ -652,7 +652,7 @@ export default function MasterPage() {
 
       <Tabs defaultValue="sku" className="space-y-4">
         <TabsList className="w-full sm:w-auto overflow-x-auto justify-start">
-          <TabsTrigger value="sku">SKU <Badge variant="secondary" className="ml-2">{stats.skuTotal}</Badge></TabsTrigger>
+          <TabsTrigger value="sku">Bahan Baku <Badge variant="secondary" className="ml-2">{stats.skuTotal}</Badge></TabsTrigger>
           <TabsTrigger value="supplier">Supplier <Badge variant="secondary" className="ml-2">{stats.supplierTotal}</Badge></TabsTrigger>
           <TabsTrigger value="cost">Kategori Biaya <Badge variant="secondary" className="ml-2">{stats.costTotal}</Badge></TabsTrigger>
         </TabsList>
@@ -684,7 +684,7 @@ const DeleteDialog = memo(function DeleteDialog({ open, onOpenChange, target, on
             Konfirmasi Hapus
           </DialogTitle>
           <DialogDescription>
-            Apakah Anda yakin ingin menghapus {target?.type === "SKU" ? "SKU" : target?.type === "SUPPLIER" ? "Supplier" : "Kategori Biaya"} ini?
+            Apakah Anda yakin ingin menghapus {target?.type === "SKU" ? "Bahan Baku" : target?.type === "SUPPLIER" ? "Supplier" : "Kategori Biaya"} ini?
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">

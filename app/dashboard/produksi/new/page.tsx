@@ -234,7 +234,7 @@ export default function NewJobOrderPage() {
                     <TableHeader>
                       <TableRow className="border-y">
                         <TableHead className="w-36">Kode</TableHead>
-                        <TableHead className="w-32">SKU</TableHead>
+                        <TableHead className="w-32">Kode Bahan</TableHead>
                         <TableHead>Produk</TableHead>
                         <TableHead className="w-32 text-center">Masuk Produksi</TableHead>
                         <TableHead className="w-32 text-center">Lolos QC</TableHead>
@@ -369,7 +369,7 @@ export default function NewJobOrderPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="skuProduk">SKU / Produk</Label>
+                  <Label htmlFor="skuProduk">Bahan Baku</Label>
                   <Input
                     id="skuProduk"
                     value={selectedLot ? `${selectedLot.product?.code || "-"} - ${selectedLot.product?.name || "-"}` : ""}

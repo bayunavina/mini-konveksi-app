@@ -44,6 +44,7 @@ import {
   type CameraBlockInfo,
 } from "@/lib/camera-utils"
 import { CameraBlockAlert } from "@/components/scanner/camera-block-alert"
+import { parseQRPayload } from "@/lib/qr-payload"
 
 interface LotProduct {
   id: string
@@ -207,10 +208,16 @@ export default function MaterialsPage() {
     }
   }
 
+  const resolveScanInput = (raw: string): string => {
+    const parsed = parseQRPayload(raw)
+    if (parsed.payload?.code) return parsed.payload.code
+    return raw.trim()
+  }
+
   const handleScanFromQr = async (qrValue: string) => {
     setSubmitting(true)
     try {
-      const response = await fetch(`/api/material-lots?search=${encodeURIComponent(qrValue)}`)
+      const response = await fetch(`/api/material-lots?search=${encodeURIComponent(resolveScanInput(qrValue))}`)
       const data = await response.json()
 
       if (Array.isArray(data) && data.length > 0) {
@@ -366,7 +373,7 @@ export default function MaterialsPage() {
       return
     }
 
-    const headers = ["SKU", "Produk", "Awal", "Sisa", "Terpakai", "Remark"]
+    const headers = ["Kode Bahan Baku", "Produk", "Awal", "Sisa", "Terpakai", "Remark"]
     const rows = summaryData.byProduct.map((item) => [
       item.productSku,
       item.productName,
@@ -423,12 +430,12 @@ export default function MaterialsPage() {
           </style>
         </head>
         <body>
-          <h1>Rekap per Produk/SKU - Bahan Baku</h1>
+          <h1>Rekap Bahan Baku per Kode</h1>
           <div class="date">Dicetak: ${new Date().toLocaleString("id-ID")}</div>
           <table>
             <thead>
               <tr>
-                <th>SKU</th>
+                <th>Kode</th>
                 <th>Produk</th>
                 <th style="text-align:center">Awal</th>
                 <th style="text-align:center">Sisa</th>
@@ -480,8 +487,8 @@ export default function MaterialsPage() {
 
     setSubmitting(true)
     try {
-      console.log("Searching for:", scanQrInput.trim())
-      const response = await fetch(`/api/material-lots?search=${encodeURIComponent(scanQrInput.trim())}`)
+      console.log("Searching for:", resolveScanInput(scanQrInput))
+      const response = await fetch(`/api/material-lots?search=${encodeURIComponent(resolveScanInput(scanQrInput))}`)
       const data = await response.json()
       
       console.log("API Response:", data)
@@ -694,7 +701,7 @@ export default function MaterialsPage() {
                         s.type === "sku" ? "bg-green-100 text-green-700" :
                         "bg-orange-100 text-orange-700"
                       }`}>
-                        {s.type === "lotNumber" ? "Lot" : s.type === "qrCode" ? "QR" : s.type === "sku" ? "SKU" : "Produk"}
+                        {s.type === "lotNumber" ? "Lot" : s.type === "qrCode" ? "QR" : s.type === "sku" ? "Kode Bahan" : "Produk"}
                       </span>
                       <span className="font-medium">{s.label}</span>
                     </button>
@@ -844,8 +851,8 @@ export default function MaterialsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Rekap per Produk/SKU</CardTitle>
-              <CardDescription>Total stok bahan baku berdasarkan Produk/SKU</CardDescription>
+              <CardTitle>Rekap Bahan Baku</CardTitle>
+              <CardDescription>Total stok bahan baku per kode</CardDescription>
             </div>
             <div className="flex gap-2">
               <Button
@@ -998,7 +1005,7 @@ export default function MaterialsPage() {
           <div className="py-4">
             {scanMode === "manual" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Cari (SKU, Kode, atau QR)</label>
+                <label className="text-sm font-medium">Cari (kode bahan, nomor lot, atau QR)</label>
                 <Input
                   placeholder="Contoh: KPDL-H-M atau BB-ABC123"
                   value={scanQrInput}
@@ -1136,14 +1143,14 @@ export default function MaterialsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Tambah Bahan Baku</DialogTitle>
-            <DialogDescription>Pilih produk dari daftar SKU yang sudah ada</DialogDescription>
+            <DialogDescription>Pilih bahan baku dari daftar yang sudah ada</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">SKU *</label>
+              <label className="text-sm font-medium">Bahan Baku *</label>
               <Select value={selectedNewProduct} onValueChange={setSelectedNewProduct}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih SKU" />
+                  <SelectValue placeholder="Pilih bahan baku" />
                 </SelectTrigger>
                 <SelectContent>
                   {(skuMaster?.filter(s => s.isActive) || []).map((s) => (
@@ -1161,7 +1168,7 @@ export default function MaterialsPage() {
                   return selected ? (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">SKU:</span>
+                        <span className="text-sm text-muted-foreground">Kode Bahan:</span>
                         <span className="font-mono font-medium">{selected.code}</span>
                       </div>
                       <div className="flex justify-between">

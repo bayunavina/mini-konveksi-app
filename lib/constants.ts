@@ -25,7 +25,7 @@ export type Role = typeof ROLES[number];
 export const ROLE_LABELS: Record<Role, string> = {
   [ROLE_SUPERADMIN]: "Super Admin",
   [ROLE_ADMIN]: "Administrator",
-  [ROLE_GUDANG]: "Operator Gudang",
+  [ROLE_GUDANG]: "Petugas Gudang",
   [ROLE_OPERATOR]: "Operator Produksi",
   [ROLE_QC]: "QC Staff",
   [ROLE_KEUANGAN]: "Keuangan",

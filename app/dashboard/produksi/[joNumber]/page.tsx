@@ -431,7 +431,7 @@ export default function JobOrderDetailPage({ params }: { params: Promise<{ joNum
           <CardContent className="space-y-5 px-5 py-5">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">SKU</p>
+                <p className="text-sm text-muted-foreground">Kode Produk</p>
                 <p className="font-medium">{jobOrder.product?.name || "-"}</p>
                 <p className="text-xs text-muted-foreground">{jobOrder.product?.sku}</p>
               </div>

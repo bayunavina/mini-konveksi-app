@@ -272,7 +272,7 @@ export default function BalancePage() {
                 <ExportPrint
                   columns={[
                     { key: "lotNumber", label: "Lot" },
-                    { key: "skuCode", label: "SKU" },
+                    { key: "skuCode", label: "Kode" },
                     { key: "initialQty", label: "Awal" },
                     { key: "quantity", label: "Sisa" },
                     { key: "usedQty", label: "Terpakai" },
@@ -292,7 +292,7 @@ export default function BalancePage() {
               <div className="flex items-center gap-2 mb-4">
                 <div className="relative flex-1">
                   <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Cari lot, QR, SKU..." value={searchMaterial} onChange={e => setSearchMaterial(e.target.value)} className="pl-9" />
+                  <Input placeholder="Cari lot, QR, kode..." value={searchMaterial} onChange={e => setSearchMaterial(e.target.value)} className="pl-9" />
                 </div>
               </div>
 
@@ -307,7 +307,7 @@ export default function BalancePage() {
                       <TableRow className="bg-muted/50">
                         <TableHead className="w-8 text-center">No</TableHead>
                         <TableHead>Lot</TableHead>
-                        <TableHead>SKU</TableHead>
+                        <TableHead>Kode</TableHead>
                         <TableHead className="text-center">Awal</TableHead>
                         <TableHead className="text-center">Sisa</TableHead>
                         <TableHead className="text-center">Terpakai</TableHead>
@@ -452,7 +452,7 @@ export default function BalancePage() {
                 </div>
                 <ExportPrint
                   columns={[
-                    { key: "productSku", label: "SKU" },
+                    { key: "productSku", label: "Kode" },
                     { key: "productName", label: "Produk" },
                     { key: "warehouseName", label: "Gudang" },
                     { key: "systemQty", label: "System" },
@@ -470,7 +470,7 @@ export default function BalancePage() {
               <div className="flex items-center gap-2 mb-4">
                 <div className="relative flex-1">
                   <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Cari SKU, produk, gudang..." value={searchStock} onChange={e => setSearchStock(e.target.value)} className="pl-9" />
+                  <Input placeholder="Cari kode, produk, gudang..." value={searchStock} onChange={e => setSearchStock(e.target.value)} className="pl-9" />
                 </div>
               </div>
 
@@ -484,7 +484,7 @@ export default function BalancePage() {
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead className="w-8 text-center">No</TableHead>
-                        <TableHead>SKU</TableHead>
+                        <TableHead>Kode</TableHead>
                         <TableHead>Produk</TableHead>
                         <TableHead>Gudang</TableHead>
                         <TableHead className="text-center">System</TableHead>
