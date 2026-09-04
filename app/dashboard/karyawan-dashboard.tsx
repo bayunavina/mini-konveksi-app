@@ -155,16 +155,16 @@ function StatCard({
   trend?: "up" | "down" | "neutral"
 }) {
   return (
-    <Card className="hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 animate-slide-up">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 px-4">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <IconComponent className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover:scale-110" />
+    <Card className="hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 animate-slide-up overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+        <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium text-muted-foreground truncate pr-1">{title}</CardTitle>
+        <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-300 group-hover:scale-110 shrink-0" />
       </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <div className="flex items-end gap-2">
-          <div className="text-xl sm:text-2xl font-bold">{value}</div>
+      <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+        <div className="flex items-end gap-1.5 sm:gap-2 min-w-0">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold truncate">{value}</div>
           {trend && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+            <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full shrink-0 ${
               trend === "up" ? "bg-warning-light text-warning-foreground dark:bg-warning-light dark:text-warning-foreground" : 
               trend === "down" ? "bg-destructive/10 text-destructive dark:bg-destructive/10 dark:text-destructive" : 
               "bg-muted text-muted-foreground"
@@ -173,7 +173,7 @@ function StatCard({
             </span>
           )}
         </div>
-        {subtitle && <p className="text-xs text-muted-foreground/70 mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-1 truncate">{subtitle}</p>}
       </CardContent>
     </Card>
   )
@@ -185,73 +185,73 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
   const remaining = assignment.targetQty - assignment.acceptedQty
   
   return (
-    <Card className="group relative hover:shadow-lg hover:border-primary/30 transition-all duration-300 animate-slide-up">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-foreground">
+    <Card className="group relative hover:shadow-lg hover:border-primary/30 transition-all duration-300 animate-slide-up overflow-hidden">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
+              <h4 className="font-semibold text-foreground text-sm sm:text-base truncate">
                 {assignment.jobOrder?.joNumber || "Manual"}
               </h4>
-              <Badge className={`${getStatusColor(assignment.status)} font-medium`}>
+              <Badge className={`${getStatusColor(assignment.status)} font-medium text-[10px] sm:text-xs`}>
                 {getStatusLabel(assignment.status)}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {assignment.product?.name || "Produk tidak ditemukan"}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Rate</p>
-            <p className="text-sm font-semibold text-primary">
+          <div className="text-right shrink-0">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Rate</p>
+            <p className="text-xs sm:text-sm font-semibold text-primary">
               {formatCurrency(Number(assignment.ratePerUnit || 0))}/pcs
             </p>
           </div>
         </div>
         
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Progress</span>
             <span className="font-semibold text-foreground">{completedProgress}%</span>
           </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+          <div className="h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden flex">
             <div 
               className="h-full bg-success transition-all duration-500"
               style={{ width: `${Math.min(completedProgress, 100)}%` }}
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            <div className="rounded-xl p-2 border border-[var(--chart-blue)]/30 dark:border-[var(--chart-blue)] shadow-sm">
-              <p className="text-xs text-[var(--chart-blue)] dark:text-[var(--chart-blue)] mb-0.5">Target</p>
-              <p className="font-bold text-[var(--chart-blue)] dark:text-[var(--chart-blue)]">{assignment.targetQty}</p>
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-center sm:grid-cols-4">
+            <div className="rounded-lg sm:rounded-xl p-1.5 sm:p-2 border border-[var(--chart-blue)]/30 dark:border-[var(--chart-blue)] shadow-sm">
+              <p className="text-[10px] sm:text-xs text-[var(--chart-blue)] dark:text-[var(--chart-blue)] mb-0.5">Target</p>
+              <p className="text-sm sm:text-base font-bold text-[var(--chart-blue)] dark:text-[var(--chart-blue)]">{assignment.targetQty}</p>
             </div>
-            <div className="rounded-xl p-2 border border-warning/30 dark:border-warning/30 shadow-sm">
-              <p className="text-xs text-warning-foreground dark:text-warning-foreground mb-0.5">Pending</p>
-              <p className="font-bold text-warning-foreground dark:text-warning-foreground">{assignment.pendingQty || 0}</p>
+            <div className="rounded-lg sm:rounded-xl p-1.5 sm:p-2 border border-warning/30 dark:border-warning/30 shadow-sm">
+              <p className="text-[10px] sm:text-xs text-warning-foreground dark:text-warning-foreground mb-0.5">Pending</p>
+              <p className="text-sm sm:text-base font-bold text-warning-foreground dark:text-warning-foreground">{assignment.pendingQty || 0}</p>
             </div>
-            <div className="rounded-xl p-2 border border-success/30 dark:border-success/30 shadow-sm">
-              <p className="text-xs text-success-foreground mb-0.5">Lolos QC</p>
-              <p className="font-bold text-success-foreground">{assignment.acceptedQty || 0}</p>
+            <div className="rounded-lg sm:rounded-xl p-1.5 sm:p-2 border border-success/30 dark:border-success/30 shadow-sm">
+              <p className="text-[10px] sm:text-xs text-success-foreground mb-0.5">Lolos QC</p>
+              <p className="text-sm sm:text-base font-bold text-success-foreground">{assignment.acceptedQty || 0}</p>
             </div>
-            <div className="rounded-xl p-2 border border-destructive/30 dark:border-destructive/30 shadow-sm">
-              <p className="text-xs text-destructive mb-0.5">Sisa</p>
-              <p className="font-bold text-destructive dark:text-destructive">{remaining > 0 ? remaining : 0}</p>
+            <div className="rounded-lg sm:rounded-xl p-1.5 sm:p-2 border border-destructive/30 dark:border-destructive/30 shadow-sm">
+              <p className="text-[10px] sm:text-xs text-destructive mb-0.5">Sisa</p>
+              <p className="text-sm sm:text-base font-bold text-destructive dark:text-destructive">{remaining > 0 ? remaining : 0}</p>
             </div>
           </div>
           
           <div className="flex items-center justify-between pt-2 border-t border-border/50">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {new Date(assignment.assignedAt).toLocaleDateString("id-ID", { 
                 day: "numeric", 
                 month: "short" 
               })}
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2 flex-wrap justify-end">
               {(assignment.status === "IN_PROGRESS" || assignment.status === "ASSIGNED") && assignment.pendingQty > 0 && !assignment.qcRequestedAt && (
                 <Button 
-                  size="sm" 
-                  className="h-8 text-xs bg-warning hover:bg-warning"
+                  size="lg" 
+                  className="bg-warning hover:bg-warning"
                   onClick={() => onRequestQC(assignment)}
                 >
                   Request QC
@@ -259,15 +259,15 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
               )}
               {assignment.status === "ASSIGNED" && !assignment.qcRequestedAt && (
                 <Button 
-                  size="sm" 
-                  className="h-8 text-xs bg-success hover:bg-success"
+                  size="lg" 
+                  className="bg-success hover:bg-success"
                   onClick={() => onConfirmClick(assignment)}
                 >
                   ✓ Terima
                 </Button>
               )}
               {assignment.status === "IN_PROGRESS" && !assignment.qcRequestedAt && (
-                <Button size="sm" className="h-8 text-xs" onClick={() => onInputClick(assignment)}>
+                <Button size="lg" onClick={() => onInputClick(assignment)}>
                   Input Hasil
                 </Button>
               )}
@@ -649,24 +649,24 @@ export function KaryawanDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-16 mx-auto mb-4 text-primary" />
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <Spinner className="size-8 text-primary" />
         <p className="text-muted-foreground">Memuat data...</p>
       </div>
     )
   }
 
   return (
-    <div className="page-container p-3 md:p-6 pt-4">
+    <div className="page-container">
       {/* Header Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-primary)] to-[#6d28d9] rounded-2xl p-5 text-primary-foreground shadow-xl shadow-[var(--brand-primary)]/20 animate-slide-up">
-        <div className="absolute top-0 right-0 opacity-10">
-          <ChartBarIcon className="h-40 w-40 -translate-y-8 translate-x-8" />
+      <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-primary)] to-[#6d28d9] rounded-2xl p-4 sm:p-5 text-primary-foreground shadow-xl shadow-[var(--brand-primary)]/20 animate-slide-up">
+        <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+          <ChartBarIcon className="h-24 w-24 sm:h-40 sm:w-40 -translate-y-6 translate-x-6 sm:-translate-y-8 sm:translate-x-8" />
         </div>
-          <div className="relative z-10">
-            <p className="text-xs font-medium opacity-80 mb-1">{formatDateDMY()}</p>
-            <h2 className="text-xl font-bold mb-1">Selamat Datang, {user?.name || "Karyawan"}!</h2>
-            <p className="text-sm opacity-80">
+          <div className="relative z-10 min-w-0">
+            <p className="text-[10px] sm:text-xs font-medium opacity-80 mb-1">{formatDateDMY()}</p>
+            <h2 className="text-base sm:text-xl font-bold mb-1 truncate">Selamat Datang, {user?.name || "Karyawan"}!</h2>
+            <p className="text-xs sm:text-sm opacity-80 truncate">
               {assignedAssignments.length} job order aktif menunggumu
             </p>
           </div>
@@ -674,14 +674,14 @@ export function KaryawanDashboard() {
 
       {/* Quick Actions - Mobile */}
       <div className="flex gap-2 md:hidden">
-        <Button className="flex-1 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary)] hover:from-[var(--brand-primary)] hover:to-indigo-700 h-12 rounded-xl shadow-lg shadow-[var(--brand-primary)]/25" disabled>
-          <PlusIcon className="h-5 w-5 mr-2" />
+        <Button size="lg" className="flex-1 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary)] hover:from-[var(--brand-primary)] hover:to-indigo-700 rounded-xl shadow-lg shadow-[var(--brand-primary)]/25" disabled>
+          <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           Input Produksi
         </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 md:grid-cols-3 lg:grid-cols-5">
+      {/* Stats Grid - 2 cols mobile, 3 cols tablet, 5 cols desktop */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-5 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
           title="Total Gaji"
           value={formatCurrency(Math.round(totalGaji))}
@@ -720,25 +720,25 @@ export function KaryawanDashboard() {
       </div>
 
       {/* Job Order Aktif Section */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg text-card-foreground">
+          <h3 className="font-bold text-base sm:text-lg text-card-foreground">
             {showHistory ? "Riwayat Job Order" : "Job Order Aktif"}
           </h3>
           <button 
             onClick={() => setShowHistory(!showHistory)}
-            className="text-sm text-primary font-medium flex items-center gap-1"
+            className="text-xs sm:text-sm text-primary font-medium flex items-center gap-1 touch-target"
           >
             {showHistory ? "Lihat Aktif" : "Lihat Riwayat"}
-            <ArrowRightIcon className="h-4 w-4" />
+            <ArrowRightIcon className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
         </div>
 
         {showHistory ? (
           completedAssignments.length === 0 ? (
-            <div className="text-center py-12 bg-card rounded-2xl border border-border">
-              <ClockIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-muted-foreground">Belum ada riwayat job order</p>
+            <div className="text-center py-10 sm:py-12 bg-card rounded-2xl border border-border">
+              <ClockIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Belum ada riwayat job order</p>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
@@ -749,20 +749,20 @@ export function KaryawanDashboard() {
           )
         ) : (
           !hasAnyAssignments ? (
-            <div className="text-center py-12 bg-card rounded-2xl border border-border">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                <ClipboardDocumentListIcon className="h-8 w-8 text-muted-foreground" />
+            <div className="text-center py-10 sm:py-12 bg-card rounded-2xl border border-border">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-muted flex items-center justify-center">
+                <ClipboardDocumentListIcon className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
               </div>
-              <h4 className="font-semibold text-card-foreground mb-1">Belum Ada Job Order</h4>
-              <p className="text-sm text-muted-foreground mb-4">Anda belum mendapatkan tugas job order</p>
+              <h4 className="font-semibold text-card-foreground mb-1 text-sm sm:text-base">Belum Ada Job Order</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4">Anda belum mendapatkan tugas job order</p>
             </div>
           ) : allCompleted ? (
-            <div className="text-center py-12 bg-card rounded-2xl border border-border">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
-                <CheckIcon className="h-8 w-8 text-success" />
+            <div className="text-center py-10 sm:py-12 bg-card rounded-2xl border border-border">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckIcon className="h-7 w-7 sm:h-8 sm:w-8 text-success" />
               </div>
-              <h4 className="font-semibold text-card-foreground mb-1">Semua Job Order Selesai!</h4>
-              <p className="text-sm text-muted-foreground mb-4">Tidak ada job order aktif saat ini</p>
+              <h4 className="font-semibold text-card-foreground mb-1 text-sm sm:text-base">Semua Job Order Selesai!</h4>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4">Tidak ada job order aktif saat ini</p>
               <Button variant="outline" className="rounded-xl" disabled>
                 Input Produksi Manual
               </Button>
@@ -779,21 +779,21 @@ export function KaryawanDashboard() {
 
       {/* Target Minggu - Progress Card */}
       <Card className="animate-slide-up" style={{ animationDelay: '100ms' }}>
-        <CardContent className="p-5">
+        <CardContent className="p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-[var(--accent)]/10 dark:bg-accent/20">
-                <FlagIcon className="h-6 w-6 text-accent-foreground dark:text-accent-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-[var(--accent)]/10 dark:bg-accent/20 shrink-0">
+                <FlagIcon className="h-5 w-5 sm:h-6 sm:w-6 text-accent-foreground dark:text-accent-foreground" />
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Target Minggu Ini</h3>
-                <p className="text-xs text-muted-foreground">Progress target periode</p>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-foreground text-sm sm:text-base">Target Minggu Ini</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Progress target periode</p>
               </div>
             </div>
             {progressPercent >= 100 && (
-              <div className="flex items-center gap-1 text-warning">
-                <TrophyIcon className="h-5 w-5" />
-                <span className="text-sm font-semibold">Target Tercapai!</span>
+              <div className="flex items-center gap-1 text-warning shrink-0">
+                <TrophyIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm font-semibold">Target Tercapai!</span>
               </div>
             )}
           </div>
@@ -816,18 +816,18 @@ export function KaryawanDashboard() {
                 }}
               />
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-center">
-              <div className="rounded-xl p-3 border-2 border-accent/30 dark:border-accent/30 shadow-sm">
-                <p className="text-xs text-accent-foreground dark:text-accent-foreground mb-1">Target</p>
-                <p className="text-lg font-bold text-accent-foreground dark:text-accent-foreground">{totalTarget}</p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+              <div className="rounded-xl p-2 sm:p-3 border-2 border-info/30 dark:border-info/30 shadow-sm">
+                <p className="text-[10px] sm:text-xs text-info dark:text-info mb-1">Target</p>
+                <p className="text-base sm:text-lg font-bold text-info dark:text-info">{totalTarget}</p>
               </div>
-              <div className="rounded-xl p-3 border-2 border-success/30 dark:border-success/30 shadow-sm">
-                <p className="text-xs text-success-foreground mb-1">Diterima QC</p>
-                <p className="text-lg font-bold text-success-foreground">{totalAccepted}</p>
+              <div className="rounded-xl p-2 sm:p-3 border-2 border-success/30 dark:border-success/30 shadow-sm">
+                <p className="text-[10px] sm:text-xs text-success-foreground mb-1">Diterima QC</p>
+                <p className="text-base sm:text-lg font-bold text-success-foreground">{totalAccepted}</p>
               </div>
-              <div className="rounded-xl p-3 border-2 border-destructive/30 dark:border-destructive/30 shadow-sm">
-                <p className="text-xs text-destructive mb-1">Ditolak</p>
-                <p className="text-lg font-bold text-destructive">{totalRejected}</p>
+              <div className="rounded-xl p-2 sm:p-3 border-2 border-destructive/30 dark:border-destructive/30 shadow-sm">
+                <p className="text-[10px] sm:text-xs text-destructive mb-1">Ditolak</p>
+                <p className="text-base sm:text-lg font-bold text-destructive">{totalRejected}</p>
               </div>
             </div>
           </div>
@@ -835,10 +835,10 @@ export function KaryawanDashboard() {
       </Card>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
         <Button 
           variant="outline"
-          className="h-auto py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200"
+          className="h-auto py-3 sm:py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200 min-h-[48px]"
           onClick={() => setKlaimModalOpen(true)}
           disabled={!canClaimThisPeriod()}
         >
@@ -849,7 +849,7 @@ export function KaryawanDashboard() {
         </Button>
         <Button 
           variant="outline" 
-          className="h-auto py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200"
+          className="h-auto py-3 sm:py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200 min-h-[48px]"
           onClick={() => setKasbonModalOpen(true)}
         >
           <CreditCardIcon className="h-5 w-5" />
@@ -857,7 +857,7 @@ export function KaryawanDashboard() {
         </Button>
         <Button 
           variant="outline" 
-          className="h-auto py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200"
+          className="h-auto py-3 sm:py-4 flex flex-col items-center gap-1 hover:border-primary/30 transition-all duration-200 min-h-[48px]"
           onClick={() => setSlipModalOpen(true)}
         >
           <ChartBarIcon className="h-5 w-5" />
@@ -865,8 +865,8 @@ export function KaryawanDashboard() {
         </Button>
       </div>
 
-      {/* Bottom Spacing for Mobile Nav */}
-      <div className="h-8 md:hidden" />
+      {/* Bottom Spacing for Mobile Gesture Bar */}
+      <div className="h-6 sm:h-8 md:hidden" />
 
       {/* Klaim Gaji Modal */}
       <Dialog open={klaimModalOpen} onOpenChange={setKlaimModalOpen}>
@@ -964,13 +964,20 @@ export function KaryawanDashboard() {
               * Kasbon akan dipotong dari gaji Anda. Requires persetujuan admin.
             </div>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setKasbonModalOpen(false)}>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setKasbonModalOpen(false)}
+              className="border"
+            >
               Batal
             </Button>
-            <Button 
+            <Button
+              size="lg"
               onClick={handleAjukanKasbon}
               disabled={isSubmitting || !kasbonAmount}
+              className="border border-transparent"
             >
               {isSubmitting ? "Mengirim..." : "Ajukan"}
             </Button>

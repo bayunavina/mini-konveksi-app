@@ -32,11 +32,11 @@ export default async function DashboardLayout({
           >
             <AppSidebar variant="floating" />
             <SidebarInset>
-              <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+              <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 mobile-safe-header">
                 <DashboardHeader />
               </div>
-              <div className="flex flex-1 flex-col bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 overflow-hidden">
-                <main className="flex-1 animate-fade-in overflow-y-auto">
+              <div className="flex flex-1 flex-col bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 min-w-0 max-w-full">
+                <main className="flex-1 animate-fade-in overflow-y-auto overflow-x-clip">
                   {children}
                 </main>
               </div>

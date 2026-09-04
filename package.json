@@ -4,6 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:https": "next dev --experimental-https",
+    "dev:https-lan": "next dev --experimental-https --hostname 0.0.0.0 --port 3000",
+    "dev:https-cert": "next dev --experimental-https --experimental-https-key ./certs/dev-key.pem --experimental-https-cert ./certs/dev-cert.pem --hostname 0.0.0.0 --port 3000",
+    "cert:lan": "bash scripts/generate-lan-cert.sh",
+    "tunnel:ngrok": "ngrok http 3000",
+    "tunnel:localtunnel": "npx --yes localtunnel --port 3000",
+    "tunnel:cloudflared": "cloudflared tunnel --url http://localhost:3000",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",

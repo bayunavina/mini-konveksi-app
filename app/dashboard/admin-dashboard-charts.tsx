@@ -69,7 +69,7 @@ export function FinanceLineChart({ data, lines, xAxisKey, year, onYearChange }: 
             <CardDescription className="text-[10px] sm:text-xs hidden sm:block">Saldo, Pemasukan, Pengeluaran</CardDescription>
           </div>
           <Select value={year.toString()} onValueChange={(v) => onYearChange(parseInt(v))}>
-            <SelectTrigger className="w-[90px] h-8 text-xs font-medium">
+            <SelectTrigger className="w-[90px] font-medium">
               <SelectValue placeholder="Tahun" />
             </SelectTrigger>
             <SelectContent>
@@ -433,7 +433,7 @@ export function InventoryBarChart({
           </div>
           {onYearChange && (
             <Select value={year?.toString() || currentYear.toString()} onValueChange={(v) => onYearChange(parseInt(v))}>
-              <SelectTrigger className="w-[90px] h-8 text-xs font-medium">
+              <SelectTrigger className="w-[90px] font-medium">
                 <SelectValue placeholder="Tahun" />
               </SelectTrigger>
               <SelectContent>

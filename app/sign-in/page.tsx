@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { Scissors } from "lucide-react"
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"
 import { Spinner } from "@/components/ui/spinner"
 
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,7 @@ function clearLockoutStorage() {
 function SignInForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [failedAttempts, setFailedAttempts] = useState(0)
@@ -234,21 +236,35 @@ function SignInForm() {
             
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Masukkan password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading || isLockedOut}
-                className="h-11 bg-transparent dark:bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg transition-all duration-300 focus:bg-white/80 dark:focus:bg-white/10 focus:backdrop-blur-md focus:border-primary focus:shadow-lg focus:shadow-primary/20"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Masukkan password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading || isLockedOut}
+                  className="h-11 bg-transparent dark:bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg transition-all duration-300 focus:bg-white/80 dark:focus:bg-white/10 focus:backdrop-blur-md focus:border-primary focus:shadow-lg focus:shadow-primary/20 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
             
-            <Button 
+            <Button size="lg" 
               type="submit" 
-              className="w-full h-11 text-sm font-semibold mt-2" 
+              className="w-full font-semibold mt-2" 
               disabled={isLoading || isLockedOut}
             >
               {isLoading ? (

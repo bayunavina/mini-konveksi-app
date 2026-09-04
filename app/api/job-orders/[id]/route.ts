@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { jobOrders, products, teams, qcReports, employees, notifications, productionAssignments, productionLogs, rejects, productionProgress, materialLots } from "@/db/schema"
-import { eq, sql } from "drizzle-orm"
+import { jobOrders, products, teams, qcReports, employees, notifications, productionAssignments, productionLogs, rejects, productionProgress, productionSalary, jobOrderCosts, transactions, inventoryMovements, materialLots } from "@/db/schema"
+import { eq, inArray, sql } from "drizzle-orm"
 
 export async function GET(
   _request: NextRequest,
@@ -168,17 +168,20 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const force = searchParams.get("force") === "true"
+    const deleteTransactions = searchParams.get("deleteTransactions") === "true"
 
     // Find job order by ID or JO number
     const isUUID = id.includes("-") && id.length === 36
     const findCondition = isUUID ? eq(jobOrders.id, id) : eq(jobOrders.joNumber, id)
-    const existingJO = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber, status: jobOrders.status }).from(jobOrders).where(findCondition).limit(1)
-    
+    const existingJO = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber, status: jobOrders.status, targetQty: jobOrders.targetQty, completedQty: jobOrders.completedQty }).from(jobOrders).where(findCondition).limit(1)
+
     if (existingJO.length === 0) {
       return NextResponse.json({ error: "Job order not found" }, { status: 404 })
     }
@@ -186,47 +189,117 @@ export async function DELETE(
     const actualId = existingJO[0].id
     const joNumber = existingJO[0].joNumber
 
-    // Get all production assignments for this job order
+    // Kumpulkan data terkait untuk guard + laporan ke UI
     const assignments = await db
       .select({ id: productionAssignments.id })
       .from(productionAssignments)
       .where(eq(productionAssignments.jobOrderId, actualId))
+    const assignmentIds = assignments.map((a) => a.id)
 
-    // Delete production progress for each assignment
-    for (const assignment of assignments) {
-      await db.delete(productionProgress).where(eq(productionProgress.assignmentId, assignment.id))
-    }
-
-    // Get QC report IDs for this job order
     const qcReportsToDelete = await db
       .select({ id: qcReports.id })
       .from(qcReports)
       .where(eq(qcReports.jobOrderId, actualId))
+    const qcReportIds = qcReportsToDelete.map((r) => r.id)
 
-    // Delete rejects first (they reference qc_reports via qc_report_id)
-    if (qcReportsToDelete.length > 0) {
-      const qcReportIds = qcReportsToDelete.map(r => r.id)
-      for (const qcId of qcReportIds) {
-        await db.delete(rejects).where(eq(rejects.qcReportId, qcId))
-      }
+    const [costRows, txRows, logRows] = await Promise.all([
+      db.select({ id: jobOrderCosts.id }).from(jobOrderCosts).where(eq(jobOrderCosts.jobOrderId, actualId)),
+      db.select({ id: transactions.id }).from(transactions).where(eq(transactions.jobOrderId, actualId)),
+      db.select({ id: productionLogs.id }).from(productionLogs).where(eq(productionLogs.jobOrderId, actualId)),
+    ])
+
+    const hasProgress =
+      assignmentIds.length > 0 ||
+      qcReportIds.length > 0 ||
+      logRows.length > 0 ||
+      (existingJO[0].completedQty ?? 0) > 0
+
+    // Guard: JO yang sudah berjalan butuh ?force=true agar tidak terhapus tak sengaja.
+    // JO Draft 0 (seperti JO260905-07GV) lolos tanpa force.
+    if (hasProgress && !force) {
+      return NextResponse.json(
+        {
+          error: "JO sudah memiliki progress produksi/QC. Gunakan force untuk hapus paksa.",
+          linked: {
+            assignments: assignmentIds.length,
+            qcReports: qcReportIds.length,
+            productionLogs: logRows.length,
+            costs: costRows.length,
+            transactions: txRows.length,
+            completedQty: existingJO[0].completedQty ?? 0,
+          },
+          hint: "Ulangi dengan ?force=true, dan tambah &deleteTransactions=true jika transaksi keuangan terkait juga mau dihapus (default: transaksi hanya di-unlink, tidak dihapus).",
+        },
+        { status: 409 }
+      )
     }
 
-    // Delete QC reports
-    await db.delete(qcReports).where(eq(qcReports.jobOrderId, actualId))
+    const deleted: Record<string, number> = {}
 
-    // Delete production assignments
-    await db.delete(productionAssignments).where(eq(productionAssignments.jobOrderId, actualId))
+    await db.transaction(async (tx) => {
+      // Child paling dalam dulu (FK-safe)
+      if (assignmentIds.length > 0) {
+        await tx.delete(productionProgress).where(inArray(productionProgress.assignmentId, assignmentIds))
+        deleted.productionProgress = assignmentIds.length
+        await tx.delete(productionSalary).where(inArray(productionSalary.assignmentId, assignmentIds))
+      }
 
-    // Delete production logs
-    await db.delete(productionLogs).where(eq(productionLogs.jobOrderId, actualId))
+      if (qcReportIds.length > 0) {
+        await tx.delete(rejects).where(inArray(rejects.qcReportId, qcReportIds))
+      }
+      // Rejects juga bisa tertaut langsung via jobOrderId (bukan hanya via qcReportId)
+      await tx.delete(rejects).where(eq(rejects.jobOrderId, actualId))
 
-    // Delete related notifications (by UUID or JO number)
-    await db.delete(notifications).where(eq(notifications.referenceId, actualId))
-    await db.delete(notifications).where(eq(notifications.referenceId, joNumber))
+      if (qcReportIds.length > 0) {
+        await tx.delete(qcReports).where(inArray(qcReports.jobOrderId, [actualId]))
+        deleted.qcReports = qcReportIds.length
+      } else {
+        await tx.delete(qcReports).where(eq(qcReports.jobOrderId, actualId))
+      }
 
-    // Delete the job order
-    await db.delete(jobOrders).where(eq(jobOrders.id, actualId))
-    return NextResponse.json({ success: true })
+      if (assignmentIds.length > 0) {
+        await tx.delete(productionAssignments).where(eq(productionAssignments.jobOrderId, actualId))
+        deleted.assignments = assignmentIds.length
+      } else {
+        await tx.delete(productionAssignments).where(eq(productionAssignments.jobOrderId, actualId))
+      }
+
+      if (logRows.length > 0) {
+        await tx.delete(productionLogs).where(eq(productionLogs.jobOrderId, actualId))
+        deleted.productionLogs = logRows.length
+      } else {
+        await tx.delete(productionLogs).where(eq(productionLogs.jobOrderId, actualId))
+      }
+
+      // Biaya HPP per JO: hapus eksplisit (walau schema onDelete cascade, eksplisit lebih aman)
+      if (costRows.length > 0) {
+        await tx.delete(jobOrderCosts).where(eq(jobOrderCosts.jobOrderId, actualId))
+        deleted.costs = costRows.length
+      }
+
+      // Transaksi keuangan: default hanya unlink (pertahankan audit finance),
+      // hapus permanen hanya jika ?deleteTransactions=true
+      if (txRows.length > 0) {
+        if (deleteTransactions) {
+          await tx.delete(transactions).where(eq(transactions.jobOrderId, actualId))
+          deleted.transactionsDeleted = txRows.length
+        } else {
+          await tx.update(transactions).set({ jobOrderId: null }).where(eq(transactions.jobOrderId, actualId))
+          deleted.transactionsUnlinked = txRows.length
+        }
+      }
+
+      // Movements & notifikasi yang merujuk JO / QC-nya (referenceId bertipe text)
+      const refIds = [actualId, joNumber, ...qcReportIds]
+      await tx.delete(inventoryMovements).where(inArray(inventoryMovements.referenceId, refIds))
+      await tx.delete(notifications).where(inArray(notifications.referenceId, refIds))
+
+      // Terakhir: JO-nya sendiri
+      await tx.delete(jobOrders).where(eq(jobOrders.id, actualId))
+      deleted.jobOrders = 1
+    })
+
+    return NextResponse.json({ success: true, joNumber, deleted })
   } catch (error) {
     console.error("Error deleting job order:", error)
     return NextResponse.json({ error: "Failed to delete job order" }, { status: 500 })

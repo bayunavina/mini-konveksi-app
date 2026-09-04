@@ -2,11 +2,20 @@
 
 import { useEffect, useRef, useCallback, useState, createContext, useContext } from "react"
 import { BrowserMultiFormatReader } from "@zxing/browser"
+import { Button } from "@/components/ui/button"
+import { CameraIcon } from "@heroicons/react/24/outline"
+import {
+  checkCameraPrerequisites,
+  getCameraErrorInfo,
+  type CameraBlockInfo,
+} from "@/lib/camera-utils"
+import { CameraBlockAlert } from "./camera-block-alert"
 
 interface ScannerContextType {
   lastResult: string | null
   isScanning: boolean
   error: string | null
+  blockInfo: CameraBlockInfo | null
   startScanning: () => Promise<void>
   stopScanning: () => void
   onResult: (callback: (result: string) => void) => void
@@ -26,10 +35,17 @@ interface ScannerProviderProps {
   children: React.ReactNode
 }
 
+/** Pilih kamera belakang bila tersedia (label berisi back/rear/environment), fallback ke perangkat terakhir. */
+function pickPreferredDeviceId(devices: { deviceId: string; label: string }[]): string {
+  const back = devices.find((d) => /back|rear|environment|belakang/i.test(d.label))
+  return (back ?? devices[devices.length - 1] ?? devices[0]).deviceId
+}
+
 export function ScannerProvider({ children }: ScannerProviderProps) {
   const [lastResult, setLastResult] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [blockInfo, setBlockInfo] = useState<CameraBlockInfo | null>(null)
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const callbackRef = useRef<((result: string) => void) | null>(null)
@@ -43,21 +59,35 @@ export function ScannerProvider({ children }: ScannerProviderProps) {
   }, [])
 
   const startScanning = useCallback(async () => {
+    // 1. Cek secure context & dukungan browser SEBELUM menyentuh kamera,
+    //    agar user HP via http://IP-lokal mendapat pesan HTTPS yang jelas.
+    const pre = checkCameraPrerequisites()
+    if (!pre.ok) {
+      setBlockInfo(pre)
+      setError(pre.title)
+      setIsScanning(false)
+      console.warn("[scanner] blocked:", pre.code, pre.currentUrl)
+      return
+    }
+
     try {
       setError(null)
+      setBlockInfo(null)
       const reader = new BrowserMultiFormatReader()
       codeReaderRef.current = reader
-      
+
       const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices()
-      
+
       if (videoInputDevices.length === 0) {
-        setError("Tidak ada kamera yang ditemukan")
+        const info = getCameraErrorInfo(new DOMException("No camera found", "NotFoundError"))
+        setBlockInfo(info)
+        setError(info.title)
         return
       }
 
-      const selectedDeviceId = videoInputDevices[0].deviceId
+      const selectedDeviceId = pickPreferredDeviceId(videoInputDevices)
       setIsScanning(true)
-      
+
       if (videoRef.current) {
         await reader.decodeFromVideoDevice(
           selectedDeviceId,
@@ -74,9 +104,11 @@ export function ScannerProvider({ children }: ScannerProviderProps) {
           }
         )
       }
-    } catch (_err) {
-      setError("Gagal memulai scanner. Pastikan kamera diizinkan.")
-      console.error(_err)
+    } catch (err) {
+      const info = getCameraErrorInfo(err)
+      setBlockInfo(info)
+      setError(info.title)
+      console.error("[scanner] start failed:", err)
       setIsScanning(false)
     }
   }, [])
@@ -109,6 +141,7 @@ export function ScannerProvider({ children }: ScannerProviderProps) {
         lastResult,
         isScanning,
         error,
+        blockInfo,
         startScanning,
         stopScanning,
         onResult,
@@ -129,7 +162,12 @@ export function CameraScanner({ onScan, onError, className }: CameraScannerProps
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [blockInfo, setBlockInfo] = useState<CameraBlockInfo | null>(null)
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
+  const onScanRef = useRef(onScan)
+  onScanRef.current = onScan
+  const onErrorRef = useRef(onError)
+  onErrorRef.current = onError
 
   const stopCameraTracks = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
@@ -140,23 +178,36 @@ export function CameraScanner({ onScan, onError, className }: CameraScannerProps
   }, [])
 
   const startScanning = useCallback(async () => {
+    // 1. Cek secure context & dukungan browser SEBELUM menyentuh kamera.
+    const pre = checkCameraPrerequisites()
+    if (!pre.ok) {
+      setBlockInfo(pre)
+      setError(pre.title)
+      onErrorRef.current?.(pre.title ?? "Kamera diblokir")
+      setIsScanning(false)
+      console.warn("[camera-scanner] blocked:", pre.code, pre.currentUrl)
+      return
+    }
+
     try {
       setError(null)
+      setBlockInfo(null)
       const reader = new BrowserMultiFormatReader()
       codeReaderRef.current = reader
-      
+
       const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices()
-      
+
       if (videoInputDevices.length === 0) {
-        const err = "Tidak ada kamera yang ditemukan"
-        setError(err)
-        onError?.(err)
+        const info = getCameraErrorInfo(new DOMException("No camera found", "NotFoundError"))
+        setBlockInfo(info)
+        setError(info.title)
+        onErrorRef.current?.(info.title ?? "Tidak ada kamera")
         return
       }
 
-      const selectedDeviceId = videoInputDevices[0].deviceId
+      const selectedDeviceId = pickPreferredDeviceId(videoInputDevices)
       setIsScanning(true)
-      
+
       if (videoRef.current) {
         await reader.decodeFromVideoDevice(
           selectedDeviceId,
@@ -164,22 +215,19 @@ export function CameraScanner({ onScan, onError, className }: CameraScannerProps
           (result) => {
             if (result) {
               const scannedValue = result.getText()
-              onScan(scannedValue)
+              onScanRef.current(scannedValue)
             }
           }
         )
       }
-    } catch {
-      const errorMsg = "Gagal memulai scanner. Pastikan kamera diizinkan."
-      setError(errorMsg)
-      onError?.(errorMsg)
+    } catch (err) {
+      const info = getCameraErrorInfo(err)
+      setBlockInfo(info)
+      setError(info.title)
+      onErrorRef.current?.(info.title ?? "Gagal memulai scanner")
+      console.error("[camera-scanner] start failed:", err)
       setIsScanning(false)
     }
-  }, [onScan, onError])
-
-  // Auto-start camera when component mounts
-  useEffect(() => {
-    startScanning()
   }, [])
 
   const stopScanning = useCallback(() => {
@@ -194,6 +242,12 @@ export function CameraScanner({ onScan, onError, className }: CameraScannerProps
     setIsScanning(false)
   }, [stopCameraTracks])
 
+  // Auto-start camera when component mounts
+  useEffect(() => {
+    startScanning()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     return () => {
       stopScanning()
@@ -201,42 +255,47 @@ export function CameraScanner({ onScan, onError, className }: CameraScannerProps
   }, [stopScanning])
 
   return (
-    <div className={`${className} relative`}>
+    <div className={`${className ?? ""} relative`}>
       <video
         ref={videoRef}
-        className="w-full h-full object-cover rounded-lg bg-black"
+        className="w-full h-full object-cover rounded-lg bg-gray-900"
         style={{ minHeight: "300px" }}
         autoPlay
         playsInline
         muted
       />
       {!isScanning && !error && (
-        <div className="flex flex-col items-center justify-center absolute inset-0 bg-muted/50">
-          <CameraIcon className="h-12 w-12 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">Memuat kamera...</p>
+        <div className="flex flex-col items-center justify-center absolute inset-0 bg-gray-900">
+          <CameraIcon className="h-12 w-12 text-gray-500 mb-2" />
+          <p className="text-sm text-gray-400">Memuat kamera...</p>
         </div>
       )}
       {error && (
-        <div className="flex flex-col items-center justify-center absolute inset-0 bg-muted rounded-lg">
-          <p className="text-sm text-red-500 text-center p-4">{error}</p>
-          <Button onClick={startScanning} variant="outline" size="sm">
-            Coba Lagi
-          </Button>
+        <div className="absolute inset-0 overflow-y-auto bg-gray-800 rounded-lg p-3">
+          {blockInfo ? (
+            <CameraBlockAlert block={blockInfo} onRetry={startScanning} />
+          ) : (
+            <>
+              <p className="text-sm text-red-500 text-center p-4">{error}</p>
+              <div className="flex justify-center">
+                <Button onClick={startScanning} variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+                  Coba Lagi
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
       {isScanning && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-48 h-48 border-2 border-primary rounded-lg relative">
-            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
+          <div className="w-48 h-48 border-2 border-gray-500 rounded-lg relative">
+            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-gray-300 rounded-tl-lg" />
+            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-gray-300 rounded-tr-lg" />
+            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-gray-300 rounded-bl-lg" />
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-gray-300 rounded-br-lg" />
           </div>
         </div>
       )}
     </div>
   )
 }
-
-import { Button } from "@/components/ui/button"
-import { CameraIcon } from "@heroicons/react/24/outline"

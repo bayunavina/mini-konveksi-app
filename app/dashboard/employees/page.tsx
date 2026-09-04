@@ -677,13 +677,13 @@ export default function EmployeesPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openViewDialog(employee)}>
+                          <Button variant="ghost" size="icon-lg" onClick={() => openViewDialog(employee)}>
                             <EyeIcon className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(employee)}>
+                          <Button variant="ghost" size="icon-lg" onClick={() => openEditDialog(employee)}>
                             <PencilIcon className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => openDeleteDialog(employee)}>
+                          <Button variant="ghost" size="icon-lg" className="text-red-600" onClick={() => openDeleteDialog(employee)}>
                             <TrashIcon className="h-4 w-4" />
                           </Button>
                         </div>

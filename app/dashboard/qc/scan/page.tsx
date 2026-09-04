@@ -140,7 +140,7 @@ export default function QCScanPage() {
         title="Scan QC"
         description="Scan barcode untuk proses quality control"
         actions={
-          <Button variant="outline" onClick={() => router.push("/dashboard/qc")} className="min-h-[44px] px-3">
+          <Button variant="outline" onClick={() => router.push("/dashboard/qc")} className="px-3">
             <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Kembali</span>
           </Button>
@@ -185,7 +185,7 @@ export default function QCScanPage() {
                 <Button variant="secondary" onClick={() => {
                   const input = document.getElementById("manual-jo") as HTMLInputElement
                   if (input?.value) handleScan(input.value)
-                }} className="min-h-[44px]">
+                }}>
                   Cari
                 </Button>
               </div>
@@ -231,21 +231,13 @@ export default function QCScanPage() {
         </Card>
       </div>
 
-      <Dialog open={scanModalOpen} onOpenChange={setScanModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Scan Barcode</DialogTitle>
-            <DialogDescription>
-              Arahkan kamera ke barcode job order
-            </DialogDescription>
-          </DialogHeader>
-          <ScanModal 
-            open={scanModalOpen}
-            onOpenChange={setScanModalOpen}
-            onScan={handleScan}
-          />
-        </DialogContent>
-      </Dialog>
+      <ScanModal
+        open={scanModalOpen}
+        onOpenChange={setScanModalOpen}
+        onScan={handleScan}
+        title="Scan Barcode"
+        description="Arahkan kamera ke barcode job order"
+      />
 
       <Dialog open={!!selectedAssignment} onOpenChange={(open) => !open && setSelectedAssignment(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -295,10 +287,10 @@ export default function QCScanPage() {
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setSelectedAssignment(null)} className="min-h-[44px] w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setSelectedAssignment(null)} className="w-full sm:w-auto">
               Batal
             </Button>
-            <Button onClick={handleSubmitQC} disabled={isSubmitting} className="min-h-[44px] w-full sm:w-auto">
+            <Button onClick={handleSubmitQC} disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting ? "Memproses..." : "Simpan QC"}
             </Button>
           </DialogFooter>

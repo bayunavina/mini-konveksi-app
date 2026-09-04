@@ -41,12 +41,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
             <div className="flex items-center gap-3">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50 shadow-sm" />
-              <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
                 <Scissors className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -135,8 +134,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <div className="flex items-center gap-2">
               <div className="relative flex h-8 w-8 items-center justify-center">
-                <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50 shadow-sm" />
-                <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)] flex items-center justify-center p-1">
+                <div className="absolute inset-0 rounded-full bg-[var(--brand-primary)] flex items-center justify-center p-1">
                   <Scissors className="h-full w-full text-white" />
                 </div>
               </div>

@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       role: role || "KARYAWAN",
-      teamId,
+      teamId: teamId || null,
       employmentType: employmentType || "HARIAN",
       baseSalary: baseSalary || 0,
       ratePerUnit: ratePerUnit || 0,

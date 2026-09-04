@@ -546,7 +546,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground">
                   {factoryScope === "all" && "Menghapus semua data bisnis, karyawan non-admin, dan pengaturan. Superadmin dipertahankan."}
                   {factoryScope === "transactions" && "Hanya menghapus data transaksi keuangan."}
-                  {factoryScope === "production" && "Hanya menghapus data produksi, QC, dan assignment. Job order di-reset ke DRAFT."}
+                  {factoryScope === "production" && "Menghapus progress, assignment, QC, gaji produksi & logs. JO di-reset ke DRAFT, lot terpakai dikembalikan ke stok awal, biaya aktual di-nol-kan."}
                   {factoryScope === "inventory" && "Hanya menghapus data inventory, material lots, dan transfers."}
                 </p>
               </div>

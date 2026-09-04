@@ -35,7 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
-import { ArrowLeftIcon, PlusIcon, UserIcon, KeyIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, PlusIcon, UserIcon, KeyIcon, PencilIcon, TrashIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 interface Employee {
@@ -104,6 +104,8 @@ export default function UsersPage() {
 
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<Employee | null>(null)
@@ -827,12 +829,24 @@ export default function UsersPage() {
               <div className="relative">
                 <Input
                   id="new-password"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   placeholder="Minimal 6 karakter"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="pr-10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? (
+                    <EyeSlashIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
               </div>
               {newPassword.length > 0 && newPassword.length < 6 && (
                 <p className="text-xs text-destructive">Password minimal 6 karakter</p>
@@ -843,7 +857,7 @@ export default function UsersPage() {
               <div className="relative">
                 <Input
                   id="confirm-password"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="Ulangi password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -853,15 +867,18 @@ export default function UsersPage() {
                       : ''
                   }`}
                 />
-                {confirmPassword.length > 0 && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {newPassword === confirmPassword ? (
-                      <span className="text-green-500 text-sm">✓</span>
-                    ) : (
-                      <span className="text-destructive text-sm">✗</span>
-                    )}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
               </div>
               {confirmPassword.length > 0 && newPassword !== confirmPassword && (
                 <p className="text-xs text-destructive flex items-center gap-1">
@@ -878,18 +895,24 @@ export default function UsersPage() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)} className="flex-1">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setPasswordDialogOpen(false)}
+              className="flex-1 border"
+            >
               Batal
             </Button>
-            <Button 
-              onClick={handleUpdatePassword} 
+            <Button
+              size="lg"
+              onClick={handleUpdatePassword}
               disabled={newPassword.length < 6 || newPassword !== confirmPassword || saving}
-              className="flex-1"
+              className="flex-1 items-center justify-center gap-2 border border-transparent transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
-                <Spinner data-icon="inline-start" />
+                <Spinner data-icon="inline-start" className="size-4 shrink-0" />
               ) : (
-                <KeyIcon className="mr-2 h-4 w-4" />
+                <KeyIcon className="size-4 shrink-0" />
               )}
               Simpan
             </Button>

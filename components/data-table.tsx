@@ -128,7 +128,7 @@ function DragHandle({ id }: { id: number }) {
       {...listeners}
       variant="ghost"
       size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
+      className="text-muted-foreground hover:bg-transparent"
     >
       <Bars3Icon className="text-muted-foreground size-3" />
       <span className="sr-only">Drag to reorder</span>
@@ -219,7 +219,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
           Target
         </Label>
         <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
+          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
           defaultValue={row.original.target}
           id={`${row.original.id}-target`}
         />
@@ -244,7 +244,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
           Limit
         </Label>
         <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
+          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
           defaultValue={row.original.limit}
           id={`${row.original.id}-limit`}
         />
@@ -292,8 +292,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-            size="icon"
+            className="data-[state=open]:bg-muted text-muted-foreground flex"
+            size="icon-lg"
           >
             <EllipsisVerticalIcon />
             <span className="sr-only">Open menu</span>
@@ -566,8 +566,9 @@ export function DataTable({
             </div>
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
               <Button
+                size="icon-lg"
                 variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
+                className="hidden lg:flex"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -576,8 +577,8 @@ export function DataTable({
               </Button>
               <Button
                 variant="outline"
-                className="size-8"
-                size="icon"
+                
+                size="icon-lg"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -586,8 +587,8 @@ export function DataTable({
               </Button>
               <Button
                 variant="outline"
-                className="size-8"
-                size="icon"
+                
+                size="icon-lg"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
@@ -596,8 +597,8 @@ export function DataTable({
               </Button>
               <Button
                 variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
+                className="hidden lg:flex"
+                size="icon-lg"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >

@@ -317,7 +317,7 @@ export default function RejectsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="h-10 pl-9"
+                className="pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -340,7 +340,7 @@ export default function RejectsPage() {
               )}
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="data-[size=default]:h-10 w-[150px]">
+              <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -352,7 +352,7 @@ export default function RejectsPage() {
                 <SelectItem value="DISPOSED">Dibuang</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
+            <Button variant="outline" size="lg" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>
@@ -403,8 +403,8 @@ export default function RejectsPage() {
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          size="icon-lg"
+                          
                           onClick={() => openViewDialog(reject)}
                         >
                           <EyeIcon className="h-4 w-4" />
@@ -415,8 +415,8 @@ export default function RejectsPage() {
                               <>
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-green-600 hover:text-green-700"
+                                  size="icon-lg"
+                                  className="text-green-600 hover:text-green-700"
                                   onClick={() => openActionDialog(reject, "APPROVE")}
                                   title="Setujui - Barang layak jual"
                                 >
@@ -424,8 +424,8 @@ export default function RejectsPage() {
                                 </Button>
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-orange-600 hover:text-orange-700"
+                                  size="icon-lg"
+                                  className="text-orange-600 hover:text-orange-700"
                                   onClick={() => openActionDialog(reject, "REWORK")}
                                   title="Perbaiki - Kembalikan ke produksi"
                                 >
@@ -433,8 +433,8 @@ export default function RejectsPage() {
                                 </Button>
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                                  size="icon-lg"
+                                  className="text-red-600 hover:text-red-700"
                                   onClick={() => openActionDialog(reject, "DISPOSE")}
                                   title="Buang - Buang barang"
                                 >
@@ -444,8 +444,8 @@ export default function RejectsPage() {
                             ) : (
                               <Button
                                 variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-gray-400 cursor-not-allowed"
+                                size="icon-lg"
+                                className="text-gray-400 cursor-not-allowed"
                                 title="Hanya Admin dan QC yang dapat memproses"
                                 disabled
                               >

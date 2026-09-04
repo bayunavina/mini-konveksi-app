@@ -307,11 +307,11 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
                         <div className="flex flex-col items-center gap-1">
                           <div className="flex items-center gap-1">
                             <Button
-                              size="sm"
+                              size="lg"
                               variant="outline"
                               disabled={!canClaim(item) || claiming === item.id}
                               onClick={() => handleKlaim(item)}
-                              className="h-8 px-2 text-xs min-w-[60px]"
+                              className="px-2 text-xs min-w-[60px]"
                             >
                               {claiming === item.id ? (
                                 <Spinner data-icon="inline-start" />
@@ -321,14 +321,14 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
                               Klaim
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon-lg"
                               variant="ghost"
                               disabled={!canExport(item)}
                               onClick={() => {
                                 setSelectedClaim(item)
                                 setExportModalOpen(true)
                               }}
-                              className="h-8 w-8 p-0"
+                              
                               title="Export Slip"
                             >
                               <ArrowDownTrayIcon className="h-4 w-4" />
@@ -390,10 +390,10 @@ Slip ini dicetak pada ${new Date().toLocaleString("id-ID")}
             </div>
           )}
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setExportModalOpen(false)} className="min-h-[44px] w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setExportModalOpen(false)} className="w-full sm:w-auto">
               Batal
             </Button>
-            <Button onClick={handleExportSlip} disabled={exportLoading} className="min-h-[44px] w-full sm:w-auto">
+            <Button onClick={handleExportSlip} disabled={exportLoading} className="w-full sm:w-auto">
               {exportLoading ? (
                 <Spinner data-icon="inline-start" />
               ) : (

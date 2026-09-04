@@ -82,8 +82,7 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground w-full h-auto py-3 px-3 rounded-lg hover:bg-accent transition-colors"
             >
               <div className="relative flex h-10 w-10 items-center justify-center shrink-0">
-                <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50" />
-                <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)]" />
+                <div className="absolute inset-0 rounded-full bg-[var(--brand-primary)]" />
                 <span className="relative z-10 text-brand-primary-foreground font-semibold text-sm">
                   {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </span>
@@ -96,16 +95,15 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-64 rounded-lg border shadow-lg"
+            className="w-64 rounded-lg shadow-lg"
             side={isMobile ? "bottom" : "top"}
             align="end"
             sideOffset={8}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-3 px-4 py-4 border-b">
+              <div className="flex items-center gap-3 px-4 py-4">
                 <div className="relative flex h-12 w-12 items-center justify-center shrink-0">
-                  <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50" />
-                  <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)]" />
+                  <div className="absolute inset-0 rounded-full bg-[var(--brand-primary)]" />
                   <span className="relative z-10 text-brand-primary-foreground font-bold text-base">
                     {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </span>

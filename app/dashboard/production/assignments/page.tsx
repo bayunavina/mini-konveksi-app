@@ -274,7 +274,7 @@ export default function AssignmentsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="h-10 pl-9"
+                className="pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -298,7 +298,7 @@ export default function AssignmentsPage() {
               )}
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="data-[size=default]:h-10 w-[150px]">
+              <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -308,7 +308,7 @@ export default function AssignmentsPage() {
                 <SelectItem value="COMPLETED">Completed</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
+            <Button variant="outline" size="lg" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>

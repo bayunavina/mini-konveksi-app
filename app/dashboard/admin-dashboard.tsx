@@ -542,7 +542,7 @@ export function AdminDashboard() {
                 </CardTitle>
                 <CardDescription className="text-[10px] sm:text-xs">Daftar job order produksi</CardDescription>
               </div>
-              <Button asChild variant="ghost" size="sm" className="h-7 text-[10px] sm:text-xs hover:bg-primary/10 hover:text-primary">
+              <Button asChild variant="ghost" size="lg" className="hover:bg-primary/10 hover:text-primary">
                 <Link href="/dashboard/produksi">
                   Lihat
                   <ArrowRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
@@ -600,7 +600,7 @@ export function AdminDashboard() {
                 </CardTitle>
                 <CardDescription className="text-[10px] sm:text-xs">Transfer antar gudang</CardDescription>
               </div>
-              <Button asChild variant="ghost" size="sm" className="h-7 text-[10px] sm:text-xs">
+              <Button asChild variant="ghost" size="lg">
                 <Link href="/dashboard/transfer">
                   Lihat
                   <ArrowRightIcon className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />

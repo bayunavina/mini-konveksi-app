@@ -398,8 +398,8 @@ export default function OutgoingPage() {
                               <span className="text-sm font-medium">{item.quantity} Pcs</span>
                               <Button
                                 variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-red-500"
+                                size="icon-sm"
+                                className="text-red-500"
                                 onClick={() => handleRemoveItem(item.productId)}
                               >
                                 <TrashIcon className="h-3 w-3" />

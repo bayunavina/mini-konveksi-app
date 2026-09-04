@@ -272,24 +272,24 @@ export default function WarehousesPage() {
                       <div className="flex gap-1 justify-center">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          size="icon-lg"
+                          
                           onClick={() => openViewDialog(warehouse)}
                         >
                           <EyeIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          size="icon-lg"
+                          
                           onClick={() => openEditDialog(warehouse)}
                         >
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-600"
+                          size="icon-lg"
+                          className="text-red-500 hover:text-red-600"
                           onClick={() => openDeleteDialog(warehouse)}
                         >
                           <TrashIcon className="h-4 w-4" />

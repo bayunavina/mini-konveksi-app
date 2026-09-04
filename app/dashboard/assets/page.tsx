@@ -523,24 +523,24 @@ export default function AssetsPage() {
                       <div className="flex gap-1 justify-center">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          size="icon-lg"
+                          
                           onClick={() => openViewDialog(asset)}
                         >
                           <EyeIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          size="icon-lg"
+                          
                           onClick={() => openEditDialog(asset)}
                         >
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-600"
+                          size="icon-lg"
+                          className="text-red-500 hover:text-red-600"
                           onClick={() => openDeleteDialog(asset)}
                         >
                           <TrashIcon className="h-4 w-4" />

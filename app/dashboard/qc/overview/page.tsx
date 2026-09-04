@@ -327,16 +327,16 @@ export default function QCOverviewPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/qc")} className="min-h-[44px] px-3">
+          <Button variant="outline" size="lg" onClick={() => router.push("/dashboard/qc")} className="px-3">
             <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Kembali</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={fetchData} className="min-h-[44px] px-3">
+          <Button variant="outline" size="lg" onClick={fetchData} className="px-3">
             <ArrowPathIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
           {selectedRows.size > 0 && (
-            <Button size="sm" onClick={openQCDialog} className="min-h-[44px]">
+            <Button size="lg" onClick={openQCDialog}>
               <CheckIcon className="h-4 w-4 sm:mr-2" />
               Proses ({getTotalSelected()})
             </Button>
@@ -558,10 +558,10 @@ export default function QCOverviewPage() {
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setQCDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setQCDialogOpen(false)} className="w-full sm:w-auto">
               Batal
             </Button>
-            <Button onClick={handleSubmitQC} disabled={submitting} className="min-h-[44px] w-full sm:w-auto">
+            <Button onClick={handleSubmitQC} disabled={submitting} className="w-full sm:w-auto">
               {submitting && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
               Simpan QC Report
             </Button>

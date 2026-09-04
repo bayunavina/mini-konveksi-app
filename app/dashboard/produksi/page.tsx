@@ -8,7 +8,6 @@ import {
   EyeIcon,
   PauseIcon,
   PlayIcon,
-  EllipsisVerticalIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
@@ -42,38 +41,43 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { useCurrency } from "@/hooks/useCurrency"
 import { toast } from "sonner"
-import { 
+import {
   JOB_ORDER_STATUS_LABELS, 
   JOB_ORDER_STATUS_COLORS, 
   type JobOrder, 
   type JobOrderStatus 
 } from "@/types/production"
 
-const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
+interface DeleteLinked {
+  assignments: number
+  qcReports: number
+  productionLogs: number
+  costs: number
+  transactions: number
+  completedQty: number
+}
 
 export default function ProduksiPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("ALL")
-  const [showResetDialog, setShowResetDialog] = useState(false)
-  const [resetting, setResetting] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<JobOrder | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteTransactions, setDeleteTransactions] = useState(false)
+  const [deleteBlocked, setDeleteBlocked] = useState<DeleteLinked | null>(null)
   
   const { user } = useSessionWithRole()
   const { formatCurrency } = useCurrency()
-  const isSuperadmin = user?.email === SUPERADMIN_EMAIL
+  const canDeleteJO = user?.isAdmin ?? false
   
   const { data: response, loading, refetch } = useFetch<{
     data: JobOrder[]
@@ -92,28 +96,6 @@ export default function ProduksiPage() {
     
     return matchesSearch && matchesStatus
   })
-
-  const handleResetProduction = async () => {
-    setResetting(true)
-    try {
-      const response = await fetch("/api/production/reset", {
-        method: "DELETE",
-      })
-
-      if (response.ok) {
-        toast.success("Semua data produksi berhasil di-reset")
-        setShowResetDialog(false)
-        refetch()
-      } else {
-        const data = await response.json()
-        toast.error(data.error || "Gagal reset data produksi")
-      }
-    } catch {
-      toast.error("Terjadi kesalahan saat reset")
-    } finally {
-      setResetting(false)
-    }
-  }
 
   const handleSyncJobOrders = async () => {
     setSyncing(true)
@@ -134,6 +116,48 @@ export default function ProduksiPage() {
       toast.error("Terjadi kesalahan saat sinkronisasi")
     } finally {
       setSyncing(false)
+    }
+  }
+
+  const openDeleteDialog = (jo: JobOrder) => {
+    setDeleteTarget(jo)
+    setDeleteTransactions(false)
+    setDeleteBlocked(null)
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteJO = async (force = false) => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const params = new URLSearchParams()
+      if (force) params.set("force", "true")
+      if (deleteTransactions) params.set("deleteTransactions", "true")
+      const qs = params.toString() ? `?${params.toString()}` : ""
+      const res = await fetch(`/api/job-orders/${deleteTarget.id}${qs}`, {
+        method: "DELETE",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        const parts: string[] = [`JO ${deleteTarget.joNumber} dihapus`]
+        if (data.deleted?.costs) parts.push(`${data.deleted.costs} biaya`)
+        if (data.deleted?.transactionsDeleted) parts.push(`${data.deleted.transactionsDeleted} transaksi dihapus`)
+        else if (data.deleted?.transactionsUnlinked) parts.push(`${data.deleted.transactionsUnlinked} transaksi di-unlink`)
+        toast.success(parts.join(" • "))
+        setShowDeleteDialog(false)
+        setDeleteTarget(null)
+        setDeleteBlocked(null)
+        refetch()
+      } else if (res.status === 409 && data.linked) {
+        setDeleteBlocked(data.linked as DeleteLinked)
+        toast.warning("JO sudah ada progress — perlu hapus paksa")
+      } else {
+        toast.error(data.error || "Gagal menghapus JO")
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat menghapus")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -217,29 +241,6 @@ export default function ProduksiPage() {
                 title="Daftar Job Order Produksi"
                 filename="job-order-produksi"
               />
-              {isSuperadmin && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" title="Aksi lainnya" className="px-2 sm:px-3">
-                      <EllipsisVerticalIcon className="h-4 w-4" />
-                      <span className="sr-only">Aksi lainnya</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
-                      Superadmin
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setShowResetDialog(true)}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                    >
-                      <TrashIcon className="mr-2 h-4 w-4" />
-                      Reset Data
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </div>
           </div>
         </CardHeader>
@@ -250,10 +251,10 @@ export default function ProduksiPage() {
               placeholder="Cari nomor JO, SKU, atau karyawan..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-full sm:max-w-sm"
+              className="w-full sm:max-w-sm"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="data-[size=default]:h-10 w-full sm:w-[170px]">
+              <SelectTrigger className="w-full sm:w-[170px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -338,8 +339,8 @@ export default function ProduksiPage() {
                         {jo.status !== "COMPLETED" && jo.status !== "CANCELLED" && (
                           <Button 
                             variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
+                            size="icon-lg" 
+                            
                             title={jo.status === "HOLD" ? "Lanjutkan" : "Hold"}
                             onClick={() => handleHoldToggle(jo.id, jo.status)}
                           >
@@ -350,9 +351,14 @@ export default function ProduksiPage() {
                             )}
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.location.href = `/dashboard/produksi/${jo.joNumber}`}>
+                        <Button variant="ghost" size="icon-lg" title="Lihat detail" onClick={() => window.location.href = `/dashboard/produksi/${jo.joNumber}`}>
                           <EyeIcon className="h-4 w-4" />
                         </Button>
+                        {canDeleteJO && (
+                          <Button variant="ghost" size="icon-lg" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Hapus JO" onClick={() => openDeleteDialog(jo)}>
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -363,23 +369,56 @@ export default function ProduksiPage() {
         </CardContent>
       </Card>
 
-      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => { setShowDeleteDialog(open); if (!open) { setDeleteTarget(null); setDeleteBlocked(null) } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset Semua Data Produksi?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Peringatan: Semua progress produksi akan di-reset ke nol. Job Order tetap ada dengan status &quot;Draft&quot;. QC Reports dan Stok Material juga akan di-reset. Tindakan ini tidak dapat dibatalkan!
+            <AlertDialogTitle>Hapus {deleteTarget?.joNumber}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  JO <strong>{deleteTarget?.joNumber}</strong> ({deleteTarget?.product?.name || "-"} • target {deleteTarget?.targetQty} pcs • status {deleteTarget ? (JOB_ORDER_STATUS_LABELS[deleteTarget.status as JobOrderStatus] || deleteTarget.status) : ""}) akan dihapus permanen beserta assignment, progress, laporan QC, rejects, logs, biaya HPP, dan notifikasi terkait. Tindakan ini tidak dapat dibatalkan!
+                </p>
+                <div className="flex items-start gap-2 rounded-md border p-2.5">
+                  <Checkbox
+                    id="delete-transactions"
+                    checked={deleteTransactions}
+                    onCheckedChange={(v) => setDeleteTransactions(v === true)}
+                  />
+                  <Label htmlFor="delete-transactions" className="text-xs font-normal leading-5 cursor-pointer">
+                    Hapus juga transaksi keuangan yang tertaut ke JO ini. Jika tidak dicentang, transaksi tetap ada tapi kolom JO-nya dikosongkan (audit finance aman).
+                  </Label>
+                </div>
+                {deleteBlocked && (
+                  <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+                    <p className="font-semibold mb-1">JO ini sudah ada progress:</p>
+                    <p>
+                      {deleteBlocked.assignments} assignment • {deleteBlocked.qcReports} QC • {deleteBlocked.productionLogs} logs • {deleteBlocked.costs} biaya • {deleteBlocked.transactions} transaksi • selesai {deleteBlocked.completedQty} pcs.
+                    </p>
+                    <p className="mt-1">Gunakan tombol Hapus Paksa jika benar-benar yakin.</p>
+                  </div>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleResetProduction}
-              disabled={resetting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {resetting ? "Mereset..." : "Ya, Reset Semua"}
-            </AlertDialogAction>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel disabled={deleting}>Batal</AlertDialogCancel>
+            {deleteBlocked ? (
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleDeleteJO(true) }}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Menghapus..." : "Ya, Hapus Paksa"}
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleDeleteJO(false) }}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Menghapus..." : "Ya, Hapus"}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

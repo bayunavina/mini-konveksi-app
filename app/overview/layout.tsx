@@ -26,7 +26,7 @@ export default async function OverviewLayout({
     >
       <AppSidebar variant="floating" />
       <SidebarInset>
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <DashboardHeader />
         </div>
         <div className="flex flex-1 flex-col bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 overflow-hidden">

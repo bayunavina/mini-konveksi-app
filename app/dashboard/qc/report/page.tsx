@@ -341,19 +341,19 @@ export default function QCReportPage() {
         description="Laporan hasil quality control produksi"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={handlePrint} disabled={filteredReports.length === 0} className="min-h-[44px] px-3">
+            <Button variant="outline" size="lg" onClick={handlePrint} disabled={filteredReports.length === 0} className="px-3">
               <PrinterIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Print</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportExcel} disabled={filteredReports.length === 0} className="min-h-[44px] px-3">
+            <Button variant="outline" size="lg" onClick={handleExportExcel} disabled={filteredReports.length === 0} className="px-3">
               <ArrowDownTrayIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Export</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/qc")} className="min-h-[44px] px-3">
+            <Button variant="outline" size="lg" onClick={() => router.push("/dashboard/qc")} className="px-3">
               <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Kembali</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="min-h-[44px] px-3">
+            <Button variant="outline" size="lg" onClick={() => refetch()} className="px-3">
               <ArrowPathIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
@@ -408,7 +408,7 @@ export default function QCReportPage() {
               <CardDescription className="text-xs sm:text-sm">Riwayat laporan quality control</CardDescription>
             </div>
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full sm:w-[140px] h-10 text-base">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <SelectValue placeholder="Filter waktu" />
               </SelectTrigger>
               <SelectContent>
@@ -466,7 +466,7 @@ export default function QCReportPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-500">
               <p>Gagal memuat data</p>
-              <Button variant="outline" className="mt-2 min-h-[44px]" onClick={() => refetch()}>
+              <Button variant="outline" className="mt-2" onClick={() => refetch()}>
                 Coba Lagi
               </Button>
             </div>

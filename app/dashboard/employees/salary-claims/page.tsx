@@ -513,9 +513,9 @@ export default function SalaryClaimsPage() {
                       {claim.status === "CLAIMED" && (
                         <div className="flex items-center justify-center gap-1">
                           <Button
-                            size="sm"
+                            size="icon-lg"
                             variant="ghost"
-                            className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                             onClick={() => handleApprove(claim)}
                             disabled={processing}
                             title="Setujui"
@@ -527,9 +527,9 @@ export default function SalaryClaimsPage() {
                             )}
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon-lg"
                             variant="ghost"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleReject(claim)}
                             disabled={processing}
                             title="Tolak"
@@ -540,9 +540,9 @@ export default function SalaryClaimsPage() {
                       )}
                       {claim.status === "APPROVED" && (
                         <Button
-                          size="sm"
+                          size="lg"
                           variant="outline"
-                          className="h-8 text-xs"
+                          className="text-xs"
                           onClick={() => handleMarkPaid(claim)}
                           disabled={processing}
                         >

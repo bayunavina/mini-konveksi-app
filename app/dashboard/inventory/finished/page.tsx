@@ -176,7 +176,7 @@ export default function FinishedGoodsPage() {
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="h-10 pl-9 w-[180px]"
+                  className="pl-9 w-[180px]"
                 />
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -199,7 +199,7 @@ export default function FinishedGoodsPage() {
                   </div>
                 )}
               </div>
-              <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
+              <Button variant="outline" size="lg" onClick={() => refetch()}>
                 Refresh
               </Button>
             </div>
@@ -259,8 +259,8 @@ export default function FinishedGoodsPage() {
                         <div className="flex gap-1 justify-center">
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
+                            size="icon-lg"
+                            
                             onClick={() => openViewDialog(item)}
                           >
                             <EyeIcon className="h-4 w-4" />

@@ -51,7 +51,7 @@ export function AuthButtons() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Button size="icon-lg" variant="ghost" className="relative rounded-full">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
               <AvatarFallback>{initials}</AvatarFallback>
@@ -119,7 +119,7 @@ export function HeroAuthButtons() {
   if (session?.user) {
     return (
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button asChild size="lg" className="text-base px-8 py-3">
+        <Button asChild size="lg" className="text-base px-8">
           <Link href="/dashboard">
             <User className="mr-2 h-5 w-5" />
             Go to Dashboard
@@ -131,7 +131,7 @@ export function HeroAuthButtons() {
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-      <Button asChild size="lg" className="text-base px-8 py-3">
+      <Button asChild size="lg" className="text-base px-8">
         <Link href="/sign-in">
           <LogIn className="mr-2 h-5 w-5" />
           Sign In

@@ -174,9 +174,9 @@ export function SignupForm() {
               />
             </div>
             
-            <Button 
+            <Button size="lg" 
               type="submit" 
-              className="w-full h-11 text-sm font-semibold mt-2" 
+              className="w-full font-semibold mt-2" 
               disabled={isLoading}
             >
               {isLoading ? (

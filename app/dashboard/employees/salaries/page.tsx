@@ -613,18 +613,18 @@ export default function SalariesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openViewDialog(salary)}>
+                        <Button variant="ghost" size="icon-lg" onClick={() => openViewDialog(salary)}>
                           <EyeIcon className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(salary)}>
+                        <Button variant="ghost" size="icon-lg" onClick={() => openEditDialog(salary)}>
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                         {salary.status === "PENDING" && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => handlePay(salary)}>
+                          <Button variant="ghost" size="icon-lg" className="text-green-600" onClick={() => handlePay(salary)}>
                             <BanknotesIcon className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => openDeleteDialog(salary)}>
+                        <Button variant="ghost" size="icon-lg" className="text-red-600" onClick={() => openDeleteDialog(salary)}>
                           <TrashIcon className="h-4 w-4" />
                         </Button>
                       </div>

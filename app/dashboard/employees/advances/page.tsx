@@ -531,26 +531,26 @@ export default function AdvancesPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openViewDialog(advance)}>
+                            <Button variant="ghost" size="icon-lg" onClick={() => openViewDialog(advance)}>
                               <EyeIcon className="h-4 w-4" />
                             </Button>
                             {advance.status === "PENDING" && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--chart-blue)]" onClick={() => handleApprove(advance)}>
+                              <Button variant="ghost" size="icon-lg" className="text-[var(--chart-blue)]" onClick={() => handleApprove(advance)}>
                                 <CheckIcon className="h-4 w-4" />
                               </Button>
                             )}
                             {(advance.status === "PENDING" || advance.status === "APPROVED") && sisa > 0 && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => openPayDialog(advance)}>
+                              <Button variant="ghost" size="icon-lg" className="text-green-600" onClick={() => openPayDialog(advance)}>
                                 <BanknotesIcon className="h-4 w-4" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600" onClick={() => openRemarkDialog(advance)}>
+                            <Button variant="ghost" size="icon-lg" className="text-amber-600" onClick={() => openRemarkDialog(advance)}>
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                                 <path d="M12 20h9"/>
                                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
                               </svg>
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => openDeleteDialog(advance)}>
+                            <Button variant="ghost" size="icon-lg" className="text-red-600" onClick={() => openDeleteDialog(advance)}>
                               <TrashIcon className="h-4 w-4" />
                             </Button>
                           </div>

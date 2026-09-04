@@ -332,12 +332,12 @@ export default function TeamsPage() {
                 placeholder="Cari tim atau ketua..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 pl-9"
+                className="pl-9"
               />
             </div>
             <div className="flex items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="data-[size=default]:h-10 w-[160px]">
+                <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -348,7 +348,7 @@ export default function TeamsPage() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
+              <Button variant="outline" size="lg" onClick={() => refetch()}>
                 Refresh
               </Button>
             </div>

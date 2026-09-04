@@ -126,7 +126,7 @@ export default function QCReportsPage() {
         title="QC Reports"
         description="Laporan hasil quality control produksi"
         actions={
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="min-h-[44px] px-3">
+          <Button variant="outline" size="lg" onClick={() => refetch()} className="px-3">
             <ArrowPathIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
@@ -180,7 +180,7 @@ export default function QCReportsPage() {
               <CardDescription className="text-xs sm:text-sm">Riwayat laporan quality control</CardDescription>
             </div>
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full sm:w-[140px] h-10 text-base">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <SelectValue placeholder="Filter waktu" />
               </SelectTrigger>
               <SelectContent>
@@ -237,7 +237,7 @@ export default function QCReportsPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-500">
               <p>Gagal memuat data</p>
-              <Button variant="outline" className="mt-2 min-h-[44px]" onClick={() => refetch()}>
+              <Button variant="outline" className="mt-2" onClick={() => refetch()}>
                 Coba Lagi
               </Button>
             </div>

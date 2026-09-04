@@ -267,7 +267,7 @@ export default function SalaryPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="h-10 pl-9"
+                className="pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -286,7 +286,7 @@ export default function SalaryPage() {
                 </div>
               )}
             </div>
-            <Button variant="outline" size="sm" className="h-10" onClick={() => refetch()}>
+            <Button variant="outline" size="lg" onClick={() => refetch()}>
               Refresh
             </Button>
           </div>

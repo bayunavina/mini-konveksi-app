@@ -671,28 +671,30 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="flex h-16 items-center gap-2 border-b bg-background/80 backdrop-blur-xl px-4">
-      <SidebarTrigger className="-ml-1" />
+    <header className="flex min-h-[clamp(3rem,8vw,4rem)] items-center gap-1.5 sm:gap-2 bg-background/80 backdrop-blur-xl px-2 sm:px-4">
+      <SidebarTrigger className="-ml-1 shrink-0 touch-target" />
       
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/dashboard" className="hover:text-foreground font-medium">
+      <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground min-w-0 overflow-hidden">
+        <Link href="/dashboard" className="hover:text-foreground font-medium shrink-0 hidden sm:inline">
           {APP_NAME}
         </Link>
+        <span className="hidden sm:inline">/</span>
         {breadcrumbs.map((crumb, index) => (
-          <span key={crumb.href} className="flex items-center gap-2">
-            <span>/</span>
+          <span key={crumb.href} className="flex items-center gap-1 sm:gap-2 min-w-0">
+            {index === 0 && <span className="sm:hidden">/</span>}
+            {index > 0 && <span>/</span>}
             {index < breadcrumbs.length - 1 ? (
-              <Link href={crumb.href} className="hover:text-foreground">
+              <Link href={crumb.href} className="hover:text-foreground shrink-0">
                 {crumb.label}
               </Link>
             ) : (
-              <span className="font-medium text-foreground">{crumb.label}</span>
+              <span className="font-medium text-foreground truncate max-w-[120px] sm:max-w-none">{crumb.label}</span>
             )}
           </span>
         ))}
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
         {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
           <>
             <div ref={searchContainerRef} className="relative hidden md:flex">
@@ -724,7 +726,7 @@ export function DashboardHeader() {
                 onClick={() => setShowSearch(false)}
               >
                 <div 
-                  className="absolute bg-background border rounded-xl shadow-2xl overflow-hidden animate-scale-in pointer-events-auto"
+                  className="absolute bg-background rounded-xl shadow-2xl overflow-hidden animate-scale-in pointer-events-auto"
                   style={{
                     top: `${searchPosition.top}px`,
                     left: `${searchPosition.left}px`,
@@ -737,7 +739,7 @@ export function DashboardHeader() {
                     {searchResults.map((result) => (
                       <button
                         key={result.id}
-                        className="w-full text-left px-4 py-3 hover:bg-accent/50 border-b border-border/50 last:border-b-0 flex items-center gap-3 transition-colors"
+                        className="w-full text-left px-4 py-3 hover:bg-accent/50 flex items-center gap-3 transition-colors"
                         onMouseDown={(e) => {
                           e.preventDefault()
                           handleSearchSelect(result)
@@ -766,7 +768,7 @@ export function DashboardHeader() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Link href="/dashboard/settings/notifications" className="relative" suppressHydrationWarning>
-              <Button variant="ghost" size="icon" className="hover:bg-accent/50 transition-colors">
+              <Button variant="ghost" size="icon" className="hover:bg-accent/50 transition-colors touch-target">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-[10px] font-medium text-white flex items-center justify-center animate-pulse-glow">
@@ -776,7 +778,7 @@ export function DashboardHeader() {
               </Button>
             </Link>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-80 border rounded-lg shadow-xl" align="end">
+          <DropdownMenuContent className="w-[min(20rem,calc(100vw-2rem))] rounded-lg shadow-xl" align="end">
             <DropdownMenuLabel className="flex items-center justify-between">
               <span>Notifikasi</span>
               {unreadCount > 0 && (

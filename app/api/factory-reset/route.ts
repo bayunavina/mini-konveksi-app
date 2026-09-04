@@ -25,6 +25,7 @@ import {
   transactions,
   suppliers,
   costCategories,
+  jobOrderCosts,
   rejects,
   notificationPreferences,
   pushSubscriptions,
@@ -249,14 +250,44 @@ export async function POST(request: NextRequest) {
     }
 
     if (scope === "production") {
+      // Kumpulkan relasi dulu sebelum dihapus (untuk restore lot + bersih notifikasi)
+      const allAssignments = await db.select({ id: productionAssignments.id, materialLotId: productionAssignments.materialLotId }).from(productionAssignments)
+      const affectedLotIds = [...new Set(allAssignments.map((a) => a.materialLotId).filter((v): v is string => !!v))]
+      const allQc = await db.select({ id: qcReports.id }).from(qcReports)
+      const qcIds = allQc.map((q) => q.id)
+      const allJOs = await db.select({ id: jobOrders.id, joNumber: jobOrders.joNumber }).from(jobOrders)
+      const joRefIds = [...allJOs.map((j) => j.id), ...allJOs.map((j) => j.joNumber), ...qcIds]
+
       await countAndDelete(productionProgress, "productionProgress")
+      await countAndDelete(productionSalary, "productionSalary")
       await countAndDelete(productionAssignments, "productionAssignments")
       await countAndDelete(qcReports, "qcReports")
       await countAndDelete(rejects, "rejects")
       await countAndDelete(productionLogs, "productionLogs")
-      // Reset jobOrders to DRAFT
+      // JO dipertahankan untuk siklus baru: kembali ke DRAFT 0/0
       await db.update(jobOrders).set({ completedQty: 0, rejectedQty: 0, status: "DRAFT", updatedAt: new Date() })
-      return NextResponse.json({ success: true, message: "Data produksi berhasil di-reset", deleted, scope })
+      deleted["jobOrdersReset"] = allJOs.length
+      // Biaya aktual HPP di-nol-kan (estimasi dipertahankan untuk siklus baru)
+      await db.update(jobOrderCosts).set({ actualAmount: 0, updatedAt: new Date() })
+      // Kembalikan lot yang terpakai produksi ke stok awal (hanya yang terdampak)
+      if (affectedLotIds.length > 0) {
+        await db
+          .update(materialLots)
+          .set({
+            quantity: sql`${materialLots.initialQty}`,
+            status: "AVAILABLE",
+            isReadyForProduction: true,
+            updatedAt: new Date(),
+          })
+          .where(inArray(materialLots.id, affectedLotIds))
+        deleted["materialLotsRestored"] = affectedLotIds.length
+      }
+      // Bersihkan notifikasi & movements yang merujuk JO/QC tersebut
+      if (joRefIds.length > 0) {
+        await db.delete(notifications).where(inArray(notifications.referenceId, joRefIds))
+        await db.delete(inventoryMovements).where(inArray(inventoryMovements.referenceId, joRefIds))
+      }
+      return NextResponse.json({ success: true, message: "Data produksi berhasil di-reset. JO kembali ke DRAFT, lot terpakai dikembalikan ke stok awal, biaya aktual di-nol-kan.", deleted, scope })
     }
 
     if (scope === "inventory") {

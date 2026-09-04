@@ -38,6 +38,12 @@ import { useSKUMaster } from "@/hooks/useSKUMaster"
 import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { toast } from "sonner"
 import { Html5Qrcode } from "html5-qrcode"
+import {
+  checkCameraPrerequisites,
+  getCameraErrorInfo,
+  type CameraBlockInfo,
+} from "@/lib/camera-utils"
+import { CameraBlockAlert } from "@/components/scanner/camera-block-alert"
 
 interface LotProduct {
   id: string
@@ -102,6 +108,7 @@ export default function MaterialsPage() {
   const [cameraActive, setCameraActive] = useState(false)
   const [scanResult, setScanResult] = useState<string | null>(null)
   const [scanning, setScanning] = useState(false)
+  const [cameraBlock, setCameraBlock] = useState<CameraBlockInfo | null>(null)
   const [editingLotId, setEditingLotId] = useState<string | null>(null)
   const [editingRemark, setEditingRemark] = useState("")
   const [savingRemark, setSavingRemark] = useState(false)
@@ -118,7 +125,18 @@ export default function MaterialsPage() {
   const { data: summaryData } = useFetch<Summary>("/api/material-lots/summary")
 
   const startCamera = async () => {
+    // Cek secure context SEBELUM menyentuh kamera: http://IP-lokal
+    // bukan secure context → getUserMedia diblokir browser.
+    const pre = checkCameraPrerequisites()
+    if (!pre.ok) {
+      setCameraBlock(pre)
+      toast.error(pre.title ?? "Kamera diblokir", { description: "Lihat panduan HTTPS di dialog." })
+      console.warn("[materials-scan] blocked:", pre.code, pre.currentUrl)
+      return
+    }
+
     try {
+      setCameraBlock(null)
       setScanning(true)
       setCameraActive(true)
       
@@ -143,7 +161,14 @@ export default function MaterialsPage() {
       )
     } catch (err) {
       console.error("Camera error:", err)
-      toast.error("Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.")
+      const info = getCameraErrorInfo(err)
+      setCameraBlock(info)
+      toast.error(info.title ?? "Tidak dapat mengakses kamera.", {
+        description:
+          info.code === "insecure-context"
+            ? "Kamera hanya bisa diakses via HTTPS — jalankan npm run dev:https."
+            : "Pastikan izin kamera diberikan.",
+      })
       setScanning(false)
       setCameraActive(false)
     }
@@ -160,6 +185,7 @@ export default function MaterialsPage() {
     }
     setCameraActive(false)
     setScanning(false)
+    setCameraBlock(null)
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -652,7 +678,7 @@ export default function MaterialsPage() {
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="h-10 pl-9"
+                className="pl-9"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -677,7 +703,7 @@ export default function MaterialsPage() {
               )}
             </div>
             <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-              <SelectTrigger className="data-[size=default]:h-10 w-[200px]">
+              <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Semua Produk" />
               </SelectTrigger>
               <SelectContent>
@@ -689,7 +715,7 @@ export default function MaterialsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-10" onClick={() => refetchAll()}>
+            <Button variant="outline" size="lg" onClick={() => refetchAll()}>
               Refresh
             </Button>
           </div>
@@ -749,28 +775,26 @@ export default function MaterialsPage() {
                             value={editingRemark}
                             onChange={(e) => setEditingRemark(e.target.value)}
                             placeholder="Ketik remark..."
-                            className="h-7 text-sm"
+                            className="text-sm"
                             autoFocus
                             onKeyDown={(e) => {
                               if (e.key === "Enter") handleSaveRemark(lot.id)
                               if (e.key === "Escape") handleCancelEditRemark()
                             }}
                           />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleSaveRemark(lot.id)}
-                            disabled={savingRemark}
-                            className="h-7 w-7 p-0"
-                          >
+<Button
+                             size="icon"
+                             variant="ghost"
+                             onClick={() => handleSaveRemark(lot.id)}
+                             disabled={savingRemark}
+                           >
                             <CheckIcon className="h-4 w-4 text-green-600" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleCancelEditRemark}
-                            className="h-7 w-7 p-0"
-                          >
+<Button
+                             size="icon"
+                             variant="ghost"
+                             onClick={handleCancelEditRemark}
+                           >
                             <XMarkIcon className="h-4 w-4 text-red-500" />
                           </Button>
                         </div>
@@ -986,6 +1010,9 @@ export default function MaterialsPage() {
 
             {scanMode === "camera" && (
               <div className="space-y-4">
+                {cameraBlock && (
+                  <CameraBlockAlert block={cameraBlock} onRetry={startCamera} />
+                )}
                 {!cameraActive ? (
                   <Button onClick={startCamera} className="w-full">
                     <CameraIcon className="mr-2 h-4 w-4" />

@@ -138,23 +138,32 @@ export function ScanModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="dark sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="camera" className="flex items-center gap-2">
+          <TabsList className="flex w-full gap-1 rounded-lg bg-gray-800 p-1">
+            <TabsTrigger
+              value="camera"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:border-gray-600 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-400 hover:data-[state=inactive]:bg-gray-700"
+            >
               <CameraIcon className="h-4 w-4" />
               Kamera
             </TabsTrigger>
-            <TabsTrigger value="image" className="flex items-center gap-2">
+            <TabsTrigger
+              value="image"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:border-gray-600 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-400 hover:data-[state=inactive]:bg-gray-700"
+            >
               <PhotoIcon className="h-4 w-4" />
               Gambar
             </TabsTrigger>
-            <TabsTrigger value="manual" className="flex items-center gap-2">
+            <TabsTrigger
+              value="manual"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:border-gray-600 data-[state=inactive]:bg-transparent data-[state=inactive]:text-gray-400 hover:data-[state=inactive]:bg-gray-700"
+            >
               <span className="h-4 w-4">⌨️</span>
               Manual
             </TabsTrigger>
@@ -165,7 +174,7 @@ export function ScanModal({
               <CardContent className="p-4">
                 <CameraScanner
                   onScan={handleScan}
-                  className="relative bg-black rounded-lg overflow-hidden"
+                  className="relative bg-gray-900 rounded-lg overflow-hidden border border-gray-700"
                 />
               </CardContent>
             </Card>
@@ -175,7 +184,7 @@ export function ScanModal({
             <Card>
               <CardContent className="p-4 space-y-4">
                 <div id="qr-reader-image-scan" className="hidden"></div>
-                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                <div className="border border-gray-700 rounded-lg p-4 text-center">
                   {imagePreview ? (
                     <div className="space-y-4">
                       <img
@@ -187,6 +196,7 @@ export function ScanModal({
                         <Button
                           variant="outline"
                           size="sm"
+                          className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
                           onClick={() => {
                             setImagePreview(null)
                             fileInputRef.current?.click()
@@ -196,6 +206,7 @@ export function ScanModal({
                         </Button>
                         <Button
                           size="sm"
+                          className="bg-gray-700 text-white hover:bg-gray-600"
                           onClick={handleScanFromImage}
                           disabled={scanningImage}
                         >
@@ -215,11 +226,11 @@ export function ScanModal({
                     </div>
                   ) : (
                     <div className="py-8">
-                      <ArrowUpTrayIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <ArrowUpTrayIcon className="h-12 w-12 mx-auto text-gray-500 mb-4" />
+                      <p className="text-sm text-gray-400 mb-4">
                         Upload gambar yang mengandung QR Code
                       </p>
-                      <Button onClick={() => fileInputRef.current?.click()}>
+                      <Button onClick={() => fileInputRef.current?.click()} className="bg-gray-700 text-white hover:bg-gray-600">
                         <ArrowUpTrayIcon className="mr-2 h-4 w-4" />
                         Pilih Gambar
                       </Button>
@@ -233,7 +244,7 @@ export function ScanModal({
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-gray-500 text-center">
                   Format: JPG, PNG, WebP. Pastikan QR Code terlihat jelas.
                 </p>
               </CardContent>
@@ -248,7 +259,7 @@ export function ScanModal({
                   placeholder="Scan barcode atau ketik manual..."
                   autoFocus
                 />
-                <div className="text-center text-sm text-muted-foreground">
+                <div className="text-center text-sm text-gray-400">
                   atau ketik nomor transfer: TRF-IN-xxxxxx-XXXX
                 </div>
               </CardContent>
@@ -257,18 +268,18 @@ export function ScanModal({
         </Tabs>
 
         {lastScan && (
-          <div className="mt-4 p-3 bg-muted rounded-lg">
+          <div className="mt-4 p-3 bg-gray-800 rounded-lg">
             <p className="text-sm font-medium">Hasil Scan:</p>
             <p className="text-sm font-mono break-all">{lastScan}</p>
           </div>
         )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white" onClick={handleClose}>
             Batal
           </Button>
           {lastScan && (
-            <Button onClick={handleConfirm}>
+            <Button onClick={handleConfirm} className="bg-gray-700 text-white hover:bg-gray-600">
               Gunakan Hasil
             </Button>
           )}

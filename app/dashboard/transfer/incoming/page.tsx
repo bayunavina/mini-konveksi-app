@@ -540,8 +540,8 @@ export default function IncomingPage() {
                       <span className="text-sm font-medium whitespace-nowrap">{item.quantity} Pcs</span>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-red-500"
+                        size="icon-sm"
+                        className="text-red-500"
                         onClick={() => handleRemoveItem(item.productId)}
                       >
                         <TrashIcon className="h-3 w-3" />
@@ -686,8 +686,8 @@ export default function IncomingPage() {
                       <div className="flex gap-1 justify-center">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          size="icon-lg"
+                          
                           onClick={() => handleView(transfer)}
                         >
                           <EyeIcon className="h-4 w-4" />
@@ -707,8 +707,8 @@ export default function IncomingPage() {
                         )}
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                          size="icon-lg"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => openDeleteDialog(transfer)}
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -848,8 +848,8 @@ export default function IncomingPage() {
                       />
                       <Button
                         variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-5 w-5"
+                        size="icon-xs"
+                        className="absolute top-1 right-1"
                         onClick={() => removePhoto(photo.id)}
                       >
                         <TrashIcon className="h-2 w-2" />

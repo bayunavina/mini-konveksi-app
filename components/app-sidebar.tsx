@@ -27,11 +27,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r-0 bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 shadow-xl shadow-black/20 dark:shadow-black/40" {...props}>
-      <SidebarHeader className="border-b border-border/50 p-3">
+      <SidebarHeader className="p-3">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="relative flex size-10 min-w-[40px] items-center justify-center overflow-visible shrink-0">
-            <div className="absolute inset-0 rounded-full border-2 border-[var(--brand-primary)]/50" />
-            <div className="absolute inset-[2px] rounded-full bg-[var(--brand-primary)] flex items-center justify-center p-1.5">
+            <div className="absolute inset-0 rounded-full bg-[var(--brand-primary)] flex items-center justify-center p-1.5">
               <Scissors className="h-full w-full text-brand-primary-foreground" />
             </div>
           </div>
@@ -43,7 +42,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <KonveksiSidebar />
       </SidebarContent>
-      <SidebarFooter className="border-t border-border/50 p-0">
+      <SidebarFooter className="p-0">
         {isLoading ? (
           <div className="h-16 flex items-center justify-center p-2">
             <div className="h-8 w-32 animate-pulse rounded bg-muted" />

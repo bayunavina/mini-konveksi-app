@@ -122,64 +122,64 @@ export function GudangDashboard() {
   }
 
   return (
-    <div className="page-container p-3 md:p-6 pt-4">
+    <div className="page-container">
       {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-primary)] to-[var(--accent)] rounded-2xl p-4 sm:p-5 text-primary-foreground shadow-xl shadow-[var(--brand-primary)]/20">
-        <div className="absolute top-0 right-0 opacity-10">
-          <TruckIconSolid className="h-40 w-40 -translate-y-8 translate-x-8" />
+        <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+          <TruckIconSolid className="h-24 w-24 sm:h-40 sm:w-40 -translate-y-6 translate-x-6 sm:-translate-y-8 sm:translate-x-8" />
         </div>
-        <div className="relative z-10">
-          <p className="text-xs font-medium opacity-80 mb-1">Dashboard</p>
-          <h2 className="text-lg sm:text-xl font-bold mb-1">Dashboard Gudang</h2>
-          <p className="text-xs sm:text-sm opacity-80">
+        <div className="relative z-10 min-w-0">
+          <p className="text-[10px] sm:text-xs font-medium opacity-80 mb-1">Dashboard</p>
+          <h2 className="text-base sm:text-xl font-bold mb-1 truncate">Dashboard Gudang</h2>
+          <p className="text-xs sm:text-sm opacity-80 truncate">
             Monitoring stok dan validasi transfer barang
           </p>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="hover:shadow-lg hover:border-warning/30 transition-all duration-300 p-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 xl:gap-5">
+        <Card className="hover:shadow-lg hover:border-warning/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
           <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
-              <p className="text-xl sm:text-2xl font-bold mt-0.5">{pendingIncoming.length + pendingOutgoing.length}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Menunggu action</p>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Pending</p>
+              <p className="text-lg sm:text-2xl font-bold mt-0.5">{pendingIncoming.length + pendingOutgoing.length}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground truncate">Menunggu action</p>
             </div>
-            <ClockIcon className="h-7 w-7 sm:h-8 sm:w-8 text-warning-foreground dark:text-warning-foreground shrink-0" />
+            <ClockIcon className="h-6 w-6 sm:h-8 sm:w-8 text-warning-foreground dark:text-warning-foreground shrink-0" />
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg hover:border-success/30 transition-all duration-300 p-4">
+        <Card className="hover:shadow-lg hover:border-success/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
           <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Barang Masuk</p>
-              <p className="text-xl sm:text-2xl font-bold mt-0.5">{incomingTransfers.length}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">{pendingIncoming.length} perlu divalidasi</p>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Barang Masuk</p>
+              <p className="text-lg sm:text-2xl font-bold mt-0.5">{incomingTransfers.length}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{pendingIncoming.length} perlu divalidasi</p>
             </div>
-            <ArrowDownIcon className="h-7 w-7 sm:h-8 sm:w-8 text-success-foreground dark:text-success-foreground shrink-0" />
+            <ArrowDownIcon className="h-6 w-6 sm:h-8 sm:w-8 text-success-foreground dark:text-success-foreground shrink-0" />
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg hover:border-[var(--chart-blue)]/30 transition-all duration-300 p-4">
+        <Card className="hover:shadow-lg hover:border-[var(--chart-blue)]/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
           <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Barang Keluar</p>
-              <p className="text-xl sm:text-2xl font-bold mt-0.5">{outgoingTransfers.length}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">{pendingOutgoing.length} perlu divalidasi</p>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Barang Keluar</p>
+              <p className="text-lg sm:text-2xl font-bold mt-0.5">{outgoingTransfers.length}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{pendingOutgoing.length} perlu divalidasi</p>
             </div>
-            <ArrowUpIcon className="h-7 w-7 sm:h-8 sm:w-8 text-[var(--chart-blue)] shrink-0" />
+            <ArrowUpIcon className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--chart-blue)] shrink-0" />
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg hover:border-accent/30 transition-all duration-300 p-4">
+        <Card className="hover:shadow-lg hover:border-accent/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
           <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs sm:text-sm text-muted-foreground">Produk Jadi</p>
-              <p className="text-xl sm:text-2xl font-bold mt-0.5">{totalFinishedGoods}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Total pcs di gudang</p>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Produk Jadi</p>
+              <p className="text-lg sm:text-2xl font-bold mt-0.5">{totalFinishedGoods}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground truncate">Total pcs di gudang</p>
             </div>
-            <CubeIcon className="h-7 w-7 sm:h-8 sm:w-8 text-accent-foreground dark:text-accent-foreground shrink-0" />
+            <CubeIcon className="h-6 w-6 sm:h-8 sm:w-8 text-accent-foreground dark:text-accent-foreground shrink-0" />
           </div>
         </Card>
       </div>
@@ -187,112 +187,112 @@ export function GudangDashboard() {
       {/* Quick Actions */}
       <div className="flex flex-col sm:flex-row gap-2">
         <Link href="/dashboard/transfer/incoming" className="flex-1 sm:flex-none">
-          <Button className="w-full bg-gradient-to-r from-[var(--success)] to-[var(--success)] hover:from-[var(--success)] hover:to-[var(--success)] shadow-lg shadow-[var(--success)]/25 min-h-[44px]">
-            <ArrowDownIcon className="mr-2 h-4 w-4" />
+          <Button className="w-full bg-gradient-to-r from-[var(--success)] to-[var(--success)] hover:from-[var(--success)] hover:to-[var(--success)] shadow-lg shadow-[var(--success)]/25">
+            <ArrowDownIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Validasi Masuk
-            <Badge className="ml-2 bg-white/20 text-white text-xs">
+            <Badge className="ml-1.5 sm:ml-2 bg-white/20 text-white text-[10px] sm:text-xs">
               {pendingIncoming.length}
             </Badge>
           </Button>
         </Link>
         <Link href="/dashboard/transfer/outgoing" className="flex-1 sm:flex-none">
-          <Button className="w-full bg-gradient-to-r from-[var(--chart-blue)] to-[var(--chart-blue)] hover:opacity-90 shadow-lg shadow-[var(--chart-blue)]/25 min-h-[44px]">
-            <ArrowUpIcon className="mr-2 h-4 w-4" />
+          <Button className="w-full bg-gradient-to-r from-[var(--chart-blue)] to-[var(--chart-blue)] hover:opacity-90 shadow-lg shadow-[var(--chart-blue)]/25">
+            <ArrowUpIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Validasi Keluar
-            <Badge className="ml-2 bg-white/20 text-white text-xs">
+            <Badge className="ml-1.5 sm:ml-2 bg-white/20 text-white text-[10px] sm:text-xs">
               {pendingOutgoing.length}
             </Badge>
           </Button>
         </Link>
         <Link href="/dashboard/inventory/finished" className="flex-1 sm:flex-none">
-          <Button variant="outline" className="w-full min-h-[44px]">
-            <CubeIcon className="mr-2 h-4 w-4" />
+          <Button variant="outline" className="w-full">
+            <CubeIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Lihat Stok
           </Button>
         </Link>
       </div>
 
       {/* Transfer List with Tabs */}
-      <Card>
-        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <CardTitle className="text-base sm:text-lg">Daftar Transfer</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Semua aktivitas transfer barang</CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="p-3 sm:p-6 pb-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="text-sm sm:text-lg">Daftar Transfer</CardTitle>
+              <CardDescription className="text-[10px] sm:text-sm">Semua aktivitas transfer barang</CardDescription>
             </div>
             <div className="flex gap-1 sm:gap-2 w-full sm:w-auto">
               <Button 
                 variant={activeTab === "incoming" ? "default" : "outline"} 
-                size="sm"
+                size="lg"
                 onClick={() => setActiveTab("incoming")}
-                className="min-h-[44px] flex-1 sm:flex-none px-2 sm:px-3"
+                className="flex-1 sm:flex-none px-2 sm:px-3"
               >
-                <ArrowDownIcon className="mr-1 h-4 w-4" />
-                <span className="hidden xs:inline">Masuk</span>
+                <ArrowDownIcon className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Masuk
               </Button>
               <Button 
                 variant={activeTab === "outgoing" ? "default" : "outline"} 
-                size="sm"
+                size="lg"
                 onClick={() => setActiveTab("outgoing")}
-                className="min-h-[44px] flex-1 sm:flex-none px-2 sm:px-3"
+                className="flex-1 sm:flex-none px-2 sm:px-3"
               >
-                <ArrowUpIcon className="mr-1 h-4 w-4" />
-                <span className="hidden xs:inline">Keluar</span>
+                <ArrowUpIcon className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Keluar
               </Button>
               <Button 
                 variant={activeTab === "all" ? "default" : "outline"} 
-                size="sm"
+                size="lg"
                 onClick={() => setActiveTab("all")}
-                className="min-h-[44px] flex-1 sm:flex-none px-2 sm:px-3"
+                className="flex-1 sm:flex-none px-2 sm:px-3"
               >
                 Semua
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-3 sm:p-6">
           {filteredTransfers.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-10 sm:py-12 text-muted-foreground">
               <TruckIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-muted-foreground/50" />
-              <p className="font-medium text-sm sm:text-base">Belum ada transfer</p>
-              <p className="text-xs sm:text-sm mt-1">Transfer barang akan muncul di sini</p>
+              <p className="font-medium text-xs sm:text-base">Belum ada transfer</p>
+              <p className="text-[10px] sm:text-sm mt-1">Transfer barang akan muncul di sini</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="overflow-x-auto -mx-1 px-1">
+              <Table className="min-w-[480px]">
                 <TableHeader>
                   <TableRow className="border-y">
-                    <TableHead className="p-2 text-xs whitespace-nowrap">No. Transfer</TableHead>
-                    <TableHead className="p-2 text-xs hidden md:table-cell">Tanggal</TableHead>
-                    <TableHead className="p-2 text-xs">Tipe</TableHead>
-                    <TableHead className="p-2 text-xs">Items</TableHead>
-                    <TableHead className="p-2 text-xs">Total Qty</TableHead>
-                    <TableHead className="p-2 text-xs">Status</TableHead>
-                    <TableHead className="text-center p-2 text-xs">Aksi</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs whitespace-nowrap">No. Transfer</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs hidden md:table-cell">Tanggal</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs">Tipe</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs hidden sm:table-cell">Items</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs">Total Qty</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs">Status</TableHead>
+                    <TableHead className="text-center p-2 text-[10px] sm:text-xs">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransfers.slice(0, 20).map((transfer) => (
                     <TableRow key={transfer.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-mono font-medium p-2 text-xs whitespace-nowrap">{transfer.transferNumber}</TableCell>
-                      <TableCell className="text-xs p-2 hidden md:table-cell whitespace-nowrap">{formatDate(transfer.createdAt)}</TableCell>
+                      <TableCell className="font-mono font-medium p-2 text-[10px] sm:text-xs whitespace-nowrap">{transfer.transferNumber}</TableCell>
+                      <TableCell className="text-[10px] sm:text-xs p-2 hidden md:table-cell whitespace-nowrap">{formatDate(transfer.createdAt)}</TableCell>
                       <TableCell className="p-2">
-                        <Badge variant="outline" className={`whitespace-nowrap ${
+                        <Badge variant="outline" className={`whitespace-nowrap text-[10px] sm:text-xs ${
                           transfer.type === "INCOMING" ? "text-success-foreground border-[var(--success)] dark:border-[var(--success)]" : "text-[var(--chart-blue)] border-[var(--chart-blue)]/30"
                         }`}>
                           {transfer.type === "INCOMING" ? "Masuk" : "Keluar"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs p-2 whitespace-nowrap">{transfer.items?.length || 0} item</TableCell>
-                      <TableCell className="font-medium p-2 text-xs">{getTotalItems(transfer.items)}</TableCell>
+                      <TableCell className="text-[10px] sm:text-xs p-2 whitespace-nowrap hidden sm:table-cell">{transfer.items?.length || 0} item</TableCell>
+                      <TableCell className="font-medium p-2 text-[10px] sm:text-xs">{getTotalItems(transfer.items)}</TableCell>
                       <TableCell className="p-2">
-                        <Badge className={`${STATUS_COLORS[transfer.status] || "bg-muted"} font-medium whitespace-nowrap`}>
+                        <Badge className={`${STATUS_COLORS[transfer.status] || "bg-muted"} font-medium whitespace-nowrap text-[10px] sm:text-xs`}>
                           {STATUS_LABELS[transfer.status] || transfer.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center p-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewTransfer(transfer)} className="min-h-[44px] min-w-[44px] p-0">
-                          <EyeIcon className="h-4 w-4" />
+                        <Button variant="ghost" size="icon-lg" onClick={() => handleViewTransfer(transfer)}>
+                          <EyeIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -305,12 +305,12 @@ export function GudangDashboard() {
       </Card>
 
       {/* Stock Overview */}
-      <Card>
-        <CardHeader className="p-4 pb-0 sm:p-6 sm:pb-0">
-          <CardTitle className="text-base sm:text-lg">Stok Barang Jadi</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">Monitoring stok produk jadi real-time</CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="p-3 sm:p-6 pb-0">
+          <CardTitle className="text-sm sm:text-lg">Stok Barang Jadi</CardTitle>
+          <CardDescription className="text-[10px] sm:text-sm">Monitoring stok produk jadi real-time</CardDescription>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <CardContent className="p-3 sm:p-6 space-y-2 sm:space-y-4">
           <div className="flex items-center gap-2">
             <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -323,25 +323,25 @@ export function GudangDashboard() {
           </div>
 
           {filteredInventoryStock.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-6 sm:py-8 text-muted-foreground">
               <CubeIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 text-muted-foreground/50" />
-              <p className="text-sm">Tidak ada produk ditemukan</p>
-              <p className="text-xs mt-1">Data akan tampil setelah produksi & QC</p>
+              <p className="text-xs sm:text-sm">Tidak ada produk ditemukan</p>
+              <p className="text-[10px] sm:text-xs mt-1">Data akan tampil setelah produksi & QC</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               {filteredInventoryStock.slice(0, 10).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 border rounded-xl hover:bg-muted/50 transition-colors gap-2 min-h-[60px]">
+                <div key={item.id} className="flex items-center justify-between p-2.5 sm:p-3 border rounded-xl hover:bg-muted/50 transition-colors gap-2 min-h-[52px] sm:min-h-[60px]">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{item.product?.name || "-"}</p>
-                    <p className="text-xs text-muted-foreground truncate">SKU: {item.product?.sku || "-"}</p>
+                    <p className="font-medium text-xs sm:text-sm truncate">{item.product?.name || "-"}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">SKU: {item.product?.sku || "-"}</p>
                   </div>
-                  <div className="text-right mr-2 shrink-0">
-                    <p className="text-base sm:text-lg font-bold text-accent-foreground dark:text-accent-foreground">{item.successQty}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">pcs</p>
+                  <div className="text-right mr-1 sm:mr-2 shrink-0">
+                    <p className="text-sm sm:text-lg font-bold text-accent-foreground dark:text-accent-foreground">{item.successQty}</p>
+                    <p className="text-[9px] sm:text-xs text-muted-foreground">pcs</p>
                   </div>
                   <Link href={`/dashboard/inventory/finished?search=${item.product?.sku}`}>
-                    <Button variant="ghost" size="sm" className="min-h-[44px] px-2 sm:px-3">Detail</Button>
+                    <Button variant="ghost" size="lg" className="px-2 sm:px-3">Detail</Button>
                   </Link>
                 </div>
               ))}
@@ -350,9 +350,12 @@ export function GudangDashboard() {
         </CardContent>
       </Card>
 
+      {/* Bottom Spacing for Mobile Gesture Bar */}
+      <div className="h-2 md:hidden" />
+
       {/* Transfer Detail Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto mx-2 sm:mx-4">
           <DialogHeader>
             <DialogTitle>Detail Transfer</DialogTitle>
           </DialogHeader>
@@ -405,13 +408,13 @@ export function GudangDashboard() {
               )}
 
               <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setDialogOpen(false)} className="min-h-[44px] w-full sm:w-auto">
+                <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
                   Tutup
                 </Button>
                 <Button onClick={() => {
                   setDialogOpen(false)
                   router.push(selectedTransfer.type === "INCOMING" ? "/dashboard/transfer/incoming" : "/dashboard/transfer/outgoing")
-                }} className="min-h-[44px] w-full sm:w-auto">
+                }} className="w-full sm:w-auto">
                   {selectedTransfer.type === "INCOMING" ? "Validasi Masuk" : "Validasi Keluar"}
                 </Button>
               </div>
