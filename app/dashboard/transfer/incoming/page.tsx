@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -583,9 +584,7 @@ export default function IncomingPage() {
               <CardDescription>Transfer yang menunggu diterima</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                Refresh
-              </Button>
+              <RefreshButton size="default" variant="outline" onClick={() => refetch()} />
               <ExportPrint
                 columns={[
                   { key: "transferNumber", label: "No. Transfer" },

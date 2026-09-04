@@ -35,6 +35,7 @@ import {
   ArrowPathIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { ExportPrint } from "@/components/shared/export-print"
 import { formatDate } from "@/lib/utils"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
@@ -331,10 +332,7 @@ export default function QCOverviewPage() {
             <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Kembali</span>
           </Button>
-          <Button variant="outline" size="lg" onClick={fetchData} className="px-3">
-            <ArrowPathIcon className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
+          <RefreshButton size="default" onClick={fetchData} />
           {selectedRows.size > 0 && (
             <Button size="lg" onClick={openQCDialog}>
               <CheckIcon className="h-4 w-4 sm:mr-2" />

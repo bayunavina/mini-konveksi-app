@@ -33,17 +33,22 @@ import {
 import { Label } from "@/components/ui/label"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
-import { 
-  UsersIcon, 
-  ArrowRightIcon, 
-  ArrowPathIcon, 
-  EyeIcon, 
-  PencilIcon, 
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  ExclamationTriangleIcon,
+  PencilIcon,
   TrashIcon,
+  EyeIcon,
+  PrinterIcon,
+  XMarkIcon,
   PlusIcon,
+  UsersIcon,
+  ArrowRightIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
 } from "@heroicons/react/24/outline"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { useFetch } from "@/hooks/useFetch"
 import { useCurrency } from "@/hooks/useCurrency"
 
@@ -417,17 +422,14 @@ export default function EmployeesPage() {
         </Card>
       </div>
 
-      <Card>
+<Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle>Menu Karyawan</CardTitle>
               <CardDescription>Kelola karyawan dan penggajian</CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <ArrowPathIcon className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
+            <RefreshButton size="default" onClick={() => refetch()} />
           </div>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">

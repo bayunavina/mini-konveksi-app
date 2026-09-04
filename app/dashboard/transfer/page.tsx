@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { TruckIcon, ArrowRightIcon, EyeIcon } from "@heroicons/react/24/outline"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { useFetch } from "@/hooks/useFetch"
 import { formatDate, formatDateLong } from "@/lib/utils"
 
@@ -211,9 +212,7 @@ export default function TransferPage() {
               <CardDescription>Riwayat transfer terbaru</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                Refresh
-              </Button>
+              <RefreshButton size="default" variant="outline" onClick={() => refetch()} />
               <ExportPrint
                 title="Daftar Transfer"
                 filename="transfer"
@@ -311,7 +310,7 @@ export default function TransferPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="flex justify-center">
-                        <Button size="sm" variant="outline" onClick={() => handleView(transfer)}>
+                        <Button size="default" variant="outline" onClick={() => handleView(transfer)}>
                           <EyeIcon className="h-4 w-4" />
                         </Button>
                       </TableCell>

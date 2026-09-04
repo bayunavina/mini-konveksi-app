@@ -39,6 +39,7 @@ import { ExportPrint } from "@/components/shared/export-print"
 import { ScanButton } from "@/components/scanner"
 import { parseQRPayload } from "@/lib/qr-payload"
 import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { formatDate, formatDateLong } from "@/lib/utils"
@@ -256,9 +257,7 @@ export default function OutgoingPage() {
               <CardDescription>Transfer yang dikirim dari gudang</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                Refresh
-              </Button>
+              <RefreshButton size="default" variant="outline" onClick={() => refetch()} />
               <ExportPrint
                 columns={[
                   { key: "transferNumber", label: "No. Transfer" },
@@ -475,7 +474,7 @@ export default function OutgoingPage() {
                       {transfer.notes || "-"}
                     </TableCell>
                     <TableCell className="flex justify-center">
-                      <Button size="sm" variant="outline" onClick={() => handleView(transfer)}>
+                      <Button size="default" variant="outline" onClick={() => handleView(transfer)}>
                         <EyeIcon className="h-4 w-4" />
                       </Button>
                     </TableCell>

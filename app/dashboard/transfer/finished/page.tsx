@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -153,9 +154,7 @@ export default function FinishedTransferPage() {
               <CardDescription>Riwayat transfer barang jadi</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                Refresh
-              </Button>
+              <RefreshButton size="default" variant="outline" onClick={() => refetch()} />
               <ExportPrint
                 title="Daftar Transfer Barang Jadi"
                 filename="transfer-barang-jadi"

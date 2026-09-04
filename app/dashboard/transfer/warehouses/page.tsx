@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -202,14 +203,8 @@ export default function WarehousesPage() {
         title="Master Gudang"
         description="Kelola gudang dan kapasitas penyimpanan"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push("/dashboard/transfer")}>
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Kembali
-            </Button>
-            <Button variant="outline" onClick={() => refetch()}>
-              Refresh
-            </Button>
+<div className="flex gap-2">
+            <RefreshButton size="default" variant="outline" onClick={() => refetch()} />
             <Button onClick={() => setDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
               Tambah Gudang

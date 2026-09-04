@@ -20,9 +20,9 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   MagnifyingGlassIcon,
-  ArrowPathIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline"
+import { RefreshButton } from "@/components/ui/refresh-button"
 
 interface MaterialBalanceRow {
   id: string
@@ -138,10 +138,7 @@ export default function BalancePage() {
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               Dashboard
             </Button>
-            <Button variant="outline" onClick={refetchAll}>
-              <ArrowPathIcon className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
+            <RefreshButton size="default" onClick={refetchAll} variant="outline" />
           </div>
         }
       />
