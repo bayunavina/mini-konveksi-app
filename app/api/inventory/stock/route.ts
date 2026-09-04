@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
       const summaryType = adjQty > 0 ? "ADJUSTMENT_IN" : "ADJUSTMENT_OUT"
       
       let newQuantity: number
-      let stockId: string
       
       const existingStock = await db
         .select()
@@ -125,10 +124,9 @@ export async function POST(request: NextRequest) {
         if (adjQty < 0) {
           return NextResponse.json({ error: "Cannot add negative stock to new entry via ADJUSTMENT" }, { status: 400 })
         }
-        const result = await db.insert(inventoryStock).values({
+        await db.insert(inventoryStock).values({
           productId, warehouseId, quantity: adjQty,
-        }).returning()
-        stockId = result[0].id
+        })
         newQuantity = adjQty
       } else {
         const currentQty = existingStock[0].quantity || 0
@@ -136,7 +134,6 @@ export async function POST(request: NextRequest) {
         if (newQuantity < 0) {
           return NextResponse.json({ error: "Stok tidak boleh negatif setelah penyesuaian" }, { status: 400 })
         }
-        stockId = existingStock[0].id
       }
       
       await db.insert(inventoryMovements).values({

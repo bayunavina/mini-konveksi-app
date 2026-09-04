@@ -139,7 +139,7 @@ export default function IncomingPage() {
   const { data: allTransfers, loading, refetch } = useFetch<Transfer[]>("/api/transfers")
   const { data: warehouses } = useFetch<Warehouse[]>("/api/warehouses")
   const { skus: skuMaster } = useSKUMaster()
-  const { user } = useSessionWithRole()
+  const { user, isLoading: roleLoading } = useSessionWithRole()
   const userRole = user?.role || "GUDANG"
   const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN"
 
@@ -152,10 +152,10 @@ export default function IncomingPage() {
 
   // Sinkronkan destinationWarehouse dengan default warehouse untuk non-ADMIN
   useEffect(() => {
-    if (!isAdmin && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id) {
+    if (!isAdmin && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id && !roleLoading) {
       setDestinationWarehouse(defaultWarehouse.id)
     }
-  }, [isAdmin, defaultWarehouse, destinationWarehouse])
+  }, [isAdmin, defaultWarehouse, destinationWarehouse, roleLoading])
 
   const incomingTransfers = (allTransfers || []).filter(t => t.type === "INCOMING")
 
@@ -456,12 +456,14 @@ export default function IncomingPage() {
 
       <div className="flex gap-2">
         <ScanButton onScan={handleScan} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80" />
-        {isAdmin && (
-          <Button onClick={() => setCreateDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Buat Transfer Masuk
-          </Button>
-        )}
+        <Button
+          onClick={() => setCreateDialogOpen(true)}
+          disabled={roleLoading || !isAdmin}
+          className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80"
+        >
+          {roleLoading ? <Spinner data-icon="inline-start" /> : <PlusIcon className="mr-2 h-4 w-4" />}
+          Buat Transfer Masuk
+        </Button>
       </div>
 
       <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) resetForm(); }}>

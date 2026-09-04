@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { db } from "@/db"
 import { inventoryMovements, inventoryStock, products, warehouses } from "@/db/schema"
-import { sql, eq } from "drizzle-orm"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 1. Ambil semua inventoryStock per product+warehouse
     const stockRows = await db
@@ -24,23 +23,7 @@ export async function GET(request: NextRequest) {
       .from(inventoryMovements)
 
     // 3. Siapkan peta productId -> name dan warehouseId -> name (fetch sekali)
-    const productIdSet = new Set(stockRows.map((s) => s.productId))
-    const warehouseIdSet = new Set(stockRows.map((s) => s.warehouseId))
-
-    // Gabungkan ID unik dari stock dan movements
-    const allProductIds = [...new Set([...stockRows.map((s) => s.productId), ...allMovements.map((m) => m.productId)])]
-    const allWarehouseIds = [...new Set([...stockRows.map((s) => s.warehouseId), ...allMovements.map((m) => m.warehouseId)])]
-
-    // Fetch product names in bulk
     const productNameMap = new Map<string, string>()
-    if (allProductIds.length > 0) {
-      const prodRows = await db
-        .select({ id: products.id, name: products.name })
-        .from(products)
-        .where(sql`${products.id} = ANY(${JSON.stringify(allProductIds)})`)
-      }
-    // Actually drizzle doesn't support JSONArray in where like that easily. Let me use a different approach:
-    // Query all products and filter locally
     const allProdRows = await db.select({ id: products.id, name: products.name }).from(products)
     for (const p of allProdRows) {
       productNameMap.set(p.id, p.name)
@@ -74,18 +57,15 @@ export async function GET(request: NextRequest) {
     }> = []
 
     for (const s of stockRows) {
+      if (!s.productId || !s.warehouseId) continue
       const key = `${s.productId}|${s.warehouseId}`
       const quantities = movementMap.get(key) || []
       const computedQty = quantities.reduce((sum, q) => sum + q, 0)
-      const systemQtySafe = s.systemQty ?? 0
-      const deviation = systemQtySafe - computedQty
-      const status = systemQtySafe !== computedQty ? "DEVIATED" : "OK"
-
       report.push({
         productId: s.productId,
         warehouseId: s.warehouseId,
-        productName: (productNameMap.get(s.productId) || "-") as string,
-        warehouseName: (warehouseNameMap.get(s.warehouseId) || "-") as string,
+        productName: productNameMap.get(s.productId) ?? "-",
+        warehouseName: warehouseNameMap.get(s.warehouseId) ?? "-",
         systemQty: s.systemQty ?? 0,
         computedQty: computedQty,
         deviation: (s.systemQty ?? 0) - computedQty,

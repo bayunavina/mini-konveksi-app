@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { AdminDashboard } from "../admin-dashboard"
 
 export default function AdminPage() {
@@ -17,19 +17,11 @@ export default function AdminPage() {
   }, [user, isLoading, router])
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (user?.role !== "ADMIN" && user?.role !== "SUPERADMIN") {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return <AdminDashboard />

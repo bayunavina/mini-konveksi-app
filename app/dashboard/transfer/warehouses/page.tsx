@@ -28,7 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/shared"
-import { PlusIcon, BuildingOfficeIcon, ArrowLeftIcon, EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { PlusIcon, BuildingOfficeIcon, EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"

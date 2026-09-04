@@ -1,13 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/shared"
 import { useFetch } from "@/hooks/useFetch"
-import { toast } from "sonner"
 import { CubeIcon, ArrowRightIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline"
 
 interface MaterialLot {

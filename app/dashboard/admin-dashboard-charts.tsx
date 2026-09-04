@@ -131,7 +131,7 @@ export function FinanceLineChart({ data, lines, xAxisKey, year, onYearChange }: 
                 activeDot={{
                   r: 5,
                 }}
-                isAnimationActive={true}
+                isAnimationActive={false}
               />
             ))}
           </LineChart>
@@ -569,7 +569,7 @@ export function TopProducedMaterialsChart({
                 activeDot={{
                   r: 5,
                 }}
-                isAnimationActive={true}
+                  isAnimationActive={false}
               />
             ))}
           </LineChart>
@@ -935,12 +935,7 @@ const MONTHS_FULL: Record<number, string> = {
 }
 
 export function ProduksiProgressChart({ produksiMasuk, barangJadi, sisaStok, year, month, onYearChange, onMonthChange }: ProduksiProgressChartProps) {
-  const [mounted, setMounted] = React.useState(false)
   const total = produksiMasuk || 1
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const BLUE_COLOR = "var(--brand-primary)"
   const GREEN_COLOR = "var(--success)"
@@ -988,31 +983,22 @@ export function ProduksiProgressChart({ produksiMasuk, barangJadi, sisaStok, yea
       <CardContent className="flex-1 flex flex-col items-center justify-center px-4 py-2">
         <div className="flex flex-col items-center w-full">
           <div className="relative w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] group">
-            {!mounted ? (
-              <div className="w-full h-full rounded-full bg-muted animate-pulse" />
-            ) : (
-              <>
-                <PieChart width={140} height={140}>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={35}
-                    outerRadius={60}
-                    paddingAngle={2}
-                    dataKey="value"
-                    isAnimationActive={true}
-                    animationBegin={0}
-                    animationDuration={1000}
-                    animationEasing="ease-out"
-                  >
-                    <Cell fill={BLUE_COLOR} strokeWidth={0} />
-                    <Cell fill={GREEN_COLOR} strokeWidth={0} />
-                    <Cell fill={RED_COLOR} strokeWidth={0} />
-                  </Pie>
-                </PieChart>
-              </>
-            )}
+            <PieChart width={140} height={140}>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={35}
+                outerRadius={60}
+                paddingAngle={2}
+                dataKey="value"
+                isAnimationActive={false}
+              >
+                <Cell fill={BLUE_COLOR} strokeWidth={0} />
+                <Cell fill={GREEN_COLOR} strokeWidth={0} />
+                <Cell fill={RED_COLOR} strokeWidth={0} />
+              </Pie>
+            </PieChart>
           </div>
             <div className="flex items-center justify-center gap-4 mt-4">
               <div className="flex items-center gap-1.5">

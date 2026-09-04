@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { canAccess, getRedirectForRole } from "@/lib/rbac"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 export function RoleGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -34,19 +34,11 @@ export function RoleGuard({ children }: { children: React.ReactNode }) {
   }, [pathname, user, isLoading, router])
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!user) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (user.role === "GUEST") {
@@ -67,11 +59,7 @@ export function RoleGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!canAccess(pathname, user.role)) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return <>{children}</>

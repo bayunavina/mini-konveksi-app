@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 
 export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
@@ -32,11 +32,7 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, router])
 
   if (isLoading || checking) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return <>{children}</>

@@ -21,6 +21,65 @@ export interface SessionWithRole {
   isLoading: boolean
 }
 
+let sessionPromise: Promise<SessionWithRole["user"]> | null = null
+let cachedSessionUser: SessionWithRole["user"] | undefined
+
+function fetchSessionAndRole(): Promise<SessionWithRole["user"]> {
+  if (cachedSessionUser !== undefined) return Promise.resolve(cachedSessionUser)
+  if (sessionPromise) return sessionPromise
+
+  const request = (async () => {
+    const sessionResponse = await fetch('/api/debug-session2')
+    const sessionData = await sessionResponse.json()
+
+    if (!sessionData.user || !sessionData.user.email) {
+      return null
+    }
+
+    const sessionUser = sessionData.user
+    const userEmail = sessionUser.email
+    let role: UserRole = "GUEST"
+    let isAdmin = false
+    let isSuperAdmin = false
+    let employeeId: string | undefined
+
+    try {
+      const roleResponse = await fetch(`/api/user-role?email=${encodeURIComponent(userEmail)}`)
+      if (roleResponse.ok) {
+        const roleData = await roleResponse.json()
+        role = roleData.role || "GUEST"
+        isAdmin = roleData.isAdmin || role === "SUPERADMIN" || role === "ADMIN"
+        isSuperAdmin = roleData.isSuperAdmin || role === "SUPERADMIN"
+        employeeId = roleData.employeeId
+      }
+    } catch (error) {
+      console.error("Error fetching role:", error)
+    }
+
+    return {
+      id: sessionUser.id || "",
+      email: userEmail,
+      name: sessionUser.name || null,
+      image: sessionUser.image || null,
+      role,
+      isAdmin,
+      isSuperAdmin,
+      isQC: role === "QC",
+      isGudang: role === "GUDANG",
+      isKaryawan: role === "KARYAWAN",
+      employeeId,
+    }
+  })()
+  sessionPromise = request.then((user) => {
+    cachedSessionUser = user
+    return user
+  }).finally(() => {
+    sessionPromise = null
+  })
+
+  return sessionPromise
+}
+
 export function useSessionWithRole() {
   const [state, setState] = useState<SessionWithRole>({
     user: null,
@@ -33,60 +92,16 @@ export function useSessionWithRole() {
     if (fetchedRef.current) return
     fetchedRef.current = true
     
-    const fetchSessionAndRole = async () => {
+    const loadSession = async () => {
       try {
-        const sessionResponse = await fetch('/api/debug-session2')
-        const sessionData = await sessionResponse.json()
-        
-        if (!sessionData.user || !sessionData.user.email) {
-          setState({ user: null, isLoading: false })
-          return
-        }
-
-        const sessionUser = sessionData.user
-        const userEmail = sessionUser.email
-        
-        let role: UserRole = "GUEST"
-        let isAdmin = false
-        let isSuperAdmin = false
-        let employeeId: string | undefined
-
-        try {
-          const roleResponse = await fetch(`/api/user-role?email=${encodeURIComponent(userEmail)}`)
-          if (roleResponse.ok) {
-            const roleData = await roleResponse.json()
-            role = roleData.role || "GUEST"
-            isAdmin = roleData.isAdmin || role === "SUPERADMIN" || role === "ADMIN"
-            isSuperAdmin = roleData.isSuperAdmin || role === "SUPERADMIN"
-            employeeId = roleData.employeeId
-          }
-        } catch (error) {
-          console.error("Error fetching role:", error)
-        }
-
-        setState({
-          user: {
-            id: sessionUser.id || "",
-            email: userEmail,
-            name: sessionUser.name || null,
-            image: sessionUser.image || null,
-            role,
-            isAdmin,
-            isSuperAdmin,
-            isQC: role === "QC",
-            isGudang: role === "GUDANG",
-            isKaryawan: role === "KARYAWAN",
-            employeeId,
-          },
-          isLoading: false,
-        })
+        setState({ user: await fetchSessionAndRole(), isLoading: false })
       } catch (error) {
         console.error("Error fetching session:", error)
         setState({ user: null, isLoading: false })
       }
     }
 
-    fetchSessionAndRole()
+    loadSession()
 
     return () => {
       // cleanup
