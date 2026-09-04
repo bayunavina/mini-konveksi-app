@@ -392,6 +392,226 @@ export function ProduksiRadialChart({
   )
 }
 
+// Top Produced Materials Trend Chart
+interface TopMaterialInfo {
+  code: string
+  name: string
+  totalProduced: number
+}
+
+interface TopProducedMaterialsData {
+  month: string
+  [key: string]: string | number
+}
+
+const topProducedMaterialsChartConfig = {
+  "BB-COTTON": {
+    label: "Cotton",
+    color: "var(--chart-1)",
+  },
+  "BB-POLY": {
+    label: "Polyester",
+    color: "var(--chart-2)",
+  },
+  "BB-DENIM": {
+    label: "Denim",
+    color: "var(--chart-3)",
+  },
+  "BB-SILK": {
+    label: "Sutera",
+    color: "var(--chart-4)",
+  },
+  "BB-WOOL": {
+    label: "Wol",
+    color: "var(--chart-5)",
+  },
+} satisfies ChartConfig
+
+export function useTopProducedMaterialsData(year: number): {
+  data: TopProducedMaterialsData[]
+  topMaterials: TopMaterialInfo[]
+  loading: boolean
+} {
+  const [data, setData] = useState<TopProducedMaterialsData[]>([])
+  const [topMaterials, setTopMaterials] = useState<TopMaterialInfo[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/production/from-materials?year=${year}`)
+        if (!response.ok) throw new Error("Failed to fetch")
+
+        const result = await response.json()
+        setData(result.data)
+        setTopMaterials(result.topMaterials)
+      } catch (error) {
+        console.error("Error fetching top produced materials data:", error)
+        const mockData: TopProducedMaterialsData[] = MONTHS.map((month) => ({
+          month,
+          "BB-COTTON": Math.floor(Math.random() * 100),
+          "BB-POLY": Math.floor(Math.random() * 100),
+          "BB-DENIM": Math.floor(Math.random() * 100),
+          "BB-SILK": Math.floor(Math.random() * 100),
+          "BB-WOOL": Math.floor(Math.random() * 100),
+        }))
+        setData(mockData)
+        setTopMaterials([
+          { code: "BB-COTTON", name: "Cotton", totalProduced: 0 },
+          { code: "BB-POLY", name: "Polyester", totalProduced: 0 },
+          { code: "BB-DENIM", name: "Denim", totalProduced: 0 },
+          { code: "BB-SILK", name: "Sutera", totalProduced: 0 },
+          { code: "BB-WOOL", name: "Wol", totalProduced: 0 },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [year])
+
+  return { data, topMaterials, loading }
+}
+
+interface TopProducedMaterialsChartProps {
+  data: TopProducedMaterialsData[]
+  topMaterials: TopMaterialInfo[]
+  year: number
+  onYearChange: (year: number) => void
+}
+
+export function TopProducedMaterialsChart({
+  data,
+  topMaterials,
+  year,
+  onYearChange,
+}: TopProducedMaterialsChartProps) {
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+
+  const colors = [
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-3)",
+    "var(--chart-4)",
+    "var(--chart-5)",
+  ]
+
+  return (
+    <Card className="h-auto">
+      <CardHeader className="pb-2 px-4 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-sm sm:text-base">Bahan Baku Sering Diproduksi</CardTitle>
+            <CardDescription className="text-[10px] sm:text-xs hidden sm:block">
+              Tren produksi bahan baku teratas
+            </CardDescription>
+          </div>
+          <select
+            value={year}
+            onChange={(e) => onYearChange(parseInt(e.target.value))}
+            className="text-xs border rounded px-2 py-1 bg-background"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      </CardHeader>
+      <CardContent className="px-4 py-2">
+        <ChartContainer config={topProducedMaterialsChartConfig} className="h-[160px] sm:h-[200px] lg:h-[240px] w-full">
+          <LineChart
+            accessibilityLayer
+            data={data}
+            margin={{
+              top: 20,
+              left: 20,
+              right: 20,
+              bottom: 10,
+            }}
+          >
+            <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis
+              dataKey="month"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={6}
+              tick={{ fontSize: 10 }}
+              tickFormatter={(value) => value}
+              interval={0}
+            />
+            <YAxis
+              domain={[0, "auto"]}
+              tick={{ fontSize: 10 }}
+              tickFormatter={(value: number) => value.toLocaleString("id-ID")}
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+              padding={{ top: 15, bottom: 15 }}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="line" />}
+            />
+            {topMaterials.map((material, index) => (
+              <Line
+                key={material.code}
+                type="natural"
+                dataKey={material.code}
+                stroke={colors[index % colors.length]}
+                strokeWidth={2.5}
+                dot={{
+                  fill: colors[index % colors.length],
+                  r: 3,
+                }}
+                activeDot={{
+                  r: 5,
+                }}
+                isAnimationActive={true}
+              />
+            ))}
+          </LineChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-2 px-4 py-3 border-t text-xs sm:text-sm">
+        <div className="flex items-center gap-4 w-full flex-wrap">
+          {topMaterials.map((material, index) => (
+            <div key={material.code} className="flex items-center gap-1.5">
+              <div
+                className="w-3 h-3 rounded-sm shadow-[0_0_6px_rgba(48,79,254,0.5)]"
+                style={{ backgroundColor: colors[index % colors.length] }}
+              />
+              <span className="text-muted-foreground truncate max-w-[80px]">
+                {material.name}
+              </span>
+              <span className="font-semibold text-foreground">
+                {material.totalProduced.toLocaleString("id-ID")}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-4 w-full text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground font-medium">Legend:</span>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {topMaterials.map((material, index) => (
+              <span key={material.code} className="flex items-center gap-1">
+                <span style={{ color: colors[index % colors.length] }}>●</span>
+                <span className="text-muted-foreground truncate max-w-[100px]">
+                  {material.name}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  )
+}
+
 interface InventoryBarChartProps {
   data: ChartDataItem[]
   xAxisKey: string

@@ -204,8 +204,12 @@ export default function QRGeneratorPage() {
                     </Select>
                   </div>
                 )}
-                <div className="flex items-end">
-                  <Button onClick={handleGenerateRealQR} className="w-full dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+                <div className="flex h-full flex-col items-end gap-2">
+                  <span className="invisible text-sm font-medium">Generate QR</span>
+                  <Button
+                    onClick={handleGenerateRealQR}
+                    className="w-auto whitespace-nowrap ml-auto dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80"
+                  >
                     <QrCodeIcon className="mr-2 h-4 w-4" />
                     Generate QR
                   </Button>

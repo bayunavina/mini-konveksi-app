@@ -33,9 +33,11 @@ import {
   InventoryBarChart,
   ProduksiProgressChart,
   RawMaterialBarChart,
+  TopProducedMaterialsChart,
   useFinanceChartData,
   useInventoryChartData,
-  useRawMaterialChartData
+  useRawMaterialChartData,
+  useTopProducedMaterialsData
 } from "./admin-dashboard-charts"
 
 interface JobOrder {
@@ -208,6 +210,8 @@ export function AdminDashboard() {
   const [productionMonth, setProductionMonth] = useState(0)
   const [rawMaterialYear, setRawMaterialYear] = useState(new Date().getFullYear())
   const { data: rawMaterialData, summary: rawMaterialSummary } = useRawMaterialChartData(rawMaterialYear)
+  const [topMaterialsYear, setTopMaterialsYear] = useState(new Date().getFullYear())
+  const { data: topMaterialsData, topMaterials } = useTopProducedMaterialsData(topMaterialsYear)
 
   const [stats, setStats] = useState({
     activeJobs: 0,
@@ -527,6 +531,14 @@ export function AdminDashboard() {
         year={rawMaterialYear}
         onYearChange={setRawMaterialYear}
         summary={rawMaterialSummary}
+      />
+
+      {/* Charts Row 4 - Top Produced Materials */}
+      <TopProducedMaterialsChart
+        data={topMaterialsData}
+        topMaterials={topMaterials}
+        year={topMaterialsYear}
+        onYearChange={setTopMaterialsYear}
       />
 
       {/* Tables Row */}

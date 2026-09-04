@@ -102,6 +102,62 @@ export async function POST(request: NextRequest) {
     const movementType = type.toUpperCase()
     const qty = parseInt(quantity)
     
+    // --- ADJUSTMENT handling: mapped to ADJUSTMENT_IN/ADJUSTMENT_OUT for summary compatibility ---
+    if (movementType === "ADJUSTMENT") {
+      if (qty === 0) {
+        return NextResponse.json({ error: "Quantity must be non-zero for ADJUSTMENT" }, { status: 400 })
+      }
+      const adjQty = qty
+      const summaryType = adjQty > 0 ? "ADJUSTMENT_IN" : "ADJUSTMENT_OUT"
+      
+      let newQuantity: number
+      let stockId: string
+      
+      const existingStock = await db
+        .select()
+        .from(inventoryStock)
+        .where(and(
+          eq(inventoryStock.productId, productId),
+          eq(inventoryStock.warehouseId, warehouseId)
+        ))
+      
+      if (existingStock.length === 0) {
+        if (adjQty < 0) {
+          return NextResponse.json({ error: "Cannot add negative stock to new entry via ADJUSTMENT" }, { status: 400 })
+        }
+        const result = await db.insert(inventoryStock).values({
+          productId, warehouseId, quantity: adjQty,
+        }).returning()
+        stockId = result[0].id
+        newQuantity = adjQty
+      } else {
+        const currentQty = existingStock[0].quantity || 0
+        newQuantity = currentQty + adjQty
+        if (newQuantity < 0) {
+          return NextResponse.json({ error: "Stok tidak boleh negatif setelah penyesuaian" }, { status: 400 })
+        }
+        stockId = existingStock[0].id
+      }
+      
+      await db.insert(inventoryMovements).values({
+        productId, warehouseId, type: summaryType,
+        quantity: adjQty,
+        reference: reference ?? "MANUAL",
+        referenceId: referenceId,
+        notes: notes ?? "Penyesuaian manual stok",
+      })
+      
+      return NextResponse.json({
+        success: true,
+        previousQuantity: existingStock[0]?.quantity || 0,
+        newQuantity,
+        movementType: summaryType,
+        movementQuantity: adjQty,
+      })
+    }
+    
+    // --- End ADJUSTMENT handling ---
+
     if (movementType === "OUT" || movementType === "REJECT") {
       if (qty < 0) {
         return NextResponse.json({ error: "Quantity must be positive for OUT/REJECT" }, { status: 400 })

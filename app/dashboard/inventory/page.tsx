@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/shared"
-import { CubeIcon, ArrowRightIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { toast } from "sonner"
+import { CubeIcon, ArrowRightIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline"
 
 interface MaterialLot {
   id: string
@@ -240,6 +242,14 @@ export default function InventoryPage() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+      <Card className="border-yellow-500/50 bg-yellow-500/5 p-4">
+        <CardHeader>
+          <CardTitle className="text-semibold">Penyesuaian Stok</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Fitur penyesuaian stok manual — akan segera hadir dengan form pemilihan produk, gudang, delta stok, dan catatan. API sudah siap (POST /api/inventory/stock tipe ADJUSTMENT).</p>
         </CardContent>
       </Card>
     </div>
