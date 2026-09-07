@@ -129,6 +129,7 @@ const statusLabels: Record<string, string> = {
 
 interface StatCardProps {
   title: string
+  subtitle?: string
   value: string | number
   icon: React.ElementType
   iconColor?: string
@@ -136,12 +137,19 @@ interface StatCardProps {
   delay?: number
 }
 
-function StatCard({ title, value, icon: Icon, iconColor = "text-muted-foreground", href, delay = 0 }: StatCardProps) {
+function StatCard({ title, subtitle, value, icon: Icon, iconColor = "text-muted-foreground", href, delay = 0 }: StatCardProps) {
   const content = (
     <Card className="hover:shadow-lg hover:border-primary/30 group transition-all duration-300 hover:-translate-y-1">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 px-3 sm:px-4">
-        <CardTitle className="text-xs sm:text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${iconColor} transition-transform duration-300 group-hover:scale-110`} />
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 px-3 sm:px-4 pb-1.5">
+        <div className="min-w-0 flex-1">
+          <CardTitle className="text-xs sm:text-sm font-medium leading-tight">{title}</CardTitle>
+          {subtitle && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug mt-0.5 truncate">
+              {subtitle}
+            </p>
+          )}
+        </div>
+        <Icon className={`h-4 w-4 ${iconColor} transition-transform duration-300 group-hover:scale-110 shrink-0 ml-2`} />
       </CardHeader>
       <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
         <div className="text-xl sm:text-2xl font-bold tabular-nums">{value}</div>
@@ -421,6 +429,7 @@ export function AdminDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         <StatCard
           title="Saldo"
+          subtitle="Saldo keuangan"
           value={formatCurrency(stats.totalSaldo)}
           icon={WalletIcon}
           iconColor="text-emerald-600"
@@ -429,6 +438,7 @@ export function AdminDashboard() {
         />
         <StatCard
           title="Pengeluaran"
+          subtitle="Total pengeluaran"
           value={formatCurrency(stats.totalPengeluaran)}
           icon={ReceiptPercentIcon}
           iconColor="text-red-600"
@@ -436,7 +446,8 @@ export function AdminDashboard() {
           delay={50}
         />
         <StatCard
-          title="Total Bahan Baku"
+          title="Bahan Baku"
+          subtitle="Jenis bahan terdaftar"
           value={stats.totalProducts}
           icon={ArchiveBoxIcon}
           iconColor="text-[var(--chart-blue)]"
@@ -445,6 +456,7 @@ export function AdminDashboard() {
         />
         <StatCard
           title="Barang Jadi"
+          subtitle="Stok barang jadi dari QC"
           value={stats.totalStock.toLocaleString()}
           icon={CubeIcon}
           iconColor="text-[var(--chart-blue)]"
@@ -453,6 +465,7 @@ export function AdminDashboard() {
         />
         <StatCard
           title="Barang Masuk"
+          subtitle="Transfer masuk"
           value={stats.transferIn}
           icon={ArrowDownIcon}
           iconColor="text-amber-600"
@@ -461,6 +474,7 @@ export function AdminDashboard() {
         />
         <StatCard
           title="Barang Keluar"
+          subtitle="Transfer keluar"
           value={stats.transferOut}
           icon={ArrowUpIcon}
           iconColor="text-cyan-600"

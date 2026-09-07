@@ -25,6 +25,11 @@ import {
 import { PageHeader } from "@/components/shared"
 import { ArrowLeftIcon, PlusIcon, TruckIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
+import { ScanButton } from "@/components/scanner"
+import { parseQRPayload } from "@/lib/qr-payload"
+import { useSessionWithRole } from "@/lib/use-session-with-role"
+import { toast } from "sonner"
+import { QrCodeIcon } from "@heroicons/react/24/outline"
 
 interface TransferItem {
   id: string
@@ -49,6 +54,9 @@ interface Product {
 
 export default function NewTransferPage() {
   const router = useRouter()
+  const { user } = useSessionWithRole()
+  const operatorId = user?.id || user?.email || "OP-001"
+  const isQC = user?.role === "QC"
   const [sourceWarehouse, setSourceWarehouse] = useState("")
   const [destinationWarehouse, setDestinationWarehouse] = useState("")
   const [notes, setNotes] = useState("")
@@ -56,8 +64,17 @@ export default function NewTransferPage() {
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState("")
 
-  const { data: warehouses } = useFetch<Warehouse[]>("/api/warehouses")
+  // Cumulative count tracking: productId -> scan count (for "1 Scan = 1 Pcs")
+  const [scannedMap, setScannedMap] = useState<Record<string, number>>({})
+
+  // QC status tracking: productId -> "GOOD" | "REJECT" | undefined (only QC can set)
+  const [qcStatusMap, setQcStatusMap] = useState<Record<string, "GOOD" | "REJECT" | undefined>>({})
+
+  // Target for deviation calculation (fase pertama: target tetap 100 Pcs)
+  const targetQty = 100
   const { data: products } = useFetch<Product[]>("/api/products")
+
+  const { data: warehouses } = useFetch<Warehouse[]>("/api/warehouses")
 
   const handleAddItem = () => {
     if (!selectedItem || !quantity) return
@@ -76,6 +93,58 @@ export default function NewTransferPage() {
     setItems([...items, newItem])
     setSelectedItem("")
     setQuantity("")
+  }
+
+  const handleScan = (raw: string) => {
+    const parsed = parseQRPayload(raw)
+    if (!parsed.payload) {
+      toast.error("QR code tidak valid")
+      return
+    }
+
+    const code = parsed.payload.code
+    const id = parsed.payload.id
+
+    // Find the product by code or ID - Product has sku, not code
+    const product = products?.find(
+      (p) =>
+        p.id === id ||
+        p.sku === code ||
+        p.name.toLowerCase() === code.toLowerCase()
+    )
+
+    if (!product) {
+      toast.error(`Produk tidak ditemukan: ${code}`)
+      return
+    }
+
+    // Always set quantity = 1 for "1 Scan = 1 Pcs"
+    const newScanCount = (scannedMap[product.id] || 0) + 1
+    setScannedMap({ ...scannedMap, [product.id]: newScanCount })
+
+    // Initialize QC status as undefined (pending) for new product scans
+    setQcStatusMap((prev) => {
+      const newMap = { ...prev }
+      if (newMap[product.id] === undefined) {
+        newMap[product.id] = "GOOD" // default to GOOD, QC can change to REJECT
+      }
+      return newMap
+    })
+
+    // Add item to items array with quantity = 1
+    const newItem: TransferItem = {
+      id: Math.random().toString(36).substring(7),
+      sku: product.sku,
+      name: product.name,
+      quantity: 1, // Always 1 for scan flow
+      unit: "Pcs",
+    }
+
+    setItems([...items, newItem])
+    setSelectedItem("")
+    setQuantity("")
+
+    toast.success(`Produk terpilih: ${product.sku}, Qty: 1 (scan #${newScanCount})`)
   }
 
   const handleRemoveItem = (id: string) => {
@@ -259,15 +328,39 @@ export default function NewTransferPage() {
                     <TableCell className="font-mono">{item.sku}</TableCell>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.quantity} {item.unit}</TableCell>
-                    <TableCell className="flex justify-center">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleRemoveItem(item.id)}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+<TableCell className="flex justify-center">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleRemoveItem(item.id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                      {/* QC Status Cell - only visible for QC role */}
+                      {isQC && (
+                        <TableCell className="flex justify-center">
+                          <div className="flex items-center gap-2">
+                            <Select
+                              defaultValue={qcStatusMap[item.id]}
+                              onValueChange={(value) => {
+                                setQcStatusMap((prev) => ({
+                                  ...prev,
+                                  [item.id]: value as "GOOD" | "REJECT",
+                                }))
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="GOOD">GOOD</SelectItem>
+                                <SelectItem value="REJECT">REJECT</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </TableCell>
+                      )}
                   </TableRow>
                 ))
               )}

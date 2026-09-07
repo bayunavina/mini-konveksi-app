@@ -83,9 +83,9 @@ interface Assignment {
 export function QCDashboard() {
   const { user } = useSessionWithRole()
   
-  const { data: jobOrdersResponse } = useFetch<{ data: JobOrder[]; pagination: { limit: number; offset: number; hasMore: boolean } }>("/api/job-orders?limit=100")
+  const { data: jobOrdersResponse, loading: joLoading } = useFetch<{ data: JobOrder[]; pagination: { limit: number; offset: number; hasMore: boolean } }>("/api/job-orders?limit=100")
   const jobOrders = jobOrdersResponse?.data || []
-  const { data: assignments } = useFetch<Assignment[]>("/api/production/assign")
+  const { data: assignments, loading: assignLoading } = useFetch<Assignment[]>("/api/production/assign")
   const { data: qcReports, loading: qcLoading } = useFetch<QCReport[]>("/api/qc-reports")
   const { loading: notifLoading } = useFetch("/api/notifications?type=PROGRESS_UPDATE")
 
@@ -143,7 +143,7 @@ export function QCDashboard() {
 
   return (
     <div className="page-container">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 animate-slide-up">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold tracking-tight truncate">QC Dashboard</h2>
           <p className="text-[10px] sm:text-sm text-muted-foreground truncate">
@@ -159,7 +159,7 @@ export function QCDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
             <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate pr-1">Sedang Produksi</CardTitle>
             <div className="p-1.5 sm:p-2 rounded-lg bg-warning-light dark:bg-warning-light shrink-0">
@@ -172,7 +172,7 @@ export function QCDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '40ms' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
             <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate pr-1">Menunggu QC</CardTitle>
             <div className="p-1.5 sm:p-2 rounded-lg bg-warning-light dark:bg-warning-light shrink-0">
@@ -185,7 +185,7 @@ export function QCDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '80ms' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
             <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate pr-1">Hari Ini</CardTitle>
             <div className="p-1.5 sm:p-2 rounded-lg bg-success-light dark:bg-success-light shrink-0">
@@ -198,7 +198,7 @@ export function QCDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '120ms' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
             <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate pr-1">Total Sukses</CardTitle>
             <div className="p-1.5 sm:p-2 rounded-lg bg-success-light dark:bg-success-light shrink-0">
@@ -211,7 +211,7 @@ export function QCDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '160ms' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-4 pt-3 sm:pt-4">
             <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate pr-1">Total Reject</CardTitle>
             <div className="p-1.5 sm:p-2 rounded-lg bg-destructive/10 dark:bg-destructive/10 shrink-0">
@@ -226,7 +226,7 @@ export function QCDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-5 md:grid-cols-2">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '200ms' }}>
           <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-4 pb-0">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
@@ -236,7 +236,13 @@ export function QCDashboard() {
             </div>
           </CardHeader>
           <CardContent className="px-3 sm:px-6 py-3 sm:py-4">
-            {inProgressJobs.length === 0 ? (
+            {(joLoading || assignLoading) ? (
+              <div className="space-y-3 sm:space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-14 sm:h-16 w-full" />
+                ))}
+              </div>
+            ) : inProgressJobs.length === 0 ? (
               <div className="text-center py-6 sm:py-8 text-muted-foreground">
                 <BuildingOfficeIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 text-warning-foreground" />
                 <p className="text-xs sm:text-sm">Tidak ada job order dalam produksi</p>
@@ -261,7 +267,7 @@ export function QCDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '240ms' }}>
           <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-4 pb-0">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
@@ -315,7 +321,7 @@ export function QCDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden md:col-span-2 lg:col-span-1">
+        <Card className="overflow-hidden animate-slide-up md:col-span-2 lg:col-span-1" style={{ animationDelay: '280ms' }}>
           <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-4 pb-0">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
@@ -369,7 +375,7 @@ export function QCDashboard() {
         </Card>
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '320ms' }}>
         <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-4 pb-0">
           <CardTitle className="text-sm sm:text-base">Quick Actions</CardTitle>
           <CardDescription className="text-[10px] sm:text-xs">Aksi cepat untuk QC</CardDescription>

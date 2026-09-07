@@ -119,7 +119,7 @@ export default function FinishedGoodsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-3 p-4 md:p-8 pt-4 sm:pt-6">
       <PageHeader
         title="Barang Jadi (Finished Goods)"
         description="Inventory barang jadi dari hasil QC produksi"
@@ -156,15 +156,15 @@ export default function FinishedGoodsPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Daftar Barang Jadi</CardTitle>
-              <CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="text-sm sm:text-base">Daftar Barang Jadi</CardTitle>
+              <CardDescription className="text-xs sm:text-sm leading-snug">
                 Barang jadi yang berasal dari QC Report yang lolos verifikasi
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <div className="relative">
+              <div className="relative flex-1 min-w-0">
                 <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
@@ -176,7 +176,7 @@ export default function FinishedGoodsPage() {
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="pl-9 w-[180px]"
+                  className="pl-9 w-full sm:w-[180px]"
                 />
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-background border rounded-lg shadow-lg overflow-hidden">
@@ -199,7 +199,7 @@ export default function FinishedGoodsPage() {
                   </div>
                 )}
               </div>
-              <Button variant="outline" size="lg" onClick={() => refetch()}>
+              <Button variant="outline" onClick={() => refetch()}>
                 Refresh
               </Button>
             </div>

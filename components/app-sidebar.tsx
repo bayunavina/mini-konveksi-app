@@ -26,7 +26,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r-0 bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 shadow-xl shadow-black/20 dark:shadow-black/40" {...props}>
+    <Sidebar collapsible="offcanvas" className="border-r-0 bg-background shadow-xl shadow-black/20 dark:shadow-black/40" {...props}>
       <SidebarHeader className="p-3">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="relative flex size-10 min-w-[40px] items-center justify-center overflow-visible shrink-0">

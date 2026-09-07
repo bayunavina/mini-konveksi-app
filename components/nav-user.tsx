@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { signOut } from "@/lib/auth-client"
+import { clearSessionCache } from "@/lib/use-session-with-role"
 import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
@@ -56,6 +57,7 @@ export function NavUser({
   const handleSignOut = async () => {
     setIsSigningOut(true)
     try {
+      clearSessionCache()
       await signOut()
       router.push("/")
     } catch (error) {

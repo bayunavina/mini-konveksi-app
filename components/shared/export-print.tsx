@@ -27,6 +27,7 @@ interface ExportPrintProps {
   filename?: string
   summary?: SummaryRow[]
   summaryTitle?: string
+  className?: string
 }
 
 interface CompanyInfo {
@@ -45,7 +46,7 @@ const defaultCompanyInfo: CompanyInfo = {
   email: "info@konveksimajujaya.com",
 }
 
-export function ExportPrint({ columns, data, title, filename, summary, summaryTitle }: ExportPrintProps) {
+export function ExportPrint({ columns, data, title, filename, summary, summaryTitle, className }: ExportPrintProps) {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo)
   const [mounted, setMounted] = useState(false)
 
@@ -181,7 +182,7 @@ export function ExportPrint({ columns, data, title, filename, summary, summaryTi
 
   if (!mounted) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" disabled className={className}>
         <ArrowDownTrayIcon className="mr-2 h-4 w-4" />
         Export
       </Button>
@@ -191,7 +192,7 @@ export function ExportPrint({ columns, data, title, filename, summary, summaryTi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className={className}>
           <ArrowDownTrayIcon className="mr-2 h-4 w-4" />
           Export
         </Button>

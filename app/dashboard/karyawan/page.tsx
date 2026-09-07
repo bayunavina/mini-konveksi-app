@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { KaryawanDashboard } from "../karyawan-dashboard"
 
 export default function KaryawanPage() {
@@ -18,19 +18,11 @@ export default function KaryawanPage() {
   }, [user, isLoading, router])
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (user?.role !== "KARYAWAN") {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return <KaryawanDashboard />

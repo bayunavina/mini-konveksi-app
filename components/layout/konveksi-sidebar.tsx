@@ -127,8 +127,8 @@ const navigationData = {
       submenu: [
         { title: "Overview", url: "/dashboard/inventory" },
         { title: "Bahan Baku", url: "/dashboard/inventory/materials" },
-        { title: "Barang Jadi", url: "/dashboard/inventory/finished" },
         { title: "Reject", url: "/dashboard/inventory/rejects" },
+        { title: "Barang Jadi", url: "/dashboard/inventory/finished" },
       ],
     },
     {
@@ -228,6 +228,17 @@ const navigationData = {
       icon: HomeIcon,
     },
     {
+      title: "Stok",
+      url: "/dashboard/inventory",
+      icon: ArchiveBoxIcon,
+      submenu: [
+        { title: "Overview", url: "/dashboard/inventory" },
+        { title: "Bahan Baku", url: "/dashboard/inventory/materials" },
+        { title: "Reject", url: "/dashboard/inventory/rejects" },
+        { title: "Barang Jadi", url: "/dashboard/inventory/finished" },
+      ],
+    },
+    {
       title: "Barang Masuk",
       url: "/dashboard/transfer/incoming",
       icon: ArrowDownIcon,
@@ -236,11 +247,6 @@ const navigationData = {
       title: "Barang Keluar",
       url: "/dashboard/transfer/outgoing",
       icon: ArrowUpIcon,
-    },
-    {
-      title: "Stok Barang Jadi",
-      url: "/dashboard/inventory/finished",
-      icon: CubeIcon,
     },
   ] as NavItem[],
   karyawan: [

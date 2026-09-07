@@ -17,6 +17,11 @@ const DEV_ORIGINS = [
     "http://192.168.*.*:3000",
     "http://10.*.*.*:3000",
     "http://172.16.*.*:3000",
+    // Tailscale (jalur normal saat Wi-Fi menghalangi unicast antar-perangkat)
+    "http://100.102.84.1:3000",
+    // HTTPS via local-ssl-proxy (3001) — kamera HP butuh secure context di Tailscale
+    "https://100.102.84.1:3000",
+    "https://100.102.84.1:3001",
     // HTTPS variants — kamera HP butuh secure context (dev:https-cert / tunnel)
     "https://localhost:3000",
     "https://127.0.0.1:3000",

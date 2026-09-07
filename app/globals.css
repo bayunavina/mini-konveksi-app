@@ -184,7 +184,7 @@
     padding-right: env(safe-area-inset-right);
   }
   .dark body {
-    background: linear-gradient(135deg, oklch(0.15 0.03 260) 0%, oklch(0.18 0.04 265) 50%, oklch(0.20 0.05 270) 100%);
+    background: var(--background);
   }
   /* All input/textarea/select at least 16px to prevent iOS auto-zoom */
   input, textarea, select {

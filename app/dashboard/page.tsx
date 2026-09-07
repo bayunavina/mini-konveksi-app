@@ -1,47 +1,51 @@
-"use client"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+import { auth } from "@/lib/auth"
+import { db } from "@/db"
+import { employees } from "@/db/schema"
+import { eq, or, ilike } from "drizzle-orm"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { Spinner } from "@/components/ui/spinner"
+export default async function DashboardPage() {
+  const h = await headers()
+  const session = await auth.api.getSession({ headers: h })
 
-export default function DashboardPage() {
-  const { user, isLoading } = useSessionWithRole()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!isLoading && user) {
-      switch (user.role) {
-        case "SUPERADMIN":
-        case "ADMIN":
-          router.replace("/dashboard/admin")
-          break
-        case "QC":
-          router.replace("/dashboard/qc")
-          break
-        case "GUDANG":
-          router.replace("/dashboard/gudang")
-          break
-        case "KARYAWAN":
-          router.replace("/dashboard/karyawan")
-          break
-        default:
-          router.replace("/sign-in")
-      }
-    }
-  }, [user, isLoading, router])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
+  if (!session?.user?.email) {
+    redirect("/sign-in")
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Spinner className="size-8 text-primary" />
-    </div>
-  )
+  const normalizedEmail = session.user.email.toLowerCase()
+
+  const result = await db
+    .select({ role: employees.role })
+    .from(employees)
+    .where(
+      or(
+        eq(employees.email, normalizedEmail),
+        ilike(employees.email, normalizedEmail)
+      )
+    )
+    .limit(1)
+
+  const role = result[0]?.role ?? "GUEST"
+
+  switch (role) {
+    case "SUPERADMIN":
+    case "ADMIN":
+      redirect("/dashboard/admin")
+      break
+    case "QC":
+      redirect("/dashboard/qc")
+      break
+    case "GUDANG":
+      redirect("/dashboard/gudang")
+      break
+    case "KARYAWAN":
+      redirect("/dashboard/karyawan")
+      break
+    default:
+      redirect("/sign-in")
+  }
+
+  // Unreachable
+  return null
 }

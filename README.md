@@ -69,53 +69,77 @@ Password: erpkonveksi123!
 
 > Akun karyawan/gudang/QC dibuat melalui menu **Dashboard → Settings → Users** atau di-seed via `scripts/seed.ts`.
 
+### Scan QR dari HP via Tailscale (HTTPS local-ssl-proxy)
+
+Kamera di browser hanya bisa diakses di **secure context** (`https://` atau `localhost`).
+`next dev --experimental-https` hanya melayani TLS di loopback (bukan di IP
+Tailscale/LAN), jadi untuk mengakses dari HP via Tailscale pakai proxy TLS:
+
+```bash
+# Terminal 1 — dev server plain HTTP di port 3000
+npm run dev &
+
+# Terminal 2 — TLS self-signed di port 3001 (pakai cert yang sudah dibuat)
+npx local-ssl-proxy --source 3001 --target 3000 \
+  --key certs/dev-key.pem --cert certs/dev-cert.pem &
+```
+
+Kemudian di HP buka **`https://100.102.84.1:3001`** (ganti IP sesuai node Tailscale),
+lalu pada peringatan sertifikat pilih **Advanced → Proceed**, dan izinkan akses kamera.
+
+Origin `https://100.102.84.1:3000/3001` sudah terdaftar di `lib/auth.ts`
+(`trustedOrigins`) agar autentikasi/CSRF tidak diblokir.
+
 ## Environment Variables
 
 Salin `.env.example` menjadi `.env`. Konfigurasi lengkap:
 
-| Variabel | Deskripsi |
-| --- | --- |
-| `DATABASE_URL` | Koneksi PostgreSQL (default dev: port `5433` saja, `db:up` memakai `5432` sesuai docker-compose) |
-| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Kredensial database dev |
-| `BETTER_AUTH_SECRET` | Secret untuk Better Auth |
-| `BETTER_AUTH_URL` / `NEXT_PUBLIC_BETTER_AUTH_URL` | URL base aplikasi |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | Email service (Gmail App Password) |
-| `FIREBASE_SERVICE_ACCOUNT` | Service account JSON untuk push notification |
+| Variabel                                                                       | Deskripsi                                                                                             |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                               | Koneksi PostgreSQL (default dev: port`5433` saja, `db:up` memakai `5432` sesuai docker-compose) |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD`                    | Kredensial database dev                                                                               |
+| `BETTER_AUTH_SECRET`                                                         | Secret untuk Better Auth                                                                              |
+| `BETTER_AUTH_URL` / `NEXT_PUBLIC_BETTER_AUTH_URL`                          | URL base aplikasi                                                                                     |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | Email service (Gmail App Password)                                                                    |
+| `FIREBASE_SERVICE_ACCOUNT`                                                   | Service account JSON untuk push notification                                                          |
 
 > **Catatan:** `docker-compose.yaml` memetakan container `postgres` ke port **5432** (kredensial `konveksi_user`/`konveksi_password`/`konveksi_db`). Untuk mode development gunakan service `postgres-dev` (port **5433**) yang memakai variabel dari `.env`.
 
 ## Script Tersedia
 
 ### Aplikasi
-| Script | Fungsi |
-| --- | --- |
-| `npm run dev` | Start dev server (Turbopack) |
-| `npm run build` | Build produksi |
-| `npm run start` | Start production server |
-| `npm run lint` | Jalankan ESLint |
+
+| Script            | Fungsi                       |
+| ----------------- | ---------------------------- |
+| `npm run dev`   | Start dev server (Turbopack) |
+| `npm run build` | Build produksi               |
+| `npm run start` | Start production server      |
+| `npm run lint`  | Jalankan ESLint              |
 
 ### Database
-| Script | Fungsi |
-| --- | --- |
-| `npm run db:up` | Start PostgreSQL (port 5432) |
-| `npm run db:down` | Stop PostgreSQL |
-| `npm run db:dev` | Start PostgreSQL dev (port 5433) |
-| `npm run db:dev-down` | Stop PostgreSQL dev |
-| `npm run db:push` | Push schema ke database |
-| `npm run db:generate` | Generate migration |
-| `npm run db:migrate` | Jalankan migration |
-| `npm run db:studio` | Buka Drizzle Studio |
-| `npm run db:reset` | Drop & push ulang schema |
-| `npm run seed:admin` | Seed superadmin |
+
+| Script                  | Fungsi                           |
+| ----------------------- | -------------------------------- |
+| `npm run db:up`       | Start PostgreSQL (port 5432)     |
+| `npm run db:down`     | Stop PostgreSQL                  |
+| `npm run db:dev`      | Start PostgreSQL dev (port 5433) |
+| `npm run db:dev-down` | Stop PostgreSQL dev              |
+| `npm run db:push`     | Push schema ke database          |
+| `npm run db:generate` | Generate migration               |
+| `npm run db:migrate`  | Jalankan migration               |
+| `npm run db:studio`   | Buka Drizzle Studio              |
+| `npm run db:reset`    | Drop & push ulang schema         |
+| `npm run seed:admin`  | Seed superadmin                  |
 
 ### Docker
-| Script | Fungsi |
-| --- | --- |
-| `npm run docker:build` | Build image app |
-| `npm run docker:up` | Start full stack (app + db) |
-| `npm run docker:down` | Stop semua container |
-| `npm run docker:logs` | Lihat logs container |
-| `npm run deploy` | Rebuild & deploy (down → build --no-cache → up) |
+
+| Script                   | Fungsi                                            |
+| ------------------------ | ------------------------------------------------- |
+| `npm run docker:build` | Build image app                                   |
+| `npm run docker:up`    | Start full stack (app + db)                       |
+| `npm run docker:down`  | Stop semua container                              |
+| `npm run docker:logs`  | Lihat logs container                              |
+| `npm run deploy`       | Rebuild & deploy (down → build --no-cache → up) |
 
 ## Struktur Proyek
 

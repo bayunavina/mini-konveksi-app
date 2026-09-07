@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { LogIn, LogOut, User } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
+import { clearSessionCache } from "@/lib/use-session-with-role";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ export function AuthButtons() {
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
+      clearSessionCache();
       await signOut();
     } catch (error) {
       console.error("Sign out error:", error);

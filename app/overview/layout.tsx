@@ -29,7 +29,7 @@ export default async function OverviewLayout({
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <DashboardHeader />
         </div>
-        <div className="flex flex-1 flex-col bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/10 overflow-hidden">
+        <div className="flex flex-1 flex-col bg-background overflow-hidden">
           <main className="flex-1 animate-fade-in overflow-y-auto">
             {children}
           </main>

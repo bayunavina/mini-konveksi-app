@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -89,8 +90,8 @@ export function GudangDashboard() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null)
 
-  const { data: transfers } = useFetch<Transfer[]>("/api/transfers")
-  const { data: qcReports } = useFetch<QCReport[]>("/api/qc-reports")
+  const { data: transfers, loading: transfersLoading } = useFetch<Transfer[]>("/api/transfers")
+  const { data: qcReports, loading: qcReportsLoading } = useFetch<QCReport[]>("/api/qc-reports")
 
   const allTransfers = Array.isArray(transfers) ? transfers : []
   const incomingTransfers = allTransfers.filter(t => t.type === "INCOMING")
@@ -124,7 +125,7 @@ export function GudangDashboard() {
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-primary)] to-[var(--accent)] rounded-2xl p-4 sm:p-5 text-primary-foreground shadow-xl shadow-[var(--brand-primary)]/20">
+      <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-primary)] to-[var(--accent)] rounded-2xl p-4 sm:p-5 text-primary-foreground shadow-xl shadow-[var(--brand-primary)]/20 animate-slide-up">
         <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
           <TruckIconSolid className="h-24 w-24 sm:h-40 sm:w-40 -translate-y-6 translate-x-6 sm:-translate-y-8 sm:translate-x-8" />
         </div>
@@ -139,7 +140,7 @@ export function GudangDashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 xl:gap-5">
-        <Card className="hover:shadow-lg hover:border-warning/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
+        <Card className="hover:shadow-lg hover:border-warning/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden animate-slide-up" style={{ animationDelay: '40ms' }}>
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Pending</p>
@@ -150,7 +151,7 @@ export function GudangDashboard() {
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg hover:border-success/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
+        <Card className="hover:shadow-lg hover:border-success/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden animate-slide-up" style={{ animationDelay: '80ms' }}>
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Barang Masuk</p>
@@ -161,7 +162,7 @@ export function GudangDashboard() {
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg hover:border-[var(--chart-blue)]/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
+        <Card className="hover:shadow-lg hover:border-[var(--chart-blue)]/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden animate-slide-up" style={{ animationDelay: '120ms' }}>
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Barang Keluar</p>
@@ -172,10 +173,10 @@ export function GudangDashboard() {
           </div>
         </Card>
 
-        <Card className="hover:shadow-lg hover:border-accent/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden">
+        <Card className="hover:shadow-lg hover:border-accent/30 transition-all duration-300 p-3 sm:p-4 overflow-hidden animate-slide-up" style={{ animationDelay: '160ms' }}>
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Produk Jadi</p>
+              <p className="text-[10px] sm:text-sm text-muted-foreground truncate">Barang Jadi</p>
               <p className="text-lg sm:text-2xl font-bold mt-0.5">{totalFinishedGoods}</p>
               <p className="text-[9px] sm:text-xs text-muted-foreground truncate">Total pcs di gudang</p>
             </div>
@@ -185,7 +186,7 @@ export function GudangDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
         <Link href="/dashboard/transfer/incoming" className="flex-1 sm:flex-none">
           <Button className="w-full bg-gradient-to-r from-[var(--success)] to-[var(--success)] hover:from-[var(--success)] hover:to-[var(--success)] shadow-lg shadow-[var(--success)]/25">
             <ArrowDownIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -207,13 +208,13 @@ export function GudangDashboard() {
         <Link href="/dashboard/inventory/finished" className="flex-1 sm:flex-none">
           <Button variant="outline" className="w-full">
             <CubeIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            Lihat Stok
+            Barang Jadi
           </Button>
         </Link>
       </div>
 
       {/* Transfer List with Tabs */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '240ms' }}>
         <CardHeader className="p-3 sm:p-6 pb-0">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
@@ -251,7 +252,19 @@ export function GudangDashboard() {
           </div>
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
-          {filteredTransfers.length === 0 ? (
+          {transfersLoading ? (
+            <div className="space-y-2 sm:space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3 border rounded-lg animate-pulse">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-16 hidden md:block" />
+                  <Skeleton className="h-5 w-14 ml-auto" />
+                  <Skeleton className="h-4 w-10" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+              ))}
+            </div>
+          ) : filteredTransfers.length === 0 ? (
             <div className="text-center py-10 sm:py-12 text-muted-foreground">
               <TruckIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-muted-foreground/50" />
               <p className="font-medium text-xs sm:text-base">Belum ada transfer</p>
@@ -305,7 +318,7 @@ export function GudangDashboard() {
       </Card>
 
       {/* Stock Overview */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden animate-slide-up" style={{ animationDelay: '280ms' }}>
         <CardHeader className="p-3 sm:p-6 pb-0">
           <CardTitle className="text-sm sm:text-lg">Stok Barang Jadi</CardTitle>
           <CardDescription className="text-[10px] sm:text-sm">Monitoring stok produk jadi real-time</CardDescription>
@@ -322,7 +335,20 @@ export function GudangDashboard() {
             />
           </div>
 
-          {filteredInventoryStock.length === 0 ? (
+          {qcReportsLoading ? (
+            <div className="space-y-1.5 sm:space-y-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center justify-between p-2.5 sm:p-3 border rounded-xl gap-2 animate-pulse">
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-5 w-10" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+              ))}
+            </div>
+          ) : filteredInventoryStock.length === 0 ? (
             <div className="text-center py-6 sm:py-8 text-muted-foreground">
               <CubeIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 text-muted-foreground/50" />
               <p className="text-xs sm:text-sm">Tidak ada produk ditemukan</p>

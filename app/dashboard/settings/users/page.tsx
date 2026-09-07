@@ -91,7 +91,9 @@ export default function UsersPage() {
     phone: "",
     teamId: "",
     baseSalary: "",
+    password: "",
   })
+  const [showCreatePassword, setShowCreatePassword] = useState(false)
   const [editFormData, setEditFormData] = useState({
     name: "",
     email: "",
@@ -180,7 +182,7 @@ export default function UsersPage() {
   }
 
   const handleCreateUser = async () => {
-    if (!formData.name || !formData.email || !formData.role) return
+    if (!formData.name || !formData.email || !formData.role || formData.password.length < 6) return
 
     setSaving(true)
     try {
@@ -198,10 +200,27 @@ export default function UsersPage() {
       })
 
       if (response.ok) {
+        const employeeData = await response.json()
+
+        const pwResponse = await fetch("/api/auth/set-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        })
+
         await fetchUsers()
         setNewDialogOpen(false)
-        setFormData({ name: "", email: "", role: "", phone: "", teamId: "", baseSalary: "" })
-        toast.success("User berhasil ditambahkan")
+        setFormData({ name: "", email: "", role: "", phone: "", teamId: "", baseSalary: "", password: "" })
+        setShowCreatePassword(false)
+
+        if (pwResponse.ok) {
+          toast.success("User berhasil ditambahkan dengan password")
+        } else {
+          toast.success("User ditambahkan, tapi gagal set password. Gunakan tombol Reset Password.")
+        }
       } else {
         toast.error("Gagal menambahkan user")
       }
@@ -338,7 +357,7 @@ export default function UsersPage() {
         setSelectedUser(null)
         setNewPassword("")
         setConfirmPassword("")
-        toast.success("Password berhasil diperbarui")
+        toast.success("Password berhasil di-reset")
       } else {
         toast.error(data.message || "Gagal memperbarui password")
       }
@@ -510,6 +529,35 @@ export default function UsersPage() {
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="create-password">Password <span className="text-destructive">*</span></Label>
+                    <div className="relative">
+                      <Input
+                        id="create-password"
+                        type={showCreatePassword ? "text" : "password"}
+                        placeholder="Minimal 6 karakter"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCreatePassword(!showCreatePassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showCreatePassword ? (
+                          <EyeSlashIcon className="h-4 w-4" />
+                        ) : (
+                          <EyeIcon className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    {formData.password.length > 0 && formData.password.length < 6 && (
+                      <p className="text-xs text-destructive">Password minimal 6 karakter</p>
+                    )}
+                  </div>
                 </div>
 
                 <DialogFooter>
@@ -518,7 +566,7 @@ export default function UsersPage() {
                   </Button>
                   <Button
                     onClick={handleCreateUser}
-                    disabled={!formData.name || !formData.email || !formData.role || saving}
+                    disabled={!formData.name || !formData.email || !formData.role || formData.password.length < 6 || saving}
                   >
                     {saving ? <Spinner data-icon="inline-start" /> : <UserIcon className="mr-2 h-4 w-4" />}
                     Simpan
@@ -605,9 +653,9 @@ export default function UsersPage() {
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => openPasswordDialog(user)} className="hidden sm:inline-flex">
                           <KeyIcon className="h-3 w-3 mr-1" />
-                          Password
+                          Reset Password
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => openPasswordDialog(user)} className="sm:hidden p-2">
+                        <Button size="sm" variant="ghost" onClick={() => openPasswordDialog(user)} className="sm:hidden p-2" title="Reset Password">
                           <KeyIcon className="h-4 w-4" />
                         </Button>
                         {!isProtectedUser(user) && (
@@ -817,9 +865,9 @@ export default function UsersPage() {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <KeyIcon className="h-6 w-6 text-primary" />
             </div>
-            <DialogTitle className="text-xl">Set Password</DialogTitle>
+            <DialogTitle className="text-xl">Reset Password</DialogTitle>
             <DialogDescription>
-              Atur password untuk <span className="font-medium text-foreground">{selectedUser?.name}</span>
+              Buat password baru untuk <span className="font-medium text-foreground">{selectedUser?.name}</span>
             </DialogDescription>
           </DialogHeader>
 

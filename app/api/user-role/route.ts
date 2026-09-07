@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get("email")
 
     if (!email) {
-      return NextResponse.json({ role: "GUEST", isAdmin: false })
+      return NextResponse.json({ role: "GUEST", isAdmin: false, isActive: false })
     }
 
     const normalizedEmail = email.toLowerCase()
@@ -28,11 +28,13 @@ export async function GET(request: NextRequest) {
       const role = result[0].role || "KARYAWAN"
       const isSuperAdmin = role === "SUPERADMIN"
       const isAdmin = role === "ADMIN" || isSuperAdmin
+      const isActive = result[0].isActive ?? false
       return NextResponse.json({
         role,
         isAdmin,
         isSuperAdmin,
         employeeId: result[0].id,
+        isActive,
       })
     }
 
@@ -52,13 +54,14 @@ export async function GET(request: NextRequest) {
         isAdmin: true,
         isSuperAdmin: false,
         employeeId: null,
+        isActive: true,
         note: "User found but not in employees table - defaulting to ADMIN",
       })
     }
 
-    return NextResponse.json({ role: "GUEST", isAdmin: false, isSuperAdmin: false })
+    return NextResponse.json({ role: "GUEST", isAdmin: false, isSuperAdmin: false, isActive: false })
   } catch (error) {
     console.error("Error fetching user role:", error)
-    return NextResponse.json({ role: "GUEST", isAdmin: false, isSuperAdmin: false })
+    return NextResponse.json({ role: "GUEST", isAdmin: false, isSuperAdmin: false, isActive: false })
   }
 }

@@ -124,11 +124,30 @@ export const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
 // Finance / Cost Categories
 export const DIRECT_CATEGORIES = new Set(["BBL", "ACC", "TKL", "TKL-P", "OVP", "PKG"]);
 export const INDIRECT_CATEGORIES = new Set(["GTL", "LST", "SEWA", "MTC", "BPJS", "KON", "ADM", "MKT"]);
-// Legacy category codes (from old localStorage master) — kept for backward compat
-export const LEGACY_DIRECT_CATEGORIES = new Set(["MATERIAL", "BBL", "ACC", "TKL", "TKL-P", "OVP", "PKG"]);
 
-export const isDirectCategory = (code: string) => DIRECT_CATEGORIES.has(code) || LEGACY_DIRECT_CATEGORIES.has(code);
+// Category code labels for display/validation
+export const CATEGORY_CODE_LABELS: Record<string, { name: string; type: "DIRECT" | "INDIRECT"; description: string }> = {
+  BBL: { name: "Bahan Baku Kain", type: "DIRECT", description: "Kain utama, kain keras, rib - termasuk ongkir beli bahan" },
+  ACC: { name: "Aksesoris Langsung", type: "DIRECT", description: "Benang, kancing, resleting, karet, busa, label woven" },
+  TKL: { name: "Upah Jahit Borongan", type: "DIRECT", description: "Upah jahit per pcs / borongan (60% HPP) - tim 20+ penjahit" },
+  TKL_P: { name: "Upah Potong", type: "DIRECT", description: "Upah potong kain harian / borongan" },
+  OVP: { name: "Ongkos Vendor Jahit (CMT)", type: "DIRECT", description: "Maklon / CMT vendor luar saat overload 30 orang" },
+  PKG: { name: "Packaging & Label", type: "DIRECT", description: "Plastik OPP, hangtag, label harga, dus packing" },
+  GTL: { name: "Gaji Tidak Langsung", type: "INDIRECT", description: "Gaji mandor, admin produksi, QC leader (3 org) - tetap bulanan" },
+  LST: { name: "Listrik & Air", type: "INDIRECT", description: "Utilitas listrik, air, genset, kompresor bulanan" },
+  SEWA: { name: "Sewa Tempat", type: "INDIRECT", description: "Sewa gudang, workshop & toko / cicilan ruko" },
+  MTC: { name: "Service & Penyusutan Mesin", type: "INDIRECT", description: "Service mesin jahit, obras, cutting + penyusutan 15-20 mesin" },
+  BPJS: { name: "BPJS, THR & Tunjangan", type: "INDIRECT", description: "BPJS Ketenagakerjaan, THR, tunjangan harian 30 karyawan" },
+  KON: { name: "Konsumsi & Mess", type: "INDIRECT", description: "Makan siang, air galon, gas, mess karyawan" },
+  ADM: { name: "Administrasi Umum", type: "INDIRECT", description: "ATK, internet, operasional kantor, pajak UMKM" },
+  MKT: { name: "Marketing & Kirim Jual", type: "INDIRECT", description: "Foto produk, iklan, fee marketplace, ongkir kirim barang jadi" },
+};
+export const CATEGORY_CODES = Object.keys(CATEGORY_CODE_LABELS) as (keyof typeof CATEGORY_CODE_LABELS)[];
+
+export const isDirectCategory = (code: string) => DIRECT_CATEGORIES.has(code);
 export const isIndirectCategory = (code: string) => INDIRECT_CATEGORIES.has(code);
+
+export const getCategoryCodeInfo = (code: string) => CATEGORY_CODE_LABELS[code] || null;
 
 export const MTC_PER_PCS = 7500;
 export const REJECT_RATE_THRESHOLD = 0.05;

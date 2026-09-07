@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "@/lib/auth-client"
+import { clearSessionCache } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 
 const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000 // 5 menit
@@ -24,6 +25,7 @@ export function useInactivityLogout(options?: {
     isLoggingOutRef.current = true
     try {
       toast.error("Sesi berakhir", { description: "Tidak ada aktivitas selama 5 menit. Silakan login kembali." })
+      clearSessionCache()
       await signOut()
     } catch {
       // fallback: clear local storage/session anyway

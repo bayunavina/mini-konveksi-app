@@ -141,6 +141,9 @@ function SignInForm() {
       clearLockoutStorage()
       setFailedAttempts(0)
 
+      // Reset sidebar to collapsed so the dashboard starts closed after login
+      document.cookie = "sidebar_state=false; path=/; max-age=604800"
+
       const userEmail = (result as { user?: { email?: string } })?.user?.email || normalizedEmail
       
       await fetch("/api/user-login", {

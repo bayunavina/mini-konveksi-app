@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   BanknotesIcon,
   FlagIcon,
@@ -147,15 +147,20 @@ function StatCard({
   subtitle, 
   icon: IconComponent, 
   trend,
+  delay = 0,
 }: { 
   title: string
   value: string | number
   subtitle?: string
   icon: React.ElementType
   trend?: "up" | "down" | "neutral"
+  delay?: number
 }) {
   return (
-    <Card className="hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 animate-slide-up overflow-hidden">
+    <Card
+      className="hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 animate-slide-up overflow-hidden"
+      style={{ animationDelay: `${delay}ms` }}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
         <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium text-muted-foreground truncate pr-1">{title}</CardTitle>
         <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-300 group-hover:scale-110 shrink-0" />
@@ -279,6 +284,16 @@ function AssignmentCard({ assignment, onInputClick, onConfirmClick, onRequestQC 
   )
 }
 
+async function fetchWithTimeout(url: string, timeoutMs = 10000): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { signal: controller.signal, cache: "no-store" })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export function KaryawanDashboard() {
   const { user } = useSessionWithRole()
   const { formatCurrency, formatNumber, currencySymbol } = useCurrency()
@@ -307,17 +322,24 @@ export function KaryawanDashboard() {
   const fetchingRef = useRef(false)
 
   const fetchData = useCallback(async () => {
-    if (!user?.employeeId || fetchingRef.current) return
+    if (fetchingRef.current) return
+
+    // Jika user/employeeId belum siap, jangan biarkan spinner menggantung:
+    // lepaskan ke kondisi standby agar halaman tetap sampai ke konten.
+    if (!user?.employeeId) {
+      setIsLoading(false)
+      return
+    }
     
     fetchingRef.current = true
     setIsLoading(true)
     try {
       const currentWeek = getCurrentWeekPeriod()
       const [assignRes, calcRes, kasbonRes, salaryRes] = await Promise.all([
-        fetch(`/api/production/assign?employeeId=${user.employeeId}`),
-        fetch(`/api/production-logs/calculate?employeeId=${user.employeeId}&periodWeek=${currentWeek.week}&periodYear=${currentWeek.year}`),
-        fetch(`/api/advances?employeeId=${user.employeeId}`),
-        fetch(`/api/admin/salary-claims?employeeId=${user.employeeId}`),
+        fetchWithTimeout(`/api/production/assign?employeeId=${user.employeeId}`),
+        fetchWithTimeout(`/api/production-logs/calculate?employeeId=${user.employeeId}&periodWeek=${currentWeek.week}&periodYear=${currentWeek.year}`),
+        fetchWithTimeout(`/api/advances?employeeId=${user.employeeId}`),
+        fetchWithTimeout(`/api/admin/salary-claims?employeeId=${user.employeeId}`),
       ])
 
       if (assignRes.ok) {
@@ -647,15 +669,6 @@ export function KaryawanDashboard() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <Spinner className="size-8 text-primary" />
-        <p className="text-muted-foreground">Memuat data...</p>
-      </div>
-    )
-  }
-
   return (
     <div className="page-container">
       {/* Header Section */}
@@ -682,45 +695,62 @@ export function KaryawanDashboard() {
 
       {/* Stats Grid - 2 cols mobile, 3 cols tablet, 5 cols desktop */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-5 md:grid-cols-3 lg:grid-cols-5">
-        <StatCard
-          title="Total Gaji"
-          value={formatCurrency(Math.round(totalGaji))}
-          subtitle="Sudah diklaim"
-          icon={BanknotesIcon}
-          trend="up"
-        />
-        <StatCard
-          title="Estimasi Gaji"
-          value={formatCurrency(Math.round(salaryCalc?.estimatedSalary || 0))}
-          subtitle={`Rate: ${formatCurrency(salaryCalc?.ratePerUnit || 0)}/pcs`}
-          icon={BanknotesIcon}
-          trend="up"
-        />
-        <StatCard
-          title="JO QC OK"
-          value={totalAccepted}
-          subtitle={`${totalRejected} pcs ditolak`}
-          icon={CheckIcon}
-          trend="up"
-        />
-        <StatCard
-          title="Sisa Kasbon"
-          value={formatCurrency(kasbonBalance)}
-          subtitle={kasbonBalance > 0 ? "Belum lunas" : "Lunas"}
-          icon={CreditCardIcon}
-          trend={kasbonBalance > 0 ? "down" : "neutral"}
-        />
-        <StatCard
-          title="Jumlah Kasbon"
-          value={kasbonCount}
-          subtitle="Belum lunas"
-          icon={CreditCardIcon}
-          trend={kasbonCount > 0 ? "down" : "neutral"}
-        />
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border/50 bg-card p-3 sm:p-4">
+              <Skeleton className="h-3.5 w-20 mb-2" />
+              <Skeleton className="h-6 sm:h-7 w-24" />
+              <Skeleton className="h-3 w-16 mt-2" />
+            </div>
+          ))
+        ) : (
+          <>
+            <StatCard
+              title="Total Gaji"
+              value={formatCurrency(Math.round(totalGaji))}
+              subtitle="Sudah diklaim"
+              icon={BanknotesIcon}
+              trend="up"
+              delay={0}
+            />
+            <StatCard
+              title="Estimasi Gaji"
+              value={formatCurrency(Math.round(salaryCalc?.estimatedSalary || 0))}
+              subtitle={`Rate: ${formatCurrency(salaryCalc?.ratePerUnit || 0)}/pcs`}
+              icon={BanknotesIcon}
+              trend="up"
+              delay={50}
+            />
+            <StatCard
+              title="JO QC OK"
+              value={totalAccepted}
+              subtitle={`${totalRejected} pcs ditolak`}
+              icon={CheckIcon}
+              trend="up"
+              delay={100}
+            />
+            <StatCard
+              title="Sisa Kasbon"
+              value={formatCurrency(kasbonBalance)}
+              subtitle={kasbonBalance > 0 ? "Belum lunas" : "Lunas"}
+              icon={CreditCardIcon}
+              trend={kasbonBalance > 0 ? "down" : "neutral"}
+              delay={150}
+            />
+            <StatCard
+              title="Jumlah Kasbon"
+              value={kasbonCount}
+              subtitle="Belum lunas"
+              icon={CreditCardIcon}
+              trend={kasbonCount > 0 ? "down" : "neutral"}
+              delay={200}
+            />
+          </>
+        )}
       </div>
 
       {/* Job Order Aktif Section */}
-      <div className="space-y-2 sm:space-y-3">
+      <div className="space-y-2 sm:space-y-3 animate-slide-up" style={{ animationDelay: '80ms' }}>
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-base sm:text-lg text-card-foreground">
             {showHistory ? "Riwayat Job Order" : "Job Order Aktif"}
@@ -734,7 +764,27 @@ export function KaryawanDashboard() {
           </button>
         </div>
 
-        {showHistory ? (
+        {isLoading ? (
+          <div className="space-y-2 sm:space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border/50 bg-card p-3 sm:p-4 animate-pulse">
+                <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  <Skeleton className="h-5 w-20" />
+                </div>
+                <Skeleton className="h-1.5 w-full mb-3" />
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[0, 1, 2, 3].map((j) => (
+                    <Skeleton key={j} className="h-12 w-full" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : showHistory ? (
           completedAssignments.length === 0 ? (
             <div className="text-center py-10 sm:py-12 bg-card rounded-2xl border border-border">
               <ClockIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-muted-foreground" />
@@ -798,6 +848,17 @@ export function KaryawanDashboard() {
             )}
           </div>
           
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-full rounded-full" />
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+                {[0, 1, 2].map((j) => (
+                  <Skeleton key={j} className="h-14 w-full rounded-xl" />
+                ))}
+              </div>
+            </div>
+          ) : (
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{totalAccepted} dari {totalTarget} pcs</span>
@@ -831,6 +892,7 @@ export function KaryawanDashboard() {
               </div>
             </div>
           </div>
+          )}
         </CardContent>
       </Card>
 

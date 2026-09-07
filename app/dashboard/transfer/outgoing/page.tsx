@@ -235,7 +235,7 @@ export default function OutgoingPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-3 p-4 md:p-8 pt-4 sm:pt-6">
       <PageHeader
         title="Barang Keluar"
         description="Kelola transfer barang keluar"
@@ -251,40 +251,44 @@ export default function OutgoingPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Daftar Barang Keluar</CardTitle>
-              <CardDescription>Transfer yang dikirim dari gudang</CardDescription>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="text-lg md:text-2xl leading-tight">Daftar Barang Keluar</CardTitle>
+              <CardDescription className="text-xs md:text-sm leading-snug">
+                Transfer yang dikirim dari gudang
+              </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <RefreshButton size="default" variant="outline" onClick={() => refetch()} />
-              <ExportPrint
-                columns={[
-                  { key: "transferNumber", label: "No. Transfer" },
-                  { key: "fromWarehouse", label: "Dari" },
-                  { key: "toWarehouse", label: "Ke" },
-                  { key: "createdAt", label: "Tanggal" },
-                  { key: "status", label: "Status" },
-                  { key: "notes", label: "Catatan" },
-                ]}
-                data={outgoingTransfers.map(t => ({
-                  ...t,
-                  fromWarehouse: getWarehouseName(t.fromWarehouseId),
-                  toWarehouse: getWarehouseName(t.toWarehouseId),
-                  createdAt: formatDate(t.createdAt),
-                  notes: t.notes || "-",
-                  status: STATUS_LABELS[t.status] || t.status,
-                }))}
-                title="Daftar Barang Keluar"
-                filename="barang-keluar"
-              />
-              <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
-                    <PlusIcon className="mr-2 h-4 w-4" />
-                    Transfer Baru
-                  </Button>
-                </DialogTrigger>
+              <div className="flex flex-1 gap-2 sm:flex-none">
+                <ExportPrint
+                  className="flex-1 sm:flex-none"
+                  columns={[
+                    { key: "transferNumber", label: "No. Transfer" },
+                    { key: "fromWarehouse", label: "Dari" },
+                    { key: "toWarehouse", label: "Ke" },
+                    { key: "createdAt", label: "Tanggal" },
+                    { key: "status", label: "Status" },
+                    { key: "notes", label: "Catatan" },
+                  ]}
+                  data={outgoingTransfers.map(t => ({
+                    ...t,
+                    fromWarehouse: getWarehouseName(t.fromWarehouseId),
+                    toWarehouse: getWarehouseName(t.toWarehouseId),
+                    createdAt: formatDate(t.createdAt),
+                    notes: t.notes || "-",
+                    status: STATUS_LABELS[t.status] || t.status,
+                  }))}
+                  title="Daftar Barang Keluar"
+                  filename="barang-keluar"
+                />
+                <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex-1 sm:flex-none dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+                      <PlusIcon className="mr-2 h-4 w-4" />
+                      Transfer Baru
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Buat Transfer Baru</DialogTitle>
@@ -431,6 +435,7 @@ export default function OutgoingPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
           </div>
         </CardHeader>

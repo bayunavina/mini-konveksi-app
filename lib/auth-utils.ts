@@ -1,5 +1,8 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
+import { db } from "@/db"
+import { employees, user } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
 export async function getSession() {
   try {
@@ -50,4 +53,40 @@ export async function requireQcOrAdmin(headers: Headers) {
   }
 
   return { authorized: true, user: session.user, role: userRole }
+}
+
+export async function canUserAccess(userEmail: string): Promise<{ canAccess: boolean, role: UserRole, isActive: boolean }> {
+  try {
+    const employee = await db.select()
+      .from(employees)
+      .where(eq(employees.email, userEmail.toLowerCase()))
+      .limit(1)
+
+    if (employee.length > 0) {
+      const isActive = employee[0].isActive as boolean ?? true
+      const roleString = employee[0].role || "KARYAWAN"
+      const role: UserRole = (roleString as UserRole) || "KARYAWAN"
+      
+      // If user is inactive, they can still access the application
+      // Exception: when user's status becomes active, normal rules apply
+      const canAccess = true
+      
+      return { canAccess, role, isActive }
+    }
+
+    // If employee not found, check auth user
+    const authUser = await db.select()
+      .from(user)
+      .where(eq(user.email, userEmail.toLowerCase()))
+      .limit(1)
+
+    if (authUser.length > 0) {
+      return { canAccess: true, role: "ADMIN" as UserRole, isActive: true }
+    }
+
+    return { canAccess: false, role: "GUEST" as UserRole, isActive: false }
+  } catch (error) {
+    console.error("Error checking user access:", error)
+    return { canAccess: false, role: "GUEST" as UserRole, isActive: false }
+  }
 }
