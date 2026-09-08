@@ -3,7 +3,7 @@ import { db } from "@/db"
 import { transfers, transferItems, transferPhotos, inventoryStock, inventoryMovements } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { PERMISSION } from "@/lib/constants"
-import { requirePermission, requireAnyPermission } from "@/lib/rbac"
+import { requireAnyPermission } from "@/lib/rbac"
 import { getSessionRoleFromHeaders } from "@/lib/auth-utils"
 
 export async function GET(
@@ -45,7 +45,7 @@ export async function PUT(
 ) {
   try {
     const role = await getSessionRoleFromHeaders(request.headers)
-    const permCheck = requirePermission(role, PERMISSION.BARANG_MASUK_TERIMA)
+    const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_TERIMA, PERMISSION.BARANG_KELUAR_TERIMA])
     if (!permCheck.authorized) return permCheck.error
 
     const { id } = await params

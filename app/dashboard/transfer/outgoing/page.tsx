@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import {
@@ -39,7 +40,7 @@ import { ExportPrint } from "@/components/shared/export-print"
 import { PhotoGallery } from "@/components/shared/photo-gallery"
 import { ScanButton } from "@/components/scanner"
 import { parseQRPayload } from "@/lib/qr-payload"
-import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon, CameraIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon, CameraIcon, CheckIcon } from "@heroicons/react/24/outline"
 import { RefreshButton } from "@/components/ui/refresh-button"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
@@ -118,6 +119,9 @@ export default function OutgoingPage() {
   const [itemQuantity, setItemQuantity] = useState("")
   const [photos, setPhotos] = useState<{ id: string; file: File; preview: string }[]>([])
   const [creating, setCreating] = useState(false)
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [confirmNotes, setConfirmNotes] = useState("")
+  const [confirming, setConfirming] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
@@ -128,6 +132,7 @@ export default function OutgoingPage() {
   const userRole = user?.role || "GUDANG"
   const canCreate = hasPermission(userRole, PERMISSION.BARANG_KELUAR_CREATE)
   const canView = hasPermission(userRole, PERMISSION.BARANG_KELUAR_VIEW)
+  const canReceive = hasPermission(userRole, PERMISSION.BARANG_KELUAR_TERIMA)
 
   // P3-1: Simplifikasi Transfer - non-ADMIN otomatis ke Gudang Utama (default warehouse)
   const defaultWarehouse = useMemo(() => {
@@ -288,6 +293,56 @@ export default function OutgoingPage() {
   const handleViewPhotos = (transfer: Transfer) => {
     setSelectedTransfer(transfer)
     setPhotosDialogOpen(true)
+  }
+
+  const handleOpenConfirm = (transfer: Transfer) => {
+    setSelectedTransfer(transfer)
+    setPhotos([])
+    setConfirmNotes("")
+    setConfirmDialogOpen(true)
+  }
+
+  const handleConfirmReceive = async () => {
+    if (!selectedTransfer) return
+
+    setConfirming(true)
+    try {
+      if (photos.length > 0) {
+        await uploadPhotos(selectedTransfer.id)
+      }
+
+      const response = await fetch(`/api/transfers/${selectedTransfer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "COMPLETED",
+          notes: confirmNotes || selectedTransfer.notes || "",
+        }),
+      })
+
+      const responseData = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        console.error("Error confirming transfer:", responseData)
+        toast.error(responseData.error || responseData.warning || "Gagal mengonfirmasi transfer")
+        return
+      }
+
+      if (responseData.warning) {
+        toast.warning(responseData.warning)
+      } else {
+        toast.success(`Transfer ${selectedTransfer.transferNumber} berhasil dikonfirmasi!`)
+      }
+      setConfirmDialogOpen(false)
+      setSelectedTransfer(null)
+      setPhotos([])
+      setConfirmNotes("")
+      refetch()
+    } catch (error) {
+      console.error("Error confirming transfer:", error)
+      toast.error("Terjadi kesalahan")
+    } finally {
+      setConfirming(false)
+    }
   }
 
   const getWarehouseName = (id?: string) => {
@@ -621,6 +676,16 @@ export default function OutgoingPage() {
                             <CameraIcon className="h-4 w-4" />
                           </Button>
                         )}
+                        {transfer.status === "PENDING" && canReceive && (
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 px-3.5 leading-none"
+                            onClick={() => handleOpenConfirm(transfer)}
+                          >
+                            <CheckIcon className="mr-1 h-4 w-4" />
+                            Konfirmasi
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -707,6 +772,124 @@ export default function OutgoingPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPhotosDialogOpen(false)}>
               Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmDialogOpen} onOpenChange={(open) => { setConfirmDialogOpen(open); if (!open) { setSelectedTransfer(null); setPhotos([]); setConfirmNotes("") } }}>
+        <DialogContent className="w-[95vw] max-w-md overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Konfirmasi Pengiriman</DialogTitle>
+            <DialogDescription className="truncate">
+              {selectedTransfer ? `Transfer ${selectedTransfer.transferNumber}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 overflow-y-auto flex-1 min-h-0">
+            {selectedTransfer && (
+              <div className="bg-muted rounded-lg p-3 space-y-2">
+                <div className="flex justify-between gap-2">
+                  <span className="text-sm text-muted-foreground shrink-0">Dari:</span>
+                  <span className="text-sm font-medium text-right">{getWarehouseName(selectedTransfer.fromWarehouseId)}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-sm text-muted-foreground shrink-0">Ke:</span>
+                  <span className="text-sm font-medium text-right">{getWarehouseName(selectedTransfer.toWarehouseId)}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-sm text-muted-foreground shrink-0">Status:</span>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
+                    {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Foto Dokumentasi (Opsional)</Label>
+              <div className="border-2 border-dashed rounded-lg p-3">
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mb-3">
+                  {photos.map((photo) => (
+                    <div key={photo.id} className="relative aspect-square rounded overflow-hidden border">
+                      <img
+                        src={photo.preview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon-xs"
+                        className="absolute top-1 right-1"
+                        onClick={() => removePhoto(photo.id)}
+                      >
+                        <TrashIcon className="h-2 w-2" />
+                      </Button>
+                    </div>
+                  ))}
+                  {photos.length < MAX_PHOTO_UPLOAD && (
+                    <>
+                      <button
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                        aria-label="Ambil foto"
+                        title="Ambil foto"
+                      >
+                        <CameraIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                        aria-label="Upload foto"
+                        title="Upload foto"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  {photos.length}/{MAX_PHOTO_UPLOAD} foto
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Catatan Pengiriman</Label>
+              <Textarea
+                placeholder="Tambahkan catatan jika ada..."
+                value={confirmNotes}
+                onChange={(e) => setConfirmNotes(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="shrink-0">
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleConfirmReceive} disabled={confirming} className="bg-green-600 hover:bg-green-700">
+              {confirming && <Spinner data-icon="inline-start" />}
+              <CheckIcon className="mr-2 h-4 w-4" />
+              Konfirmasi Kirim
             </Button>
           </DialogFooter>
         </DialogContent>
