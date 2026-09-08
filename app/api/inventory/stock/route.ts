@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { inventoryStock, inventoryMovements, products, warehouses } from "@/db/schema"
 import { eq, and, desc } from "drizzle-orm"
+import { resolveCatalogItemToProductId } from "@/lib/master-skus"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const productId = searchParams.get("productId")
+    const rawProductId = searchParams.get("productId")
     const warehouseId = searchParams.get("warehouseId")
+    const productId = rawProductId ? await resolveCatalogItemToProductId(rawProductId) : null
 
     let results
 
@@ -91,12 +93,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { productId, warehouseId, type, quantity, reference, referenceId, notes } = body
+    const { productId: rawProductId, warehouseId, type, quantity, reference, referenceId, notes } = body
 
-    if (!productId || !warehouseId || !type || !quantity) {
+    if (!rawProductId || !warehouseId || !type || !quantity) {
       return NextResponse.json({ 
         error: "productId, warehouseId, type, and quantity are required" 
       }, { status: 400 })
+    }
+
+    const productId = await resolveCatalogItemToProductId(rawProductId)
+    if (!productId) {
+      return NextResponse.json({ error: "Produk tidak ditemukan" }, { status: 404 })
     }
 
     const movementType = type.toUpperCase()

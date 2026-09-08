@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm"
 import { PERMISSION } from "@/lib/constants"
 import { requireAnyPermission } from "@/lib/rbac"
 import { getSessionRoleFromHeaders } from "@/lib/auth-utils"
+import { resolveCatalogItemToProductId } from "@/lib/master-skus"
 
 export async function GET(
   request: NextRequest,
@@ -97,12 +98,23 @@ export async function PUT(
         const quantity = item.quantity!
 
         try {
+          const stockProductId = await resolveCatalogItemToProductId(productId)
+          if (!stockProductId) {
+            failedItems.push({
+              productId,
+              skuCode: item.skuCode || null,
+              quantity,
+              reason: "Produk tidak ditemukan di katalog stok",
+            })
+            continue
+          }
+
           if (transfer.fromWarehouseId) {
             const sourceStock = await db
               .select()
               .from(inventoryStock)
               .where(and(
-                eq(inventoryStock.productId, productId),
+                eq(inventoryStock.productId, stockProductId),
                 eq(inventoryStock.warehouseId, transfer.fromWarehouseId)
               ))
 
@@ -122,7 +134,7 @@ export async function PUT(
               .where(eq(inventoryStock.id, sourceStock[0].id))
 
             await db.insert(inventoryMovements).values({
-              productId,
+              productId: stockProductId,
               warehouseId: transfer.fromWarehouseId,
               type: "OUT",
               quantity: -quantity,
@@ -137,13 +149,13 @@ export async function PUT(
               .select()
               .from(inventoryStock)
               .where(and(
-                eq(inventoryStock.productId, productId),
+                eq(inventoryStock.productId, stockProductId),
                 eq(inventoryStock.warehouseId, transfer.toWarehouseId)
               ))
 
             if (destStock.length === 0) {
               await db.insert(inventoryStock).values({
-                productId,
+                productId: stockProductId,
                 warehouseId: transfer.toWarehouseId,
                 quantity,
               })
@@ -154,7 +166,7 @@ export async function PUT(
             }
 
             await db.insert(inventoryMovements).values({
-              productId,
+              productId: stockProductId,
               warehouseId: transfer.toWarehouseId,
               type: "IN",
               quantity: quantity,
