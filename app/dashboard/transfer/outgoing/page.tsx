@@ -122,6 +122,8 @@ export default function OutgoingPage() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [confirmNotes, setConfirmNotes] = useState("")
   const [confirming, setConfirming] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
@@ -133,6 +135,7 @@ export default function OutgoingPage() {
   const canCreate = hasPermission(userRole, PERMISSION.BARANG_KELUAR_CREATE)
   const canView = hasPermission(userRole, PERMISSION.BARANG_KELUAR_VIEW)
   const canReceive = hasPermission(userRole, PERMISSION.BARANG_KELUAR_TERIMA)
+  const canDelete = hasPermission(userRole, PERMISSION.BARANG_KELUAR_DELETE)
 
   // P3-1: Simplifikasi Transfer - non-ADMIN otomatis ke Gudang Utama (default warehouse)
   const defaultWarehouse = useMemo(() => {
@@ -342,6 +345,37 @@ export default function OutgoingPage() {
       toast.error("Terjadi kesalahan")
     } finally {
       setConfirming(false)
+    }
+  }
+
+  const openDeleteDialog = (transfer: Transfer) => {
+    setSelectedTransfer(transfer)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteTransfer = async () => {
+    if (!selectedTransfer) return
+
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/transfers/${selectedTransfer.id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        toast.success(`Transfer ${selectedTransfer.transferNumber} berhasil dihapus!`)
+        setDeleteDialogOpen(false)
+        setSelectedTransfer(null)
+        refetch()
+      } else {
+        const error = await response.json().catch(() => ({}))
+        toast.error(error.message || "Gagal menghapus transfer")
+      }
+    } catch (error) {
+      console.error("Error deleting transfer:", error)
+      toast.error("Terjadi kesalahan")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -665,14 +699,23 @@ export default function OutgoingPage() {
                       <TableCell className="max-w-[150px] truncate">
                         {transfer.notes || "-"}
                       </TableCell>
-                      <TableCell className="flex justify-center gap-1 whitespace-nowrap">
+                      <TableCell className="min-w-fit whitespace-nowrap">
+                      <div className="flex flex-row items-center gap-2 flex-nowrap">
                         {canView && (
-                          <Button size="default" variant="outline" onClick={() => handleView(transfer)}>
+                          <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            onClick={() => handleView(transfer)}
+                          >
                             <EyeIcon className="h-4 w-4" />
                           </Button>
                         )}
                         {canView && (
-                          <Button size="default" variant="outline" onClick={() => handleViewPhotos(transfer)}>
+                          <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            onClick={() => handleViewPhotos(transfer)}
+                          >
                             <CameraIcon className="h-4 w-4" />
                           </Button>
                         )}
@@ -686,7 +729,18 @@ export default function OutgoingPage() {
                             Konfirmasi
                           </Button>
                         )}
-                      </TableCell>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => openDeleteDialog(transfer)}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -772,6 +826,50 @@ export default function OutgoingPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPhotosDialogOpen(false)}>
               Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setSelectedTransfer(null) }}>
+        <DialogContent className="w-[95vw] max-w-sm overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Hapus Transfer</DialogTitle>
+            <DialogDescription className="truncate">
+              {selectedTransfer ? `Transfer ${selectedTransfer.transferNumber}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTransfer && (
+            <div className="py-2 overflow-y-auto flex-1 min-h-0 space-y-3">
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <p className="text-sm text-destructive font-medium">Peringatan: Tindakan ini tidak dapat dibatalkan!</p>
+              </div>
+              <div className="bg-muted rounded-lg p-3 space-y-2">
+                <div className="flex justify-between gap-2">
+                  <span className="text-sm text-muted-foreground shrink-0">No. Transfer:</span>
+                  <span className="font-mono font-medium text-sm break-all">{selectedTransfer.transferNumber}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-sm text-muted-foreground shrink-0">Gudang:</span>
+                  <span className="font-medium text-sm">{getWarehouseName(selectedTransfer.fromWarehouseId)}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-sm text-muted-foreground shrink-0">Status:</span>
+                  <Badge className={`${STATUS_COLORS[selectedTransfer.status] || "bg-gray-100"}`}>
+                    {STATUS_LABELS[selectedTransfer.status] || selectedTransfer.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="shrink-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteTransfer} disabled={deleting}>
+              {deleting && <Spinner data-icon="inline-start" />}
+              <TrashIcon className="mr-2 h-4 w-4" />
+              Hapus
             </Button>
           </DialogFooter>
         </DialogContent>
