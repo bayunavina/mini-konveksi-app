@@ -56,14 +56,10 @@ export function generateEmployeeQR(data: {
   pin?: string
   role?: string
 }): string {
-  const payload: QRPayload = {
-    type: "EMPLOYEE",
-    id: data.id,
-    code: data.pin || data.id.slice(0, 8).toUpperCase(),
-    name: data.name,
-    extra: { role: data.role },
-  }
-  return JSON.stringify(payload)
+  const code = data.pin || data.id.slice(0, 8).toUpperCase()
+  const name = sanitizeValue(data.name || "")
+
+  return `EMPLOYEE:${code}:name-${name}`
 }
 
 export function generateJobOrderQR(data: {
@@ -71,18 +67,46 @@ export function generateJobOrderQR(data: {
   joNumber: string
   productName?: string
 }): string {
-  const payload: QRPayload = {
-    type: "JOB_ORDER",
-    id: data.id,
-    code: data.joNumber,
-    name: data.productName || data.joNumber,
-  }
-  return JSON.stringify(payload)
+  const joNumber = data.joNumber
+  const product = data.productName ? sanitizeValue(data.productName) : ""
+
+  return `JOB_ORDER:joNumber-${joNumber}${product ? `:product-${product}` : ""}`
+}
+
+function parseEmployeeString(raw: string): { code: string; name: string } | null {
+  if (!/^EMPLOYEE:/i.test(raw.trim())) return null
+  const parts = raw.trim().split(":")
+  const code = (parts[1] || "").replace(/^name-/i, "")
+  if (!code) return null
+  const name = parts.find((p) => /^name-.+/i.test(p))?.replace(/^name-/i, "") || ""
+  return { code, name }
+}
+
+function parseJobOrderString(raw: string): { joNumber: string; product?: string } | null {
+  if (!/^JOB_ORDER:/i.test(raw.trim())) return null
+  const parts = raw.trim().split(":")
+  const joMatch = parts[1]?.match(/^joNumber-(.+)$/i)
+  if (!joMatch) return null
+  const joNumber = joMatch[1]
+  const product = parts.find((p) => /^product-.+/i.test(p))?.replace(/^product-/i, "") || undefined
+  return { joNumber, product }
 }
 
 export function generateSKUQR(skuCode: string): string {
   // SKU barcodes are plain Code128 — no JSON needed for USB scanner speed
   return skuCode.toUpperCase()
+}
+
+/**
+ * Batch barcode format: `<SKU>-<NNNN>` (e.g. SKU-SRG-001-0001).
+ * Strips the trailing 4+ digit sequence to recover the base SKU code.
+ * Returns the SKU base if matched, otherwise null.
+ */
+export function parseSkuBatchCode(raw: string): string | null {
+  const trimmed = raw.trim()
+  const m = trimmed.match(/^(.+)-(\d{4,})$/i)
+  if (!m) return null
+  return m[1].toUpperCase()
 }
 
 export function generateTransferQR(data: {
@@ -228,6 +252,38 @@ export function parseQRPayload(raw: string): ParsedQR {
       raw: trimmed,
       isLegacy: false,
       detectedType: "MATERIAL_LOT",
+    }
+  }
+
+  // Try new string format: EMPLOYEE:<code>:name-<name>
+  const employeeParsed = parseEmployeeString(trimmed)
+  if (employeeParsed) {
+    return {
+      payload: {
+        type: "EMPLOYEE",
+        id: employeeParsed.code,
+        code: employeeParsed.code,
+        name: employeeParsed.name,
+      },
+      raw: trimmed,
+      isLegacy: false,
+      detectedType: "EMPLOYEE",
+    }
+  }
+
+  // Try new string format: JOB_ORDER:joNumber-<joNumber>:product-<product>
+  const jobOrderParsed = parseJobOrderString(trimmed)
+  if (jobOrderParsed) {
+    return {
+      payload: {
+        type: "JOB_ORDER",
+        id: jobOrderParsed.joNumber,
+        code: jobOrderParsed.joNumber,
+        name: jobOrderParsed.product || jobOrderParsed.joNumber,
+      },
+      raw: trimmed,
+      isLegacy: false,
+      detectedType: "JOB_ORDER",
     }
   }
 

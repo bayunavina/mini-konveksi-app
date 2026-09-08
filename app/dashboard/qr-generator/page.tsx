@@ -17,30 +17,30 @@ import { toast } from "sonner"
 export default function QRGeneratorPage() {
   const [qrValue, setQRValue] = useState("")
   const [barcodeValue, setBarcodeValue] = useState("")
-  const [batchItems, setBatchItems] = useState<{ sku: string; name: string }[]>([])
   const [qrEntityType, setQrEntityType] = useState<"MATERIAL_LOT" | "EMPLOYEE" | "JOB_ORDER">("MATERIAL_LOT")
   const [selectedLotId, setSelectedLotId] = useState("")
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
   const [selectedJoId, setSelectedJoId] = useState("")
 
-  const { data: lots } = useFetch<{ id: string; lotNumber: string; qrCode: string; product?: { code: string; name: string }; supplier?: string }[]>("/api/material-lots")
+  const { data: lots } = useFetch<{ id: string; lotNumber: string; qrCode: string; quantity: number; product?: { code: string; name: string; unit?: string }; supplier?: string }[]>("/api/material-lots")
   const { data: employees } = useFetch<{ id: string; name: string; qrCode?: string; role?: string }[]>("/api/employees")
   const { data: joData } = useFetch<{ data: { id: string; joNumber: string; qrCode?: string; product?: { name: string } }[] }>("/api/job-orders")
   const joList = (joData as unknown as { data?: { id: string; joNumber: string; qrCode?: string; product?: { name: string } }[] })?.data || (Array.isArray(joData) ? (joData as unknown as { id: string; joNumber: string }[]) : [])
 
   const handleGenerateFromForm = (type: "lot" | "sku") => {
     if (type === "lot") {
-      const lotId = `LOT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`
-      const data = JSON.stringify({
-        type: "MATERIAL_LOT",
-        lotId,
-        sku: "KAIN-KATUN-001",
-        quantity: 100,
+      const lotId = `BB-MTSEL8L9-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`
+      const payload = generateMaterialLotQR({
+        id: lotId,
+        lotNumber: lotId,
+        skuCode: "SKU-CLN-001",
+        skuName: "Kain Katun",
+        quantity: 1,
         unit: "Pcs",
-        supplier: "PT Textile",
-        dateIn: new Date().toISOString().split("T")[0],
+        supplier: "PT. Sandang Jaya Textile",
+        dateIn: "2026-09-08",
       })
-      setQRValue(data)
+      setQRValue(payload)
     } else {
       const skuCode = `SKU-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`
       setBarcodeValue(skuCode)
@@ -57,6 +57,8 @@ export default function QRGeneratorPage() {
           lotNumber: lot.lotNumber,
           skuCode: lot.product?.code,
           skuName: lot.product?.name,
+          quantity: lot.quantity,
+          unit: lot.product?.unit,
           supplier: lot.supplier,
         })
         setQRValue(payload)
@@ -64,7 +66,7 @@ export default function QRGeneratorPage() {
       } else if (qrEntityType === "EMPLOYEE") {
         const emp = (employees || []).find(e => e.id === selectedEmployeeId)
         if (!emp) { toast.error("Pilih karyawan terlebih dahulu"); return }
-        const payload = generateEmployeeQR({ id: emp.id, name: emp.name, role: emp.role })
+        const payload = generateEmployeeQR({ id: emp.id, name: emp.name, role: emp.role, pin: emp.qrCode || undefined })
         setQRValue(payload)
         toast.success(`QR generated untuk karyawan ${emp.name}`)
       } else if (qrEntityType === "JOB_ORDER") {
@@ -285,10 +287,7 @@ export default function QRGeneratorPage() {
         </TabsContent>
 
         <TabsContent value="batch" className="space-y-4">
-          <BatchBarcodeGenerator
-            items={batchItems}
-            onItemsChange={setBatchItems}
-          />
+          <BatchBarcodeGenerator />
         </TabsContent>
       </Tabs>
     </div>

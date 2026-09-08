@@ -381,23 +381,23 @@ export function QCDashboard() {
           <CardDescription className="text-[10px] sm:text-xs">Aksi cepat untuk QC</CardDescription>
         </CardHeader>
         <CardContent className="px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex gap-2 sm:gap-4 flex-wrap">
-            <Link href="/dashboard/qc-reports">
-              <Button variant="outline">
-                <ClipboardDocumentCheckIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Lihat Semua </span>QC Reports
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+            <Link href="/dashboard/qc-reports" className="min-w-0">
+              <Button variant="outline" size="lg" className="w-full flex-col gap-0.5 px-1 text-[10px] leading-tight whitespace-normal sm:flex-row sm:gap-1 sm:px-2.5 sm:text-xs sm:leading-relaxed sm:whitespace-nowrap">
+                <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 shrink-0 sm:mr-1 sm:h-4 sm:w-4" />
+                <span><span className="hidden xs:inline">Lihat Semua </span>QC Reports</span>
               </Button>
             </Link>
-            <Link href="/dashboard/produksi">
-              <Button variant="outline">
-                <BuildingOfficeIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Daftar Job Orders
+            <Link href="/dashboard/produksi" className="min-w-0">
+              <Button variant="outline" size="lg" className="w-full flex-col gap-0.5 px-1 text-[10px] leading-tight whitespace-normal sm:flex-row sm:gap-1 sm:px-2.5 sm:text-xs sm:leading-relaxed sm:whitespace-nowrap">
+                <BuildingOfficeIcon className="h-3.5 w-3.5 shrink-0 sm:mr-1 sm:h-4 sm:w-4" />
+                <span>Daftar Job Orders</span>
               </Button>
             </Link>
-            <Link href="/dashboard/qc/scan">
-              <Button variant="outline">
-                <QrCodeIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Scan Barcode
+            <Link href="/dashboard/qc/scan" className="min-w-0">
+              <Button variant="outline" size="lg" className="w-full flex-col gap-0.5 px-1 text-[10px] leading-tight whitespace-normal sm:flex-row sm:gap-1 sm:px-2.5 sm:text-xs sm:leading-relaxed sm:whitespace-nowrap">
+                <QrCodeIcon className="h-3.5 w-3.5 shrink-0 sm:mr-1 sm:h-4 sm:w-4" />
+                <span>Scan Barcode</span>
               </Button>
             </Link>
           </div>

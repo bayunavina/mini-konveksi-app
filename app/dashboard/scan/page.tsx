@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { PageHeader } from "@/components/shared"
 import { ScanModal } from "@/components/scanner"
+import { HiddenKeyboardScanner } from "@/components/scanner"
 import { useFetch } from "@/hooks/useFetch"
 import { useSKUMaster } from "@/hooks/useSKUMaster"
-import { parseQRPayload } from "@/lib/qr-payload"
+import { parseQRPayload, parseSkuBatchCode } from "@/lib/qr-payload"
 import { formatDateShort } from "@/lib/utils"
 import {
   QrCodeIcon,
@@ -23,6 +25,7 @@ import {
   BuildingOffice2Icon,
   TagIcon,
 } from "@heroicons/react/24/outline"
+import { toast } from "sonner"
 
 interface TransferItem {
   id: string
@@ -251,11 +254,13 @@ export default function ScanPage() {
         employees?.some((e) => (e.qrCode ? norm(e.qrCode) === rawNorm : false)) ||
         employees?.some((e) => e.name.toLowerCase() === raw)
       ) {
-        const targetEmployee = parsed.payload?.id
-          ? employees?.find((e) => e.id === parsed.payload?.id)
-          : employees?.find(
-              (e) => (e.qrCode ? norm(e.qrCode) === rawNorm : false) || e.name.toLowerCase() === raw.toLowerCase()
-            )
+        const targetEmployee = employees?.find(
+          (e) =>
+            e.id === parsed.payload?.id ||
+            (e.qrCode ? norm(e.qrCode) === rawNorm || norm(e.qrCode) === norm(parsed.payload?.code || "") : false) ||
+            (e.id.slice(0, 8).toUpperCase() === parsed.payload?.code) ||
+            e.name.toLowerCase() === raw.toLowerCase()
+        )
         if (targetEmployee) {
           const empAssign = (assignments || []).filter((a) => a.employee?.id === targetEmployee.id)
           const totalTarget = empAssign.reduce((s, a) => s + a.targetQty, 0)
@@ -305,9 +310,11 @@ export default function ScanPage() {
       }
 
       // --- SKU ---
-      const matchedSku = skuMaster.find(
-        (s) => norm(s.code) === rawNorm || s.code.toLowerCase() === code.toLowerCase()
-      )
+      const matchedSku =
+        skuMaster.find(
+          (s) => norm(s.code) === rawNorm || s.code.toLowerCase() === code.toLowerCase()
+        ) ||
+        skuMaster.find((s) => norm(parseSkuBatchCode(raw) || "") === norm(s.code))
       if (matchedSku) {
         const relatedLots = (lots || []).filter((l) => l.product?.code?.toLowerCase() === matchedSku.code.toLowerCase())
         const lotSisa = relatedLots.reduce((s, l) => s + (l.quantity || 0), 0)
@@ -380,6 +387,11 @@ export default function ScanPage() {
     }
   }
 
+  const handleScanFromUsb = (raw: string) => {
+    toast.success("Scanner USB terdeteksi — siap scan")
+    handleScan(raw)
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
@@ -412,33 +424,35 @@ export default function ScanPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CommandLineIcon className="h-5 w-5" />
-              Input Manual / USB Scanner
-            </CardTitle>
-            <CardDescription>
-              Ketik manual atau gunakan barcode scanner USB
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleManualSubmit} className="flex gap-2">
-              <input
-                value={rawInput}
-                onChange={(e) => setRawInput(e.target.value)}
-                placeholder="Contoh: TRF-IN-250101-AB12, JO250101-AB, BB-..."
-                className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
-              />
-              <Button type="submit" disabled={resolving}>
-                Cari
-              </Button>
-            </form>
-            <p className="text-xs text-muted-foreground mt-3">
-              Scanner barcode USB otomatis terdeteksi saat mengetik. Tekan Enter untuk memproses.
-            </p>
-          </CardContent>
-        </Card>
+        <HiddenKeyboardScanner onScan={handleScanFromUsb} enabled>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CommandLineIcon className="h-5 w-5" />
+                Input Manual / USB Scanner
+              </CardTitle>
+              <CardDescription>
+                Ketik manual atau gunakan barcode scanner USB
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleManualSubmit} className="flex gap-2">
+                <input
+                  value={rawInput}
+                  onChange={(e) => setRawInput(e.target.value)}
+                  placeholder="Contoh: TRF-IN-250101-AB12, JO250101-AB, BB-..."
+                  className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
+                />
+                <Button type="submit" disabled={resolving}>
+                  Cari
+                </Button>
+              </form>
+              <p className="text-xs text-muted-foreground mt-3">
+                Scanner barcode USB otomatis terdeteksi saat mengetik. Tekan Enter untuk memproses.
+              </p>
+            </CardContent>
+          </Card>
+        </HiddenKeyboardScanner>
       </div>
 
       {/* Result panel */}

@@ -767,8 +767,16 @@ export function DashboardHeader() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Link href="/dashboard/settings/notifications" className="relative" suppressHydrationWarning>
-              <Button variant="ghost" size="icon" className="hover:bg-accent/50 transition-colors touch-target">
+            <Link
+              href="/dashboard/settings/notifications"
+              className="relative rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              suppressHydrationWarning
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="touch-target border-transparent transition-colors hover:bg-accent/50 focus:border-transparent focus:ring-0 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-[10px] font-medium text-white flex items-center justify-center animate-pulse-glow">

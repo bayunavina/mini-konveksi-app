@@ -24,6 +24,7 @@ import {
 } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { toast } from "sonner"
+import { parseSkuBatchCode } from "@/lib/qr-payload"
 
 interface Assignment {
   id: string
@@ -43,6 +44,7 @@ interface Assignment {
     id: string
     name: string
     code: string
+    sku?: string
   } | null
   employee: {
     id: string
@@ -67,7 +69,47 @@ export default function QCScanPage() {
 
   const handleScan = async (result: string) => {
     setScanModalOpen(false)
-    
+
+    // Check for batch barcode format: SKU-NNNN (e.g. SKU-SRG-001-0001)
+    const skuBase = parseSkuBatchCode(result)
+    if (skuBase) {
+      const found = (assignments || []).find(a => 
+        (a.product?.code === skuBase || a.product?.sku === skuBase) &&
+        a.status === "QC_REQUESTED" && 
+        (a.pendingQty || 0) > 0
+      )
+      if (found) {
+        setIsSubmitting(true)
+        try {
+          const response = await fetch("/api/qc-reports", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jobOrderId: found.jobOrderId,
+              employeeId: found.employee?.id,
+              successQty: 1,
+              rejectQty: 0,
+              assignmentId: found.id,
+            }),
+          })
+          if (response.ok) {
+            toast.success(`1 pcs lolos QC: ${found.product?.name}`)
+            refetch()
+          } else {
+            const data = await response.json()
+            toast.error(data.error || "Gagal memproses QC")
+          }
+        } catch {
+          toast.error("Terjadi kesalahan")
+        } finally {
+          setIsSubmitting(false)
+        }
+        return
+      }
+      toast.error("Tidak ada assignment QC untuk SKU ini")
+      return
+    }
+
     // Find assignment by job order number or ID
     const found = (assignments || []).find(a => 
       a.jobOrder?.joNumber?.toLowerCase().includes(result.toLowerCase()) ||

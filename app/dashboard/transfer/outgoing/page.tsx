@@ -39,7 +39,7 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import { PhotoGallery } from "@/components/shared/photo-gallery"
 import { ScanButton } from "@/components/scanner"
-import { parseQRPayload } from "@/lib/qr-payload"
+import { parseQRPayload, parseSkuBatchCode } from "@/lib/qr-payload"
 import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon, CameraIcon, CheckIcon } from "@heroicons/react/24/outline"
 import { RefreshButton } from "@/components/ui/refresh-button"
 import { useFetch } from "@/hooks/useFetch"
@@ -211,12 +211,6 @@ export default function OutgoingPage() {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        
-        if (photos.length > 0) {
-          await uploadPhotos(data.id)
-        }
-
         toast.success("Transfer berhasil dibuat")
         setNewDialogOpen(false)
         resetForm()
@@ -416,8 +410,8 @@ export default function OutgoingPage() {
                   className="flex-1 sm:flex-none"
                   columns={[
                     { key: "transferNumber", label: "No. Transfer" },
-                    { key: "fromWarehouse", label: "Dari" },
-                    { key: "toWarehouse", label: "Ke" },
+                    { key: "fromWarehouse", label: "Asal Gudang" },
+                    { key: "toWarehouse", label: "Tujuan Gudang" },
                     { key: "createdAt", label: "Tanggal" },
                     { key: "status", label: "Status" },
                     { key: "notes", label: "Catatan" },
@@ -519,7 +513,7 @@ export default function OutgoingPage() {
                             const parsed = parseQRPayload(raw)
                             const code = parsed.payload?.code || raw
                             const id = parsed.payload?.id || raw
-                            const found = masterSkus?.find(s => s.id === id || s.code === code || s.code.toLowerCase() === code.toLowerCase())
+                            const found = masterSkus?.find(s => s.id === id || s.code === code || s.code.toLowerCase() === code.toLowerCase()) || masterSkus?.find(s => parseSkuBatchCode(raw) && s.code === parseSkuBatchCode(raw)!.toUpperCase())
                             if (found) {
                               setSelectedProduct(found.id)
                               toast.success(`Produk terpilih: ${found.code}`)
@@ -573,72 +567,6 @@ export default function OutgoingPage() {
                         onChange={(e) => setNotes(e.target.value)}
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <Label>Foto Dokumentasi (Opsional)</Label>
-                      <div className="border-2 border-dashed rounded-lg p-3">
-                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mb-3">
-                          {photos.map((photo) => (
-                            <div key={photo.id} className="relative aspect-square rounded overflow-hidden border">
-                              <img
-                                src={photo.preview}
-                                alt="Preview"
-                                className="w-full h-full object-cover"
-                              />
-                              <Button
-                                variant="destructive"
-                                size="icon-xs"
-                                className="absolute top-1 right-1"
-                                onClick={() => removePhoto(photo.id)}
-                              >
-                                <TrashIcon className="h-2 w-2" />
-                              </Button>
-                            </div>
-                          ))}
-                          {photos.length < MAX_PHOTO_UPLOAD && (
-                            <>
-                              <button
-                                onClick={() => cameraInputRef.current?.click()}
-                                className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                                aria-label="Ambil foto"
-                                title="Ambil foto"
-                              >
-                                <CameraIcon className="h-5 w-5" />
-                              </button>
-                              <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                                aria-label="Upload foto"
-                                title="Upload foto"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                                </svg>
-                              </button>
-                            </>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">
-                          {photos.length}/{MAX_PHOTO_UPLOAD} foto
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handlePhotoUpload}
-                          className="hidden"
-                        />
-                        <input
-                          ref={cameraInputRef}
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={handlePhotoUpload}
-                          className="hidden"
-                        />
-                      </div>
-                    </div>
                   </div>
 
                   <DialogFooter>
@@ -676,8 +604,8 @@ export default function OutgoingPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>No. Transfer</TableHead>
-                    <TableHead>Dari</TableHead>
-                    <TableHead>Ke</TableHead>
+                    <TableHead>Asal Gudang</TableHead>
+                    <TableHead>Tujuan Gudang</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Catatan</TableHead>

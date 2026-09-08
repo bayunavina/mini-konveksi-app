@@ -449,7 +449,7 @@ export default function NewJobOrderPage() {
                         const parsed = parseQRPayload(raw)
                         const code = parsed.payload?.code || raw
                         const id = parsed.payload?.id || raw
-                        const found = (employees || []).find(e => e.id === id || e.id === code || (e as unknown as { qrCode?: string }).qrCode === code || e.name.toLowerCase().includes(code.toLowerCase()))
+                        const found = (employees || []).find(e => e.id === id || e.id === code || e.id.slice(0, 8).toUpperCase() === code || (e as unknown as { qrCode?: string }).qrCode === code || e.name.toLowerCase().includes(code.toLowerCase()))
                         if (found) {
                           setFormData(prev => ({ ...prev, employeeId: found.id }))
                           // auto-fill rate if exists

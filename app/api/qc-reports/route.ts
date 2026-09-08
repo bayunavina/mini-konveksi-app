@@ -76,9 +76,166 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { jobOrderId, employeeId, successQty, rejectQty, notes, rejectReason } = body
+    const { jobOrderId, employeeId, successQty, rejectQty, notes, rejectReason, assignmentId } = body
     const actorId = await getActorEmployeeId(request.headers)
 
+    if (assignmentId) {
+      // --- Direct assignment path (batch barcode: 1 scan = 1 pcs) ---
+      const assignmentData = await db
+        .select()
+        .from(productionAssignments)
+        .where(eq(productionAssignments.id, assignmentId))
+
+      if (assignmentData.length === 0) {
+        return NextResponse.json({ error: "Assignment not found" }, { status: 404 })
+      }
+
+      const ass = assignmentData[0]
+
+      if (ass.status !== "QC_REQUESTED" && (ass.pendingQty || 0) <= 0) {
+        return NextResponse.json({ error: "Assignment tidak tersedia untuk QC" }, { status: 400 })
+      }
+
+      if (!ass.jobOrderId) {
+        return NextResponse.json({ error: "Assignment tidak memiliki Job Order" }, { status: 400 })
+      }
+      const joResult = await db.select().from(jobOrders).where(eq(jobOrders.id, ass.jobOrderId))
+      if (joResult.length === 0) {
+        return NextResponse.json({ error: "Job order tidak ditemukan" }, { status: 404 })
+      }
+      const currentJo = joResult[0]
+
+      const assignedSuccess = Math.min(successQty || 0, ass.pendingQty || 0)
+      const assignedReject = rejectQty || 0
+
+      const newCompletedQty = (ass.completedQty || 0) + assignedSuccess
+      const newRejectedQty = (ass.rejectedQty || 0) + assignedReject
+      const newAcceptedQty = (ass.acceptedQty || 0) + assignedSuccess
+      const newPendingQty = Math.max((ass.pendingQty || 0) - assignedSuccess - assignedReject, 0)
+      const newStatus = newPendingQty === 0 ? "COMPLETED" : ass.status
+
+      await db
+        .update(productionAssignments)
+        .set({
+          completedQty: newCompletedQty,
+          rejectedQty: newRejectedQty,
+          acceptedQty: newAcceptedQty,
+          pendingQty: newPendingQty,
+          status: newStatus,
+          completedAt: newPendingQty === 0 ? new Date() : undefined,
+          updatedAt: new Date(),
+        })
+        .where(eq(productionAssignments.id, assignmentId))
+
+      const joCompletedQty = (currentJo.completedQty || 0) + assignedSuccess
+      const joRejectedQty = (currentJo.rejectedQty || 0) + assignedReject
+
+      await db
+        .update(jobOrders)
+        .set({ completedQty: joCompletedQty, rejectedQty: joRejectedQty, status: "IN_PROGRESS", updatedAt: new Date() })
+        .where(eq(jobOrders.id, currentJo.id))
+
+      const newReport = await db.insert(qcReports).values({
+        jobOrderId: currentJo.id,
+        employeeId: ass.employeeId,
+        successQty: assignedSuccess,
+        rejectQty: assignedReject,
+        notes,
+      }).returning()
+
+      const reportId = newReport[0].id
+
+      // AUTO GAJI BORONGAN TKL - single assignment
+      if (assignedSuccess > 0) {
+        const rate = parseFloat(ass.ratePerUnit?.toString() || "0")
+        const empId = ass.employeeId
+        if (rate > 0 && empId) {
+          const amount = assignedSuccess * rate
+          try {
+            await db.insert(productionSalary).values({
+              kode: generateKode("PJ"),
+              employeeId: empId,
+              assignmentId,
+              totalCompleted: assignedSuccess,
+              totalRejected: 0,
+              totalAccepted: assignedSuccess,
+              ratePerUnit: rate.toString(),
+              totalSalary: amount.toString(),
+              status: "PENDING",
+            })
+          } catch (e) { console.warn("Auto salary insert failed:", e) }
+          try {
+            await db.insert(transactions).values({
+              type: "EXPENSE", category: "TKL", amount,
+              description: `Gaji borongan ${assignedSuccess} pcs × ${rate} - JO ${currentJo.joNumber} - ${assignmentId.slice(0, 6)}`,
+              reference: currentJo.joNumber, jobOrderId: currentJo.id,
+            })
+          } catch (e) { console.warn("Auto TKL tx failed", e) }
+          try {
+            await db.update(jobOrderCosts).set({ actualAmount: sql`${jobOrderCosts.actualAmount} + ${amount}`, updatedAt: new Date() }).where(and(eq(jobOrderCosts.jobOrderId, currentJo.id), eq(jobOrderCosts.costCategoryCode, "TKL")))
+            const check = await db.select().from(jobOrderCosts).where(and(eq(jobOrderCosts.jobOrderId, currentJo.id), eq(jobOrderCosts.costCategoryCode, "TKL")))
+            if (check.length === 0) {
+              await db.insert(jobOrderCosts).values({ jobOrderId: currentJo.id, costCategoryCode: "TKL", costCategoryName: "Upah Jahit Borongan", type: "DIRECT", estimatedAmount: 0, actualAmount: amount })
+            }
+          } catch (e) { console.error("Auto job_order_costs TKL error", e) }
+        }
+      }
+
+      if (assignedSuccess > 0 && ass.employeeId) {
+        const actorId2 = await getActorEmployeeId(request.headers)
+        await db.insert(notifications).values({ employeeId: ass.employeeId, actorId: actorId2, type: "QC_ACCEPTED", title: "Produksi Lolos QC - Klaim Gaji", message: `JO ${currentJo.joNumber}: ${assignedSuccess} Pcs diterima QC. Anda bisa klaim gaji sekarang!`, reference: "QC_REPORT", referenceId: reportId })
+      }
+
+      if (assignedReject > 0) {
+        await db.insert(rejects).values({ jobOrderId: currentJo.id, productId: currentJo.productId, qcReportId: reportId, quantity: assignedReject, unit: "Pcs", reason: rejectReason || "Tidak lolos QC", description: notes, status: "PENDING" })
+        if (employeeId) {
+          const actorId2 = await getActorEmployeeId(request.headers)
+          await db.insert(notifications).values({ employeeId, actorId: actorId2, type: "QC_REJECTED", title: "Produksi Ditolak QC", message: `Job Order ${currentJo.joNumber} memiliki ${assignedReject} Pcs yang ditolak QC.`, reference: "QC_REPORT", referenceId: reportId })
+        }
+        const totalChecked = assignedSuccess + assignedReject
+        const rejectRate = totalChecked > 0 ? assignedReject / totalChecked : 0
+        if (rejectRate > REJECT_RATE_THRESHOLD) {
+          const mtcAmount = assignedReject * MTC_PER_PCS
+          try { await db.insert(transactions).values({ type: "EXPENSE", category: "MTC", amount: mtcAmount, description: `Biaya rework ${assignedReject} pcs reject (${Math.round(rejectRate * 100)}%) - JO ${currentJo.joNumber}`, reference: currentJo.joNumber, jobOrderId: currentJo.id }) } catch (e) { console.warn("Auto MTC tx failed", e) }
+          try {
+            await db.update(jobOrderCosts).set({ actualAmount: sql`${jobOrderCosts.actualAmount} + ${mtcAmount}`, updatedAt: new Date() }).where(and(eq(jobOrderCosts.jobOrderId, currentJo.id), eq(jobOrderCosts.costCategoryCode, "MTC")))
+            const checkMtc = await db.select().from(jobOrderCosts).where(and(eq(jobOrderCosts.jobOrderId, currentJo.id), eq(jobOrderCosts.costCategoryCode, "MTC")))
+            if (checkMtc.length === 0) await db.insert(jobOrderCosts).values({ jobOrderId: currentJo.id, costCategoryCode: "MTC", costCategoryName: "Service & Penyusutan Mesin", type: "INDIRECT", estimatedAmount: 0, actualAmount: mtcAmount, notes: `Auto reject ${Math.round(rejectRate * 100)}%` })
+          } catch (e) { console.warn("Auto job_order_costs MTC error", e) }
+          await sendNotificationToAdmin("QC_REJECTED", `Reject Tinggi ${Math.round(rejectRate * 100)}% - JO ${currentJo.joNumber}`, `Reject ${assignedReject}/${totalChecked} pcs (${Math.round(rejectRate * 100)}%) → auto biaya MTC ${mtcAmount.toLocaleString("id-ID")}`, "QC_REPORT", reportId, { joNumber: currentJo.joNumber, rejectQty: assignedReject, rejectRate }, actorId || undefined)
+        }
+      }
+
+      if (assignedSuccess > 0 && currentJo.productId) {
+        let finishedGoodsWarehouse = await db.select().from(warehouses).where(eq(warehouses.name, "Gudang Bahan Jadi")).limit(1)
+        if (finishedGoodsWarehouse.length === 0) { finishedGoodsWarehouse = await db.select().from(warehouses).limit(1) }
+        if (finishedGoodsWarehouse.length > 0) {
+          const warehouseId = finishedGoodsWarehouse[0].id
+          const productId = currentJo.productId
+          const existingStock = await db.select().from(inventoryStock).where(and(eq(inventoryStock.productId, productId), eq(inventoryStock.warehouseId, warehouseId)))
+          if (existingStock.length === 0) { await db.insert(inventoryStock).values({ productId, warehouseId, quantity: assignedSuccess }) }
+          else { await db.update(inventoryStock).set({ quantity: (existingStock[0].quantity ?? 0) + assignedSuccess, updatedAt: new Date() }).where(eq(inventoryStock.id, existingStock[0].id)) }
+          await db.insert(inventoryMovements).values({ productId, warehouseId, type: "QC_COMPLETE", quantity: assignedSuccess, reference: "QC_REPORT", referenceId: reportId, notes: `QC Selesai - JO ${currentJo.joNumber}` })
+        }
+      }
+
+      if (assignedReject > 0 && currentJo.productId) {
+        let rejectWarehouse = await db.select().from(warehouses).where(eq(warehouses.name, "Gudang Reject")).limit(1)
+        if (rejectWarehouse.length === 0) { rejectWarehouse = await db.select().from(warehouses).limit(1) }
+        if (rejectWarehouse.length > 0) {
+          const warehouseId = rejectWarehouse[0].id
+          const productId = currentJo.productId
+          const existingStock = await db.select().from(inventoryStock).where(and(eq(inventoryStock.productId, productId), eq(inventoryStock.warehouseId, warehouseId)))
+          if (existingStock.length === 0) { await db.insert(inventoryStock).values({ productId, warehouseId, quantity: assignedReject }) }
+          else { await db.update(inventoryStock).set({ quantity: (existingStock[0].quantity ?? 0) + assignedReject, updatedAt: new Date() }).where(eq(inventoryStock.id, existingStock[0].id)) }
+          await db.insert(inventoryMovements).values({ productId, warehouseId, type: "REJECT", quantity: assignedReject, reference: "QC_REPORT", referenceId: reportId, notes: `Reject QC - JO ${currentJo.joNumber}` })
+        }
+      }
+
+      return NextResponse.json({ ...newReport[0], jobOrder: { completedQty: joCompletedQty, rejectedQty: joRejectedQty } }, { status: 201 })
+    }
+
+    // --- Existing distribution path (unchanged) ---
     const newReport = await db.insert(qcReports).values({
       jobOrderId,
       employeeId,

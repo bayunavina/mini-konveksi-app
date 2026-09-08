@@ -280,77 +280,121 @@ export function BarcodeGenerator({
   )
 }
 
+interface BatchItem {
+  sku: string
+  name: string
+  quantity: number
+}
+
+interface GenerateResult {
+  sku: string
+  labelName: string
+  barcode: string
+  image: string
+}
+
 interface BatchBarcodeGeneratorProps {
-  items: { sku: string; name: string }[]
-  onItemsChange?: (items: { sku: string; name: string }[]) => void
+  items?: { sku: string; name: string }[]
   className?: string
 }
 
 export function BatchBarcodeGenerator({
   items: initialItems,
-  onItemsChange,
   className,
 }: BatchBarcodeGeneratorProps) {
-  const [items, setItems] = useState(initialItems || [])
-  const [generatedCodes, setGeneratedCodes] = useState<Map<string, string>>(new Map())
+  const [items, setItems] = useState<BatchItem[]>(
+    (initialItems || []).map((i) => ({ ...i, quantity: 1 }))
+  )
+  const [generated, setGenerated] = useState<GenerateResult[]>([])
+  const [warnings, setWarnings] = useState<string[]>([])
+
+  const duplicateSkus = items.reduce<string[]>((acc, item, _i, arr) => {
+    const key = (item.sku || item.name || "").trim().toUpperCase()
+    if (!key) return acc
+    if (arr.findIndex((x) => (x.sku || x.name || "").trim().toUpperCase() === key) !== _i) {
+      if (!acc.includes(key)) acc.push(key)
+    }
+    return acc
+  }, [])
 
   const handleAddItem = () => {
-    const newItems = [...items, { sku: "", name: "" }]
-    setItems(newItems)
-    onItemsChange?.(newItems)
+    setItems([...items, { sku: "", name: "", quantity: 1 }])
   }
 
   const handleRemoveItem = (index: number) => {
-    const newItems = items.filter((_, i) => i !== index)
-    setItems(newItems)
-    onItemsChange?.(newItems)
+    setItems(items.filter((_, i) => i !== index))
   }
 
-  const handleItemChange = (index: number, field: "sku" | "name", value: string) => {
+  const handleItemChange = (index: number, field: keyof BatchItem, value: string | number) => {
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
     setItems(newItems)
-    onItemsChange?.(newItems)
   }
 
   const handleGenerateAll = async () => {
-    const codes = new Map<string, string>()
-    
+    const results: GenerateResult[] = []
+    const newWarnings: string[] = []
+    const counters = new Map<string, number>()
+    const seenBarcodes = new Set<string>()
+
     for (const item of items) {
-      if (item.sku) {
+      if (!item.name) continue
+      const qty = Math.max(1, Math.min(Number(item.quantity) || 1, 10000))
+      const key = (item.sku || item.name).trim().toUpperCase()
+      const currentSeq = (counters.get(key) ?? 0) + 1
+
+      for (let i = 0; i < qty; i++) {
+        const seq = currentSeq + i
+        const suffix = String(seq).padStart(4, "0")
+        const barcodeText = item.sku ? `${item.sku}-${suffix}` : `${item.name}-${suffix}`
+        const labelName = `${item.name}-${suffix}`
+
+        if (seenBarcodes.has(barcodeText)) {
+          newWarnings.push(`Barcode duplikat dilewati: ${barcodeText}`)
+          continue
+        }
+        seenBarcodes.add(barcodeText)
+
+        let image = ""
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const bwipjs = require("bwip-js")
           const canvas = document.createElement("canvas")
-          
           bwipjs.toCanvas(canvas, {
             bcid: "code128",
-            text: item.sku,
+            text: barcodeText,
             scale: 3,
             height: 10,
             includetext: true,
             textxalign: "center",
           })
-          
-          codes.set(item.sku, canvas.toDataURL("image/png"))
+          image = canvas.toDataURL("image/png")
         } catch (err) {
-          console.error(`Failed to generate barcode for ${item.sku}:`, err)
+          console.error(`Failed to generate barcode for ${barcodeText}:`, err)
         }
+        results.push({ sku: item.sku, labelName, barcode: barcodeText, image })
       }
+      counters.set(key, currentSeq + qty - 1)
     }
-    
-    setGeneratedCodes(codes)
+
+    if (duplicateSkus.length > 0) {
+      newWarnings.push(
+        `SKU duplikat dalam daftar: ${duplicateSkus.join(", ")}. Nomor urut di-reset per-SKU.`
+      )
+    }
+    setWarnings(newWarnings)
+    setGenerated(results)
   }
 
   const handlePrintAll = () => {
     const printWindow = window.open("", "_blank")
     if (printWindow) {
-      const codesHtml = items
-        .filter((item) => generatedCodes.has(item.sku))
-        .map((item) => `
+      const codesHtml = generated
+        .map((g) => `
           <div class="barcode-item">
-            <img src="${generatedCodes.get(item.sku)}" alt="${item.sku}" />
-            <div class="barcode-name">${item.name}</div>
+            <img src="${g.image}" alt="${g.barcode}" />
+            ${g.sku ? `<div class="barcode-sku">${g.sku}</div>` : ""}
+            <div class="barcode-name">${g.labelName}</div>
           </div>
         `)
         .join("")
@@ -378,6 +422,12 @@ export function BatchBarcodeGenerator({
                 margin-top: 10px;
                 font-size: 12px;
               }
+              .barcode-sku {
+                margin-top: 8px;
+                font-size: 12px;
+                font-weight: bold;
+                font-family: monospace;
+              }
               @media print {
                 body { padding: 0; }
                 .barcode-item { break-inside: avoid; }
@@ -404,7 +454,10 @@ export function BatchBarcodeGenerator({
     <Card className={className}>
       <CardHeader>
         <CardTitle>Batch Generate Barcode</CardTitle>
-        <CardDescription>Generate multiple barcodes sekaligus</CardDescription>
+        <CardDescription>
+          Generate banyak barcode sekaligus. Format: <code className="font-mono">SKU-NamaProduk</code> + nomor urut.
+          Nomor urut di-reset per-SKU (mis. Celana PDL-0001, -0002, dst. untuk qty 3, lalu Kaos-0001 dst.).
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -423,6 +476,14 @@ export function BatchBarcodeGenerator({
                   placeholder="Nama Produk"
                   className="flex-1"
                 />
+                <Input
+                  type="number"
+                  min={1}
+                  value={item.quantity}
+                  onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+                  placeholder="Qty"
+                  className="w-20"
+                />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -438,29 +499,55 @@ export function BatchBarcodeGenerator({
             <Button variant="outline" onClick={handleAddItem}>
               + Tambah Item
             </Button>
-            <Button onClick={handleGenerateAll}>
-              Generate All
+            <Button
+              onClick={handleGenerateAll}
+              className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80"
+            >
+              Generate ({generated.length || items.reduce((s, i) => s + (Number(i.quantity) || 1), 0)})
             </Button>
           </div>
 
-          {generatedCodes.size > 0 && (
+          {warnings.length > 0 && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+              <p className="font-medium mb-1">Peringatan:</p>
+              <ul className="list-disc pl-4 space-y-0.5">
+                {warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {duplicateSkus.length > 0 && generated.length === 0 && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+              <p className="font-medium">
+                SKU duplikat terdeteksi: {duplicateSkus.join(", ")}.
+                Nomor urut akan di-reset per-SKU saat generate.
+              </p>
+            </div>
+          )}
+
+          {generated.length > 0 && (
             <>
               <div className="grid grid-cols-3 gap-4 mt-4">
-                {items
-                  .filter((item) => generatedCodes.has(item.sku))
-                  .map((item, index) => (
-                    <div key={`${item.sku}-${index}`} className="text-center border rounded p-2">
+                {generated.map((g, index) => (
+                  <div key={index} className="text-center border rounded p-2">
+                    {g.image ? (
                       <img
-                        src={generatedCodes.get(item.sku)}
-                        alt={item.sku}
+                        src={g.image}
+                        alt={g.barcode}
                         className="mx-auto"
                       />
-                      <p className="text-xs mt-1">{item.name}</p>
-                    </div>
-                  ))}
+                    ) : (
+                      <p className="text-xs">{g.barcode}</p>
+                    )}
+                    {g.sku && <p className="text-xs font-mono mt-1">{g.sku}</p>}
+                    <p className="text-xs">{g.labelName}</p>
+                  </div>
+                ))}
               </div>
               <Button onClick={handlePrintAll} className="w-full mt-4">
-                Print All Barcodes
+                Print All Barcodes ({generated.length})
               </Button>
             </>
           )}
