@@ -119,6 +119,7 @@ export default function OutgoingPage() {
   const [photos, setPhotos] = useState<{ id: string; file: File; preview: string }[]>([])
   const [creating, setCreating] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const { data: allTransfers, loading: transfersLoading, refetch } = useFetch<Transfer[]>("/api/transfers")
   const { data: warehouses, loading: warehousesLoading } = useFetch<Warehouse[]>("/api/warehouses")
@@ -506,12 +507,26 @@ export default function OutgoingPage() {
                             </div>
                           ))}
                           {photos.length < MAX_PHOTO_UPLOAD && (
-                            <button
-                              onClick={() => fileInputRef.current?.click()}
-                              className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                            >
-                              <CameraIcon className="h-5 w-5" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => cameraInputRef.current?.click()}
+                                className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                                aria-label="Ambil foto"
+                                title="Ambil foto"
+                              >
+                                <CameraIcon className="h-5 w-5" />
+                              </button>
+                              <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                                aria-label="Upload foto"
+                                title="Upload foto"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                                </svg>
+                              </button>
+                            </>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground text-center">
@@ -522,6 +537,14 @@ export default function OutgoingPage() {
                           type="file"
                           accept="image/*"
                           multiple
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                        <input
+                          ref={cameraInputRef}
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
                           onChange={handlePhotoUpload}
                           className="hidden"
                         />
