@@ -26,7 +26,37 @@ export async function getSessionFromHeaders(headers: Headers) {
   }
 }
 
-export type UserRole = "ADMIN" | "QC" | "SUPERVISOR" | "KARYAWAN"
+export async function getActorEmployeeId(headers: Headers): Promise<string | null> {
+  try {
+    const session = await getSessionFromHeaders(headers)
+    if (!session?.user) return null
+
+    if (session.user.id) {
+      const byUserId = await db
+        .select({ id: employees.id })
+        .from(employees)
+        .where(eq(employees.userId, session.user.id))
+        .limit(1)
+      if (byUserId.length > 0) return byUserId[0].id
+    }
+
+    if (session.user.email) {
+      const byEmail = await db
+        .select({ id: employees.id })
+        .from(employees)
+        .where(eq(employees.email, session.user.email.toLowerCase()))
+        .limit(1)
+      if (byEmail.length > 0) return byEmail[0].id
+    }
+
+    return null
+  } catch (error) {
+    console.error("Error resolving actor employee:", error)
+    return null
+  }
+}
+
+export type UserRole = "ADMIN" | "QC" | "SUPERVISOR" | "KARYAWAN" | "GUDANG"
 
 export const QC_ADMIN_ROLES: UserRole[] = ["ADMIN", "QC"]
 

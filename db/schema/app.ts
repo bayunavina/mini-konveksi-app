@@ -63,6 +63,7 @@ export const materialLots = pgTable("material_lots", {
     status: text("status").default("AVAILABLE"),
     isReadyForProduction: boolean("is_ready_for_production").default(false),
     notes: text("notes"),
+    supplier: text("supplier"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 })
@@ -199,6 +200,16 @@ export const transferItems = pgTable("transfer_items", {
     skuName: text("sku_name"),
     quantity: integer("quantity").notNull(),
     unit: text("unit").default("Pcs"),
+    createdAt: timestamp("created_at").defaultNow(),
+})
+
+// Transfer Photos - Documentation photos for transfers
+export const transferPhotos = pgTable("transfer_photos", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    transferId: uuid("transfer_id").references(() => transfers.id, { onDelete: "cascade" }).notNull(),
+    photoData: text("photo_data").notNull(),
+    label: text("label").notNull(),
+    timestamp: timestamp("timestamp").defaultNow(),
     createdAt: timestamp("created_at").defaultNow(),
 })
 
@@ -407,6 +418,7 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
 export const notifications = pgTable("notifications", {
     id: uuid("id").primaryKey().defaultRandom(),
     employeeId: uuid("employee_id").references(() => employees.id),
+    actorId: uuid("actor_id").references(() => employees.id),
     type: text("type").notNull(),
     title: text("title").notNull(),
     message: text("message").notNull(),

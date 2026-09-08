@@ -62,8 +62,20 @@ interface MaterialLot {
   usedQty: number
   status: string
   notes?: string
+  supplier?: string
   createdAt: string
   product?: LotProduct
+}
+
+interface SummaryLot {
+  id: string
+  productId: string
+  lotNumber?: string | null
+  quantity: number
+  initialQty: number
+  productSku?: string | null
+  productName?: string | null
+  remark?: string | null
 }
 
 interface ByProduct {
@@ -85,6 +97,7 @@ interface Summary {
     itemCount: number
   }
   byProduct: ByProduct[]
+  lots: SummaryLot[]
 }
 
 export default function MaterialsPage() {
@@ -102,6 +115,7 @@ export default function MaterialsPage() {
   const [formData, setFormData] = useState({
     quantity: "",
     notes: "",
+    supplier: "",
   })
   const [scanQrInput, setScanQrInput] = useState("")
   const [produceQty, setProduceQty] = useState("")
@@ -113,6 +127,8 @@ export default function MaterialsPage() {
   const [editingLotId, setEditingLotId] = useState<string | null>(null)
   const [editingRemark, setEditingRemark] = useState("")
   const [savingRemark, setSavingRemark] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState("")
+  const [savingSupplier, setSavingSupplier] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scannerRef = useRef<Html5Qrcode | null>(null)
 
@@ -312,6 +328,7 @@ export default function MaterialsPage() {
           productId: selectedProduct,
           quantity: parseInt(formData.quantity),
           notes: formData.notes,
+          supplier: formData.supplier,
         }),
       })
 
@@ -319,7 +336,7 @@ export default function MaterialsPage() {
         const data = await response.json()
         toast.success(`Lot ${data.lotNumber} berhasil dibuat. QR: ${data.qrCode}`)
         setAddLotDialogOpen(false)
-        setFormData({ quantity: "", notes: "" })
+        setFormData({ quantity: "", notes: "", supplier: "" })
         setSelectedProduct("")
         refetchAll()
       } else {
@@ -365,6 +382,36 @@ export default function MaterialsPage() {
   const handleCancelEditRemark = () => {
     setEditingLotId(null)
     setEditingRemark("")
+    setEditingSupplier("")
+  }
+
+  const handleStartEditSupplier = (lot: MaterialLot) => {
+    setEditingLotId(lot.id)
+    setEditingSupplier(lot.supplier || "")
+  }
+
+  const handleSaveSupplier = async (lotId: string) => {
+    setSavingSupplier(true)
+    try {
+      const response = await fetch(`/api/material-lots/${lotId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ supplier: editingSupplier }),
+      })
+
+      if (response.ok) {
+        toast.success("Supplier berhasil disimpan")
+        setEditingLotId(null)
+        refetchLots()
+      } else {
+        toast.error("Gagal menyimpan supplier")
+      }
+    } catch (error) {
+      console.error("Error saving supplier:", error)
+      toast.error("Terjadi kesalahan")
+    } finally {
+      setSavingSupplier(false)
+    }
   }
 
   const exportToExcel = () => {
@@ -373,15 +420,29 @@ export default function MaterialsPage() {
       return
     }
 
-    const headers = ["Kode Bahan Baku", "Produk", "Awal", "Sisa", "Terpakai", "Remark"]
-    const rows = summaryData.byProduct.map((item) => [
-      item.productSku,
-      item.productName,
-      item.totalInitial,
-      item.totalStock,
-      item.totalUsed,
-      item.remarks?.join("; ") || "",
-    ])
+    // Group lots by product for detailed export
+    const lotsByProduct: Record<string, SummaryLot[]> = {}
+    ;(summaryData.lots || []).forEach((lot) => {
+      if (!lotsByProduct[lot.productId]) {
+        lotsByProduct[lot.productId] = []
+      }
+      lotsByProduct[lot.productId].push(lot)
+    })
+
+    const headers = ["Kode Bahan Baku", "Produk", "Lot Number", "Awal", "Sisa", "Terpakai", "Remark"]
+    const rows = summaryData.byProduct.map((item) => {
+      const productLots = lotsByProduct[item.productId] || []
+      const lotNum = productLots.length > 0 ? productLots[0].lotNumber || productLots[0].id : ""
+      return [
+        item.productSku,
+        item.productName,
+        lotNum,
+        item.totalInitial,
+        item.totalStock,
+        item.totalUsed,
+        item.remarks?.join("; ") || "",
+      ]
+    })
 
     const csvContent = [
       headers.join(","),
@@ -408,6 +469,15 @@ export default function MaterialsPage() {
       toast.error("Tidak ada data untuk di-print")
       return
     }
+
+    // Group lots by product for print
+    const lotsByProduct: Record<string, { lotNumber: string }[]> = {}
+    ;(summaryData.lots || []).forEach((lot) => {
+      if (!lotsByProduct[lot.productId]) {
+        lotsByProduct[lot.productId] = []
+      }
+      lotsByProduct[lot.productId].push({ lotNumber: lot.lotNumber || lot.id })
+    })
 
     const printWindow = window.open("", "_blank")
     if (!printWindow) {
@@ -437,6 +507,7 @@ export default function MaterialsPage() {
               <tr>
                 <th>Kode</th>
                 <th>Produk</th>
+                <th style="text-align:center">Lot</th>
                 <th style="text-align:center">Awal</th>
                 <th style="text-align:center">Sisa</th>
                 <th style="text-align:center">Terpakai</th>
@@ -444,16 +515,20 @@ export default function MaterialsPage() {
               </tr>
             </thead>
             <tbody>
-              ${summaryData.byProduct.map((item) => `
+              ${summaryData.byProduct.map((item) => {
+                const productLots = lotsByProduct[item.productId] || []
+                const lotNum = productLots.length > 0 ? productLots[0].lotNumber : ""
+                return `
                 <tr>
                   <td>${item.productSku}</td>
                   <td>${item.productName}</td>
+                  <td style="text-align:center">${lotNum}</td>
                   <td style="text-align:center">${item.totalInitial}</td>
                   <td style="text-align:center">${item.totalStock}</td>
                   <td style="text-align:center">${item.totalUsed || "-"}</td>
                   <td>${item.remarks?.join("; ") || "-"}</td>
                 </tr>
-              `).join("")}
+              `}).join("")}
             </tbody>
           </table>
           <script>window.onload = function() { window.print(); window.close(); }</script>
@@ -521,8 +596,21 @@ export default function MaterialsPage() {
     if (!selectedLot || !produceQty) return
 
     const qty = parseInt(produceQty)
+    const usedQty = (selectedLot.initialQty || 0) - (selectedLot.quantity || 0)
+
     if (qty > selectedLot.quantity) {
-      toast.error(`Stok tidak mencukupi. Available: ${selectedLot.quantity}`)
+      toast.error(
+        `Stok tidak mencukupi untuk Lot ${selectedLot.lotNumber}.
+Tersedia: ${selectedLot.quantity} Pcs.
+Request: ${qty} Pcs.
+Sisa di lot: ${selectedLot.quantity - qty} Pcs (jika produksi parcial)
+Jumlah terpakai total: ${usedQty} Pcs dari ${selectedLot.initialQty} Pcs awal`
+      )
+      return
+    }
+
+    if (qty <= 0) {
+      toast.error("Quantity produksi harus lebih dari 0")
       return
     }
 
@@ -608,9 +696,9 @@ export default function MaterialsPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <PageHeader
+<PageHeader
         title="Bahan Baku"
-        description="Kelola stok bahan baku dengan QR Code"
+        description="Kelola stok bahan baku dengan QR Code. Setiap QR kode mengaitkan lot bahan baku spesifik ke produk."
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => router.push("/dashboard/inventory")}>
@@ -749,6 +837,7 @@ export default function MaterialsPage() {
                   <TableHead className="w-24 text-center">Sisa</TableHead>
                   <TableHead className="w-24 text-center">Terpakai</TableHead>
                   <TableHead className="w-24 text-center">Status</TableHead>
+                  <TableHead>Supplier</TableHead>
                   <TableHead>Remark</TableHead>
                   <TableHead className="w-24 text-center">Aksi</TableHead>
                 </TableRow>
@@ -775,6 +864,47 @@ export default function MaterialsPage() {
                       {usedQty > 0 ? usedQty : "-"}
                     </TableCell>
                     <TableCell className="py-2 text-center">{getStatusBadge(lot.status)}</TableCell>
+                    <TableCell className="py-2">
+                      {editingLotId === lot.id ? (
+                        <div className="flex gap-1 items-center">
+                          <Input
+                            value={editingSupplier}
+                            onChange={(e) => setEditingSupplier(e.target.value)}
+                            placeholder="Ketik supplier..."
+                            className="text-sm"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveSupplier(lot.id)
+                              if (e.key === "Escape") handleCancelEditRemark()
+                            }}
+                          />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleSaveSupplier(lot.id)}
+                            disabled={savingSupplier}
+                          >
+                            <CheckIcon className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={handleCancelEditRemark}
+                          >
+                            <XMarkIcon className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div
+                          className="cursor-pointer hover:bg-muted rounded px-2 py-1 min-h-[32px] flex items-center"
+                          onClick={() => handleStartEditSupplier(lot)}
+                        >
+                          <span className={`text-sm ${lot.supplier ? "" : "text-muted-foreground italic"}`}>
+                            {lot.supplier || "Klik untuk edit..."}
+                          </span>
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="py-2">
                       {editingLotId === lot.id ? (
                         <div className="flex gap-1 items-center">
@@ -956,6 +1086,14 @@ export default function MaterialsPage() {
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Supplier</label>
+              <Input
+                placeholder="Nama supplier bahan baku (opsional)"
+                value={formData.supplier}
+                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddLotDialogOpen(false)}>
@@ -1006,6 +1144,10 @@ export default function MaterialsPage() {
             {scanMode === "manual" && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Cari (kode bahan, nomor lot, atau QR)</label>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Scan QR code pada kemasan → sistem akan memilih lot otomatis. 
+                  Atau masukkan kode lot (BB-...) atau kode produk (SKU-...)
+                </p>
                 <Input
                   placeholder="Contoh: KPDL-H-M atau BB-ABC123"
                   value={scanQrInput}
@@ -1098,19 +1240,32 @@ export default function MaterialsPage() {
           {selectedLot && (
             <div className="space-y-4 py-4">
               <div className="bg-muted p-4 rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Produk:</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">Lot:</span>
+                  <Badge className="bg-blue-100 text-blue-800 text-xs font-mono">{selectedLot.lotNumber}</Badge>
                   <span className="font-medium">{selectedLot.product?.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Kode:</span>
-                  <span className="font-mono font-medium">{selectedLot.lotNumber}</span>
+                  <span className="text-sm text-muted-foreground">Kode (SKU):</span>
+                  <span className="font-mono font-medium text-sm">{selectedLot.product?.sku || "-"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Stok Tersedia:</span>
                   <span className="font-bold text-green-600">{selectedLot.quantity} Pcs</span>
                 </div>
               </div>
+              {selectedLot.initialQty && (
+                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                  <span>Dari:</span>
+                  <span className="font-mono">{selectedLot.initialQty} Pcs</span>
+                </div>
+              )}
+              {((selectedLot.initialQty || 0) - (selectedLot.quantity || 0)) > 0 && (
+                <div className="flex justify-between text-orange-600 text-xs font-medium mt-1">
+                  <span>Terpakai:</span>
+                  <span>{(selectedLot.initialQty || 0) - (selectedLot.quantity || 0)} Pcs</span>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Quantity Produksi *</label>
                 <FormattedNumberInput

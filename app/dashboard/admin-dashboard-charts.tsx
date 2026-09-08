@@ -441,22 +441,39 @@ export function useTopProducedMaterialsData(year: number): {
       try {
         setLoading(true)
         const response = await fetch(`/api/production/from-materials?year=${year}`)
-        if (!response.ok) throw new Error("Failed to fetch")
+        if (!response.ok) {
+          const fallback: TopProducedMaterialsData[] = MONTHS.map((month) => ({
+            month,
+            "BB-COTTON": 0,
+            "BB-POLY": 0,
+            "BB-DENIM": 0,
+            "BB-SILK": 0,
+            "BB-WOOL": 0,
+          }))
+          setData(fallback)
+          setTopMaterials([
+            { code: "BB-COTTON", name: "Cotton", totalProduced: 0 },
+            { code: "BB-POLY", name: "Polyester", totalProduced: 0 },
+            { code: "BB-DENIM", name: "Denim", totalProduced: 0 },
+            { code: "BB-SILK", name: "Sutera", totalProduced: 0 },
+            { code: "BB-WOOL", name: "Wol", totalProduced: 0 },
+          ])
+          return
+        }
 
         const result = await response.json()
         setData(result.data)
         setTopMaterials(result.topMaterials)
-      } catch (error) {
-        console.error("Error fetching top produced materials data:", error)
-        const mockData: TopProducedMaterialsData[] = MONTHS.map((month) => ({
+      } catch {
+        const fallback: TopProducedMaterialsData[] = MONTHS.map((month) => ({
           month,
-          "BB-COTTON": Math.floor(Math.random() * 100),
-          "BB-POLY": Math.floor(Math.random() * 100),
-          "BB-DENIM": Math.floor(Math.random() * 100),
-          "BB-SILK": Math.floor(Math.random() * 100),
-          "BB-WOOL": Math.floor(Math.random() * 100),
+          "BB-COTTON": 0,
+          "BB-POLY": 0,
+          "BB-DENIM": 0,
+          "BB-SILK": 0,
+          "BB-WOOL": 0,
         }))
-        setData(mockData)
+        setData(fallback)
         setTopMaterials([
           { code: "BB-COTTON", name: "Cotton", totalProduced: 0 },
           { code: "BB-POLY", name: "Polyester", totalProduced: 0 },
@@ -740,7 +757,16 @@ export function useFinanceChartData(year: number): FinanceData[] {
         const endDate = `${year}-12-31`
         
         const response = await fetch(`/api/transactions?startDate=${startDate}&endDate=${endDate}`)
-        if (!response.ok) throw new Error("Failed to fetch")
+        if (!response.ok) {
+          const fallback: FinanceData[] = MONTHS.map((month) => ({
+            month,
+            saldo: 0,
+            pemasukan: 0,
+            pengeluaran: 0,
+          }))
+          setData(fallback)
+          return
+        }
         
         const transactions: Transaction[] = await response.json()
         
@@ -777,15 +803,14 @@ export function useFinanceChartData(year: number): FinanceData[] {
         })
         
         setData(cumulativeData)
-      } catch (error) {
-        console.error("Error fetching finance data:", error)
-        const mockData: FinanceData[] = MONTHS.map((month, index) => ({
+      } catch {
+        const fallback: FinanceData[] = MONTHS.map((month) => ({
           month,
-          saldo: 10000000 + (index * 500000),
-          pemasukan: 2000000 + (index * 200000),
-          pengeluaran: 1500000 + (index * 150000),
+          saldo: 0,
+          pemasukan: 0,
+          pengeluaran: 0,
         }))
-        setData(mockData)
+        setData(fallback)
       }
     }
     
@@ -848,7 +873,18 @@ export function useInventoryChartData(year: number): {
       try {
         setLoading(true)
         const response = await fetch("/api/transfers")
-        if (!response.ok) throw new Error("Failed to fetch")
+        if (!response.ok) {
+          // API unavailable or error — use fallback zero data
+          const fallback: InventoryChartData[] = MONTHS.map((month, index) => ({
+            month,
+            monthNum: index + 1,
+            barangMasuk: 0,
+            barangKeluar: 0,
+          }))
+          setData(fallback)
+          setSummary({ totalBarangMasuk: 0, totalBarangKeluar: 0, currentStock: 0 })
+          return
+        }
         
         const transfers: TransferData[] = await response.json()
         
@@ -883,15 +919,14 @@ export function useInventoryChartData(year: number): {
           totalBarangKeluar,
           currentStock: totalBarangMasuk - totalBarangKeluar,
         })
-      } catch (error) {
-        console.error("Error fetching transfer data:", error)
-        const mockData: InventoryChartData[] = MONTHS.map((month, index) => ({
+      } catch {
+        const fallback: InventoryChartData[] = MONTHS.map((month, index) => ({
           month,
           monthNum: index + 1,
           barangMasuk: 0,
           barangKeluar: 0,
         }))
-        setData(mockData)
+        setData(fallback)
         setSummary({
           totalBarangMasuk: 0,
           totalBarangKeluar: 0,
@@ -1108,7 +1143,19 @@ export function useRawMaterialChartData(year: number): {
       try {
         setLoading(true)
         const response = await fetch("/api/material-lots")
-        if (!response.ok) throw new Error("Failed to fetch")
+        if (!response.ok) {
+          const fallback: RawMaterialChartData[] = MONTHS.map((monthName, index) => ({
+            month: monthName,
+            monthNum: index + 1,
+            stokAwal: 0,
+            masuk: 0,
+            terpakai: 0,
+            sisa: 0,
+          }))
+          setData(fallback)
+          setSummary({ totalStok: 0, totalMasuk: 0, totalTerpakai: 0, totalSisa: 0 })
+          return
+        }
         
         const lots: MaterialLot[] = await response.json()
         
@@ -1144,9 +1191,8 @@ export function useRawMaterialChartData(year: number): {
           totalTerpakai,
           totalSisa,
         })
-      } catch (error) {
-        console.error("Error fetching raw material data:", error)
-        const mockData: RawMaterialChartData[] = MONTHS.map((month, index) => ({
+      } catch {
+        const fallback: RawMaterialChartData[] = MONTHS.map((month, index) => ({
           month,
           monthNum: index + 1,
           stokAwal: 0,
@@ -1154,7 +1200,7 @@ export function useRawMaterialChartData(year: number): {
           terpakai: 0,
           sisa: 0,
         }))
-        setData(mockData)
+        setData(fallback)
         setSummary({
           totalStok: 0,
           totalMasuk: 0,

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { ArrowDownTrayIcon, PrinterIcon, ClipboardIcon, CheckIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
+import { parseMaterialLotString } from "@/lib/qr-payload"
 
 interface QRCodeGeneratorProps {
   value: string
@@ -255,13 +256,37 @@ interface MaterialQRData {
   poNumber?: string
 }
 
+function sanitizeValue(value: string): string {
+  return value.replace(/:/g, " ").replace(/-/g, " ")
+}
+
 export function generateMaterialQRData(data: MaterialQRData): string {
-  return JSON.stringify(data)
+  const { lotId, sku, quantity, unit, supplier, dateIn } = data
+  const sanitizedSupplier = sanitizeValue(supplier || "")
+  return `MATERIAL_LOT:lotId-${lotId}:sku-${sku}:${quantity}-${unit}:Supplier-${sanitizedSupplier}:DateIn-${dateIn || new Date().toISOString().split("T")[0]}`
 }
 
 export function parseMaterialQRData(qrString: string): MaterialQRData | null {
+  const trimmed = qrString.trim()
+
+  // Try new string format: MATERIAL_LOT:lotId-<id>:sku-<sku>:<qty>-<unit>:Supplier-<supplier>:DateIn-<date>
+  const materialLotParsed = parseMaterialLotString(trimmed)
+  if (materialLotParsed) {
+    return {
+      type: "MATERIAL_LOT",
+      lotId: materialLotParsed.lotId,
+      sku: materialLotParsed.sku,
+      quantity: materialLotParsed.quantity,
+      unit: materialLotParsed.unit,
+      supplier: materialLotParsed.supplier,
+      dateIn: materialLotParsed.dateIn,
+      poNumber: undefined,
+    }
+  }
+
+  // Fall back to JSON parse
   try {
-    const data = JSON.parse(qrString)
+    const data = JSON.parse(trimmed)
     if (data.type === "MATERIAL_LOT") {
       return data as MaterialQRData
     }

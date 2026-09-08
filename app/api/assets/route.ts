@@ -29,8 +29,11 @@ export async function POST(request: NextRequest) {
     }).returning()
 
     return NextResponse.json(newAsset[0], { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating asset:", error)
+    if (String(error?.message || "").includes("duplicate") || String(error?.cause?.message || "").includes("duplicate") || error?.code === "23505") {
+      return NextResponse.json({ error: "Kode aset sudah digunakan. Silakan gunakan kode yang berbeda." }, { status: 409 })
+    }
     return NextResponse.json({ error: "Failed to create asset" }, { status: 500 })
   }
 }

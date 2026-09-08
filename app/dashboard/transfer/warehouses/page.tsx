@@ -116,7 +116,8 @@ export default function WarehousesPage() {
         setFormData({ code: "", name: "", address: "" })
         refetch()
       } else {
-        toast.error("Gagal menambahkan gudang")
+        const data = await response.json().catch(() => null)
+        toast.error(data?.error || "Gagal menambahkan gudang")
       }
     } catch (error) {
       console.error("Error creating warehouse:", error)
@@ -163,7 +164,8 @@ export default function WarehousesPage() {
         setSelectedWarehouse(null)
         refetch()
       } else {
-        toast.error("Gagal memperbarui gudang")
+        const data = await response.json().catch(() => null)
+        toast.error(data?.error || "Gagal memperbarui gudang")
       }
     } catch (error) {
       console.error("Error updating warehouse:", error)

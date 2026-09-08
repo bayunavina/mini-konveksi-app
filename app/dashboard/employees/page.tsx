@@ -35,13 +35,9 @@ import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
 import {
   ArrowPathIcon,
-  CheckIcon,
-  ExclamationTriangleIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon,
-  PrinterIcon,
-  XMarkIcon,
   PlusIcon,
   UsersIcon,
   ArrowRightIcon,
@@ -56,6 +52,8 @@ import { ROLE_LABELS } from "@/lib/constants"
 
 const isAdminRole = (role?: string | null) => role === "ADMIN" || role === "SUPERADMIN"
 import { toast } from "sonner"
+
+const SYSTEM_ADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 
 interface Employee {
@@ -526,6 +524,7 @@ export default function EmployeesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Semua Role</SelectItem>
+                  <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
                   <SelectItem value="KARYAWAN">Karyawan</SelectItem>
                   <SelectItem value="QC">QC</SelectItem>
                   <SelectItem value="GUDANG">Gudang</SelectItem>
@@ -914,10 +913,12 @@ export default function EmployeesPage() {
                   onChange={(e) => handleRoleChange(e.target.value)}
                   className="w-full border rounded-md px-3 py-2"
                 >
-                  <option value="KARYAWAN">Karyawan</option>
-                  <option value="QC">QC</option>
-                  <option value="GUDANG">Gudang</option>
-                  <option value="ADMIN">Admin</option>
+                  {(selectedEmployee?.email === SYSTEM_ADMIN_EMAIL
+                    ? ["SUPERADMIN", "KARYAWAN", "QC", "GUDANG", "ADMIN"]
+                    : ["KARYAWAN", "QC", "GUDANG", "ADMIN"]
+                  ).map(role => (
+                    <option key={role} value={role}>{ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role}</option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-2">

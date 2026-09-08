@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -30,9 +31,11 @@ import {
   EyeIcon,
   TruckIcon,
   TruckIcon as TruckIconSolid,
+  CameraIcon,
 } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
 import { formatDate, formatDateLong } from "@/lib/utils"
+import { PhotoGallery } from "@/components/shared/photo-gallery"
 
 interface Transfer {
   id: string
@@ -44,6 +47,16 @@ interface Transfer {
   toWarehouseId?: string
   notes?: string
   items?: TransferItem[]
+  photos?: TransferPhoto[]
+}
+
+interface TransferPhoto {
+  id: string
+  transferId: string
+  photoData: string
+  label: string
+  timestamp: string
+  createdAt: string
 }
 
 interface TransferItem {
@@ -88,6 +101,7 @@ export function GudangDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState<"incoming" | "outgoing" | "all">("incoming")
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [photosDialogOpen, setPhotosDialogOpen] = useState(false)
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null)
 
   const { data: transfers, loading: transfersLoading } = useFetch<Transfer[]>("/api/transfers")
@@ -115,6 +129,11 @@ export function GudangDashboard() {
   const handleViewTransfer = (transfer: Transfer) => {
     setSelectedTransfer(transfer)
     setDialogOpen(true)
+  }
+
+  const handleViewPhotos = (transfer: Transfer) => {
+    setSelectedTransfer(transfer)
+    setPhotosDialogOpen(true)
   }
 
   const getTotalItems = (items?: TransferItem[]) => {
@@ -279,6 +298,7 @@ export function GudangDashboard() {
                     <TableHead className="p-2 text-[10px] sm:text-xs hidden md:table-cell">Tanggal</TableHead>
                     <TableHead className="p-2 text-[10px] sm:text-xs">Tipe</TableHead>
                     <TableHead className="p-2 text-[10px] sm:text-xs hidden sm:table-cell">Items</TableHead>
+                    <TableHead className="p-2 text-[10px] sm:text-xs hidden md:table-cell">Foto</TableHead>
                     <TableHead className="p-2 text-[10px] sm:text-xs">Total Qty</TableHead>
                     <TableHead className="p-2 text-[10px] sm:text-xs">Status</TableHead>
                     <TableHead className="text-center p-2 text-[10px] sm:text-xs">Aksi</TableHead>
@@ -297,6 +317,13 @@ export function GudangDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-[10px] sm:text-xs p-2 whitespace-nowrap hidden sm:table-cell">{transfer.items?.length || 0} item</TableCell>
+                      <TableCell className="text-center p-2">
+                        {transfer.photos && transfer.photos.length > 0 ? (
+                          <CameraIcon className="h-3.5 w-3.5 mx-auto text-[var(--chart-blue)]" />
+                        ) : (
+                          <CameraIcon className="h-3.5 w-3.5 mx-auto opacity-30" />
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium p-2 text-[10px] sm:text-xs">{getTotalItems(transfer.items)}</TableCell>
                       <TableCell className="p-2">
                         <Badge className={`${STATUS_COLORS[transfer.status] || "bg-muted"} font-medium whitespace-nowrap text-[10px] sm:text-xs`}>
@@ -306,6 +333,9 @@ export function GudangDashboard() {
                       <TableCell className="text-center p-2">
                         <Button variant="ghost" size="icon-lg" onClick={() => handleViewTransfer(transfer)}>
                           <EyeIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon-lg" onClick={() => handleViewPhotos(transfer)}>
+                          <CameraIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -433,6 +463,31 @@ export function GudangDashboard() {
                 </div>
               )}
 
+              {selectedTransfer.photos && selectedTransfer.photos.length > 0 && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium">Foto Dokumentasi</p>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setDialogOpen(false)
+                      setPhotosDialogOpen(true)
+                    }}>
+                      <CameraIcon className="h-3.5 w-3.5 mr-1.5" />
+                      Lihat Foto ({selectedTransfer.photos.length})
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedTransfer.photos.slice(0, 6).map((photo) => (
+                      <img
+                        key={photo.id}
+                        src={photo.photoData}
+                        alt={photo.label}
+                        className="w-full h-16 object-cover rounded"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
                   Tutup
@@ -446,6 +501,25 @@ export function GudangDashboard() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={photosDialogOpen} onOpenChange={setPhotosDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Foto Dokumentasi</DialogTitle>
+            <DialogDescription>
+              {selectedTransfer ? `Foto untuk transfer ${selectedTransfer.transferNumber}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTransfer && (
+            <PhotoGallery transferId={selectedTransfer.id} readOnly={false} />
+          )}
+          <div className="flex justify-end pt-2">
+            <Button variant="outline" onClick={() => setPhotosDialogOpen(false)}>
+              Tutup
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

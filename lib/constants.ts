@@ -1,23 +1,15 @@
 export const ROLE_SUPERADMIN = "SUPERADMIN";
 export const ROLE_ADMIN = "ADMIN";
 export const ROLE_GUDANG = "GUDANG";
-export const ROLE_OPERATOR = "OPERATOR";
 export const ROLE_QC = "QC";
-export const ROLE_KEUANGAN = "KEUANGAN";
-export const ROLE_MANAGER = "MANAGER";
 export const ROLE_KARYAWAN = "KARYAWAN";
-export const ROLE_VIEWER = "VIEWER";
 
 export const ROLES = [
   ROLE_SUPERADMIN,
   ROLE_ADMIN,
   ROLE_GUDANG,
-  ROLE_OPERATOR,
   ROLE_QC,
-  ROLE_KEUANGAN,
-  ROLE_MANAGER,
   ROLE_KARYAWAN,
-  ROLE_VIEWER,
 ] as const;
 
 export type Role = typeof ROLES[number];
@@ -26,24 +18,16 @@ export const ROLE_LABELS: Record<Role, string> = {
   [ROLE_SUPERADMIN]: "Super Admin",
   [ROLE_ADMIN]: "Administrator",
   [ROLE_GUDANG]: "Petugas Gudang",
-  [ROLE_OPERATOR]: "Operator Produksi",
   [ROLE_QC]: "QC Staff",
-  [ROLE_KEUANGAN]: "Keuangan",
-  [ROLE_MANAGER]: "Manajer",
   [ROLE_KARYAWAN]: "Karyawan Produksi",
-  [ROLE_VIEWER]: "Viewer",
 };
 
 export const ROLE_COLORS: Record<Role, string> = {
   [ROLE_SUPERADMIN]: "bg-destructive/10 text-destructive border border-destructive/30",
   [ROLE_ADMIN]: "bg-destructive/10 text-destructive",
   [ROLE_GUDANG]: "bg-brand-primary/10 text-brand-primary",
-  [ROLE_OPERATOR]: "bg-success-light text-success-foreground",
   [ROLE_QC]: "bg-accent text-accent-foreground",
-  [ROLE_KEUANGAN]: "bg-warning-light text-warning-foreground",
-  [ROLE_MANAGER]: "bg-brand-primary/10 text-brand-primary",
   [ROLE_KARYAWAN]: "bg-brand-primary/10 text-brand-primary",
-  [ROLE_VIEWER]: "bg-muted text-muted-foreground",
 };
 
 export const UNIT_LUSIN = "LUSIN";
@@ -154,3 +138,64 @@ export const REJECT_RATE_THRESHOLD = 0.05;
 export const LOW_STOCK_THRESHOLD = 0.2;
 
 export const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL || "erpkonveksi@gmail.com";
+
+// Permission Constants
+export enum PERMISSION {
+  // Barang Masuk (Incoming)
+  BARANG_MASUK_CREATE = "BARANG_MASUK_CREATE",
+  BARANG_MASUK_VIEW = "BARANG_MASUK_VIEW",
+  BARANG_MASUK_TERIMA = "BARANG_MASUK_TERIMA",
+  BARANG_MASUK_DELETE = "BARANG_MASUK_DELETE",
+  // Barang Keluar (Outgoing)
+  BARANG_KELUAR_CREATE = "BARANG_KELUAR_CREATE",
+  BARANG_KELUAR_VIEW = "BARANG_KELUAR_VIEW",
+  BARANG_KELUAR_DELETE = "BARANG_KELUAR_DELETE",
+  // Scan
+  TRANSFER_SCAN = "TRANSFER_SCAN",
+}
+
+export const ROLE_PERMISSIONS: Record<string, PERMISSION[]> = {
+  GUDANG: [
+    PERMISSION.BARANG_MASUK_CREATE,
+    PERMISSION.BARANG_MASUK_VIEW,
+    PERMISSION.BARANG_MASUK_TERIMA,
+    PERMISSION.BARANG_MASUK_DELETE,
+    PERMISSION.BARANG_KELUAR_CREATE,
+    PERMISSION.BARANG_KELUAR_VIEW,
+    PERMISSION.BARANG_KELUAR_DELETE,
+    PERMISSION.TRANSFER_SCAN,
+  ],
+  ADMIN: [
+    PERMISSION.BARANG_MASUK_CREATE,
+    PERMISSION.BARANG_MASUK_VIEW,
+    PERMISSION.BARANG_MASUK_TERIMA,
+    PERMISSION.BARANG_MASUK_DELETE,
+    PERMISSION.BARANG_KELUAR_CREATE,
+    PERMISSION.BARANG_KELUAR_VIEW,
+    PERMISSION.BARANG_KELUAR_DELETE,
+    PERMISSION.TRANSFER_SCAN,
+  ],
+  SUPERADMIN: [
+    PERMISSION.BARANG_MASUK_CREATE,
+    PERMISSION.BARANG_MASUK_VIEW,
+    PERMISSION.BARANG_MASUK_TERIMA,
+    PERMISSION.BARANG_MASUK_DELETE,
+    PERMISSION.BARANG_KELUAR_CREATE,
+    PERMISSION.BARANG_KELUAR_VIEW,
+    PERMISSION.BARANG_KELUAR_DELETE,
+    PERMISSION.TRANSFER_SCAN,
+  ],
+  QC: [],
+  KARYAWAN: [],
+}
+
+export function hasPermission(role: string, permission: PERMISSION): boolean {
+  const permissions = ROLE_PERMISSIONS[role]
+  if (!permissions) return false
+  return permissions.includes(permission)
+}
+
+export function hasAnyPermission(role: string, permissions: PERMISSION[]): boolean {
+  const rolePermissions = ROLE_PERMISSIONS[role] || []
+  return permissions.some(p => rolePermissions.includes(p))
+}

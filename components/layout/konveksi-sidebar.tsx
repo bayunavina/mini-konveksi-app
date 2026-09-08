@@ -137,9 +137,9 @@ const navigationData = {
       icon: TruckIcon,
       submenu: [
         { title: "Overview", url: "/dashboard/transfer" },
-        { title: "Barang Keluar", url: "/dashboard/transfer/outgoing" },
         { title: "Barang Masuk", url: "/dashboard/transfer/incoming" },
-        { title: "Master Gudang", url: "/dashboard/transfer/warehouses", roles: ["ADMIN"] as UserRole[] },
+        { title: "Barang Keluar", url: "/dashboard/transfer/outgoing" },
+        { title: "Master Gudang", url: "/dashboard/transfer/warehouses", roles: ["ADMIN", "SUPERADMIN"] as UserRole[] },
       ],
     },
     {
@@ -248,6 +248,16 @@ const navigationData = {
       url: "/dashboard/transfer/outgoing",
       icon: ArrowUpIcon,
     },
+    {
+      title: "Dokumentasi Barang Masuk",
+      url: "/dashboard/transfer/incoming-docs",
+      icon: ArrowDownIcon,
+    },
+    {
+      title: "Dokumentasi Barang Keluar",
+      url: "/dashboard/transfer/outgoing-docs",
+      icon: ArrowUpIcon,
+    },
   ] as NavItem[],
   karyawan: [
     {
@@ -281,7 +291,7 @@ const navigationData = {
       title: "Scan QR",
       url: "/dashboard/scan",
       icon: QrCodeIcon,
-      roles: ["ADMIN"],
+      roles: ["ADMIN", "SUPERADMIN"],
     },
   ],
 }

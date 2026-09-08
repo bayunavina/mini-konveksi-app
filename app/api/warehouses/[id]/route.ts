@@ -45,9 +45,15 @@ export async function PUT(
 
     return NextResponse.json(result.rows[0])
   } catch (error: unknown) {
-    const err = error as Error
+    const err = error as { code?: string; constraint?: string }
+    if (err?.code === "23505" && err?.constraint === "warehouses_code_unique") {
+      return NextResponse.json(
+        { error: "Kode gudang sudah digunakan. Silakan gunakan kode yang berbeda." },
+        { status: 409 }
+      )
+    }
     console.error("Error updating warehouse:", err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: "Gagal memperbarui gudang" }, { status: 500 })
   }
 }
 

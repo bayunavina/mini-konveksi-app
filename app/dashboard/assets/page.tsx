@@ -173,7 +173,8 @@ export default function AssetsPage() {
         setFormData({ code: "", name: "", category: "MACHINE", location: "", purchaseDate: "", purchaseValue: "" })
         refetch()
       } else {
-        toast.error("Gagal menambahkan asset")
+        const data = await response.json().catch(() => null)
+        toast.error(data?.error || "Gagal menambahkan asset")
       }
     } catch (error) {
       console.error("Error creating asset:", error)
@@ -232,7 +233,8 @@ export default function AssetsPage() {
         setSelectedAsset(null)
         refetch()
       } else {
-        toast.error("Gagal memperbarui asset")
+        const data = await response.json().catch(() => null)
+        toast.error(data?.error || "Gagal memperbarui asset")
       }
     } catch (error) {
       console.error("Error updating asset:", error)

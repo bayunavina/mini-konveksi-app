@@ -54,8 +54,11 @@ export async function PUT(
     }
 
     return NextResponse.json(updated[0])
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating asset:", error)
+    if (String(error?.message || "").includes("duplicate") || String(error?.cause?.message || "").includes("duplicate") || error?.code === "23505") {
+      return NextResponse.json({ error: "Kode aset sudah digunakan. Silakan gunakan kode yang berbeda." }, { status: 409 })
+    }
     return NextResponse.json({ error: "Failed to update asset" }, { status: 500 })
   }
 }

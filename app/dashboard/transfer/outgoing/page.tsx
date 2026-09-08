@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,14 +36,17 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
+import { PhotoGallery } from "@/components/shared/photo-gallery"
 import { ScanButton } from "@/components/scanner"
 import { parseQRPayload } from "@/lib/qr-payload"
-import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, PlusIcon, TruckIcon, EyeIcon, TrashIcon, CameraIcon } from "@heroicons/react/24/outline"
 import { RefreshButton } from "@/components/ui/refresh-button"
 import { useFetch } from "@/hooks/useFetch"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { formatDate, formatDateLong } from "@/lib/utils"
+import { MAX_PHOTO_UPLOAD } from "@/lib/constants"
 import { toast } from "sonner"
+import { hasPermission, PERMISSION } from "@/lib/constants"
 
 interface Transfer {
   id: string
@@ -105,6 +108,7 @@ export default function OutgoingPage() {
   const router = useRouter()
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [photosDialogOpen, setPhotosDialogOpen] = useState(false)
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null)
   const [sourceWarehouse, setSourceWarehouse] = useState("")
   const [destinationWarehouse, setDestinationWarehouse] = useState("")
@@ -112,14 +116,17 @@ export default function OutgoingPage() {
   const [transferItems, setTransferItems] = useState<TransferFormItem[]>([])
   const [selectedProduct, setSelectedProduct] = useState("")
   const [itemQuantity, setItemQuantity] = useState("")
+  const [photos, setPhotos] = useState<{ id: string; file: File; preview: string }[]>([])
   const [creating, setCreating] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: allTransfers, loading: transfersLoading, refetch } = useFetch<Transfer[]>("/api/transfers")
   const { data: warehouses, loading: warehousesLoading } = useFetch<Warehouse[]>("/api/warehouses")
   const { data: masterSkus } = useFetch<Product[]>("/api/master-skus?all=true")
   const { user } = useSessionWithRole()
   const userRole = user?.role || "GUDANG"
-  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN"
+  const canCreate = hasPermission(userRole, PERMISSION.BARANG_KELUAR_CREATE)
+  const canView = hasPermission(userRole, PERMISSION.BARANG_KELUAR_VIEW)
 
   // P3-1: Simplifikasi Transfer - non-ADMIN otomatis ke Gudang Utama (default warehouse)
   const defaultWarehouse = useMemo(() => {
@@ -129,10 +136,10 @@ export default function OutgoingPage() {
 
   // Sinkronkan destinationWarehouse dengan default warehouse untuk non-ADMIN
   useEffect(() => {
-    if (!isAdmin && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id) {
+    if (!canCreate && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id) {
       setDestinationWarehouse(defaultWarehouse.id)
     }
-  }, [isAdmin, defaultWarehouse, destinationWarehouse])
+  }, [canCreate, defaultWarehouse, destinationWarehouse])
 
   const outgoingTransfers = (allTransfers || []).filter(t => t.type === "OUTGOING")
 
@@ -195,12 +202,15 @@ export default function OutgoingPage() {
       })
 
       if (response.ok) {
+        const data = await response.json()
+        
+        if (photos.length > 0) {
+          await uploadPhotos(data.id)
+        }
+
         toast.success("Transfer berhasil dibuat")
         setNewDialogOpen(false)
-        setSourceWarehouse("")
-        setDestinationWarehouse("")
-        setNotes("")
-        setTransferItems([])
+        resetForm()
         refetch()
       } else {
         const error = await response.json()
@@ -221,11 +231,62 @@ export default function OutgoingPage() {
     setTransferItems([])
     setSelectedProduct("")
     setItemQuantity("")
+    setPhotos([])
+  }
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    const newPhotos: { id: string; file: File; preview: string }[] = []
+    for (let i = 0; i < files.length && photos.length + newPhotos.length < MAX_PHOTO_UPLOAD; i++) {
+      const file = files[i]
+      newPhotos.push({
+        id: Math.random().toString(36).substring(7),
+        file,
+        preview: URL.createObjectURL(file),
+      })
+    }
+    setPhotos([...photos, ...newPhotos])
+  }
+
+  const removePhoto = (id: string) => {
+    setPhotos(photos.filter((p) => p.id !== id))
+  }
+
+  const uploadPhotos = async (transferId: string): Promise<void> => {
+    if (photos.length === 0) return
+
+    const formData = new FormData()
+    formData.append("transferId", transferId)
+    formData.append("label", `Dokumentasi ${transferId}`)
+    
+    photos.forEach(photo => {
+      formData.append("photos", photo.file)
+    })
+
+    try {
+      const response = await fetch("/api/transfers/photos", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        console.error("Failed to upload photos")
+      }
+    } catch (error) {
+      console.error("Error uploading photos:", error)
+    }
   }
 
   const handleView = (transfer: Transfer) => {
     setSelectedTransfer(transfer)
     setViewDialogOpen(true)
+  }
+
+  const handleViewPhotos = (transfer: Transfer) => {
+    setSelectedTransfer(transfer)
+    setPhotosDialogOpen(true)
   }
 
   const getWarehouseName = (id?: string) => {
@@ -253,8 +314,8 @@ export default function OutgoingPage() {
         <CardHeader>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0">
-              <CardTitle className="text-lg md:text-2xl leading-tight">Daftar Barang Keluar</CardTitle>
-              <CardDescription className="text-xs md:text-sm leading-snug">
+              <CardTitle>Daftar Barang Keluar</CardTitle>
+              <CardDescription>
                 Transfer yang dikirim dari gudang
               </CardDescription>
             </div>
@@ -282,13 +343,14 @@ export default function OutgoingPage() {
                   title="Daftar Barang Keluar"
                   filename="barang-keluar"
                 />
-                <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="flex-1 sm:flex-none dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
-                      <PlusIcon className="mr-2 h-4 w-4" />
-                      Transfer Baru
-                    </Button>
-                  </DialogTrigger>
+                {canCreate && (
+                  <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="flex-1 sm:flex-none dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+                        <PlusIcon className="mr-2 h-4 w-4" />
+                        Transfer Baru
+                      </Button>
+                    </DialogTrigger>
                 <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Buat Transfer Baru</DialogTitle>
@@ -301,7 +363,7 @@ export default function OutgoingPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Gudang Asal *</Label>
-                        {isAdmin ? (
+                        {canCreate ? (
                           <Select value={sourceWarehouse} onValueChange={setSourceWarehouse}>
                             <SelectTrigger>
                               <SelectValue placeholder="Pilih asal" />
@@ -323,7 +385,7 @@ export default function OutgoingPage() {
                       </div>
                       <div className="space-y-2">
                         <Label>Gudang Tujuan *</Label>
-                        {isAdmin ? (
+                        {canCreate ? (
                           <Select value={destinationWarehouse} onValueChange={setDestinationWarehouse}>
                             <SelectTrigger>
                               <SelectValue placeholder="Pilih tujuan" />
@@ -421,6 +483,50 @@ export default function OutgoingPage() {
                         onChange={(e) => setNotes(e.target.value)}
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <Label>Foto Dokumentasi (Opsional)</Label>
+                      <div className="border-2 border-dashed rounded-lg p-3">
+                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mb-3">
+                          {photos.map((photo) => (
+                            <div key={photo.id} className="relative aspect-square rounded overflow-hidden border">
+                              <img
+                                src={photo.preview}
+                                alt="Preview"
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="icon-xs"
+                                className="absolute top-1 right-1"
+                                onClick={() => removePhoto(photo.id)}
+                              >
+                                <TrashIcon className="h-2 w-2" />
+                              </Button>
+                            </div>
+                          ))}
+                          {photos.length < MAX_PHOTO_UPLOAD && (
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                            >
+                              <CameraIcon className="h-5 w-5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          {photos.length}/{MAX_PHOTO_UPLOAD} foto
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <DialogFooter>
@@ -434,7 +540,8 @@ export default function OutgoingPage() {
                     </Button>
                   </DialogFooter>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+                )}
               </div>
             </div>
           </div>
@@ -447,46 +554,56 @@ export default function OutgoingPage() {
               ))}
             </div>
           ) : outgoingTransfers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Belum ada transfer keluar</p>
+            <div className="flex min-h-[9rem] sm:min-h-[12rem] flex-col items-center justify-center gap-1.5 px-2 py-6 text-center text-muted-foreground">
+              <p className="font-medium text-foreground/80">Belum ada transfer keluar</p>
+              <p className="text-xs text-muted-foreground/80">Transfer yang dikirim dari gudang akan tampil di sini</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>No. Transfer</TableHead>
-                  <TableHead>Dari</TableHead>
-                  <TableHead>Ke</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Catatan</TableHead>
-                  <TableHead className="text-center">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {outgoingTransfers.map((transfer) => (
-                  <TableRow key={transfer.id}>
-                    <TableCell className="font-mono">{transfer.transferNumber}</TableCell>
-                    <TableCell>{getWarehouseName(transfer.fromWarehouseId)}</TableCell>
-                    <TableCell>{getWarehouseName(transfer.toWarehouseId)}</TableCell>
-                    <TableCell>{formatDate(transfer.createdAt)}</TableCell>
-                    <TableCell>
-                      <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
-                        {STATUS_LABELS[transfer.status] || transfer.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[150px] truncate">
-                      {transfer.notes || "-"}
-                    </TableCell>
-                    <TableCell className="flex justify-center">
-                      <Button size="default" variant="outline" onClick={() => handleView(transfer)}>
-                        <EyeIcon className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>No. Transfer</TableHead>
+                    <TableHead>Dari</TableHead>
+                    <TableHead>Ke</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Catatan</TableHead>
+                    <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {outgoingTransfers.map((transfer) => (
+                    <TableRow key={transfer.id}>
+                      <TableCell className="font-mono">{transfer.transferNumber}</TableCell>
+                      <TableCell>{getWarehouseName(transfer.fromWarehouseId)}</TableCell>
+                      <TableCell>{getWarehouseName(transfer.toWarehouseId)}</TableCell>
+                      <TableCell>{formatDate(transfer.createdAt)}</TableCell>
+                      <TableCell>
+                        <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
+                          {STATUS_LABELS[transfer.status] || transfer.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[150px] truncate">
+                        {transfer.notes || "-"}
+                      </TableCell>
+                      <TableCell className="flex justify-center gap-1 whitespace-nowrap">
+                        {canView && (
+                          <Button size="default" variant="outline" onClick={() => handleView(transfer)}>
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canView && (
+                          <Button size="default" variant="outline" onClick={() => handleViewPhotos(transfer)}>
+                            <CameraIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -546,6 +663,26 @@ export default function OutgoingPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={photosDialogOpen} onOpenChange={(open) => {
+        setPhotosDialogOpen(open)
+        if (!open) setSelectedTransfer(null)
+      }}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Foto Dokumentasi</DialogTitle>
+            <DialogDescription>
+              {selectedTransfer ? `Foto dokumentasi untuk transfer ${selectedTransfer.transferNumber}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <PhotoGallery transferId={selectedTransfer?.id || null} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPhotosDialogOpen(false)}>
               Tutup
             </Button>
           </DialogFooter>

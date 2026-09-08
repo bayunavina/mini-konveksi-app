@@ -39,35 +39,26 @@ import { eq } from "drizzle-orm"
 
 const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
 
-async function requireAdmin(request: NextRequest) {
+async function requireSuperAdmin(request: NextRequest) {
   const sessionData = await getSessionFromHeaders(request.headers)
   if (!sessionData) {
     return { authorized: false, response: NextResponse.json({ error: "Unauthorized - Please login" }, { status: 401 }) }
   }
   const email = sessionData.user.email?.toLowerCase()
-  // Allow superadmin directly
   if (email === SUPERADMIN_EMAIL.toLowerCase()) {
     return { authorized: true, email }
   }
-  // Check employees table for ADMIN role
   if (email) {
     const emp = await db.select().from(employees).where(eq(employees.email, email)).limit(1)
-    if (emp.length > 0 && (emp[0].role === "ADMIN" || emp[0].role === "SUPERADMIN")) {
+    if (emp.length > 0 && emp[0].role === "SUPERADMIN") {
       return { authorized: true, email }
     }
-    // Also check user table exists => fallback to ADMIN
-    const u = await db.select().from(user).where(eq(user.email, email)).limit(1)
-    if (u.length > 0) {
-      // if not found in employees but exists in user, we treat as ADMIN for backup purposes?
-      // but be strict: only ADMIN employees can backup
-      // fallback: deny
-    }
   }
-  return { authorized: false, response: NextResponse.json({ error: "Forbidden - Hanya Admin yang dapat melakukan backup/restore" }, { status: 403 }) }
+  return { authorized: false, response: NextResponse.json({ error: "Forbidden - Khusus Super Admin. Backup/restore tidak bisa dilakukan karena anda bukan superadmin" }, { status: 403 }) }
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireSuperAdmin(request)
   if (!auth.authorized) return auth.response!
 
   try {
@@ -227,7 +218,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireSuperAdmin(request)
   if (!auth.authorized) return auth.response!
 
   try {

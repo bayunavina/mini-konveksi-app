@@ -18,6 +18,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -31,8 +41,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 import { PageHeader } from "@/components/shared"
-import { ArrowLeftIcon, TrashIcon, BeakerIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline"
+import { ArrowLeftIcon, TrashIcon, BeakerIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, ArrowPathIcon, InformationCircleIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 import { useCurrency } from "@/hooks/useCurrency"
 
@@ -83,11 +98,13 @@ const SkuRow = memo(function SkuRow({
   formatCurrency,
   onToggle,
   onDelete,
+  onEdit,
 }: {
   sku: SKU
   formatCurrency: (v: number) => string
   onToggle: (id: string, currentStatus: boolean) => void
   onDelete: (id: string, name: string, type: "SKU" | "SUPPLIER" | "COST") => void
+  onEdit: (id: string) => void
 }) {
   return (
     <TableRow className={!sku.isActive ? "opacity-50" : ""}>
@@ -104,20 +121,25 @@ const SkuRow = memo(function SkuRow({
         <Button variant="ghost" size="sm" onClick={() => onToggle(sku.id, sku.isActive)} title={sku.isActive ? "Nonaktifkan" : "Aktifkan"}>
           {sku.isActive ? "Nonaktifkan" : "Aktifkan"}
         </Button>
+        <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" onClick={() => onEdit(sku.id)}>
+          <PencilIcon className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => onDelete(sku.id, sku.name, "SKU")}>
           <TrashIcon className="h-4 w-4" />
         </Button>
       </TableCell>
     </TableRow>
   )
-}, (prev, next) => prev.sku === next.sku && prev.formatCurrency === next.formatCurrency && prev.onToggle === next.onToggle && prev.onDelete === next.onDelete)
+}, (prev, next) => prev.sku === next.sku && prev.formatCurrency === next.formatCurrency && prev.onToggle === next.onToggle && prev.onDelete === next.onDelete && prev.onEdit === next.onEdit)
 
 const SupplierRow = memo(function SupplierRow({
   supplier,
   onDelete,
+  onEdit,
 }: {
   supplier: Supplier
   onDelete: (id: string, name: string, type: "SKU" | "SUPPLIER" | "COST") => void
+  onEdit: (id: string) => void
 }) {
   return (
     <TableRow>
@@ -127,20 +149,25 @@ const SupplierRow = memo(function SupplierRow({
       <TableCell className="font-mono text-xs whitespace-nowrap">{supplier.phone}</TableCell>
       <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground" title={supplier.address}>{supplier.address}</TableCell>
       <TableCell className="text-right">
+        <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" onClick={() => onEdit(supplier.id)}>
+          <PencilIcon className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => onDelete(supplier.id, supplier.name, "SUPPLIER")}>
           <TrashIcon className="h-4 w-4" />
         </Button>
       </TableCell>
     </TableRow>
   )
-}, (prev, next) => prev.supplier === next.supplier && prev.onDelete === next.onDelete)
+}, (prev, next) => prev.supplier === next.supplier && prev.onDelete === next.onDelete && prev.onEdit === next.onEdit)
 
 const CostRow = memo(function CostRow({
   category,
   onDelete,
+  onEdit,
 }: {
   category: CostCategory
   onDelete: (id: string, name: string, type: "SKU" | "SUPPLIER" | "COST") => void
+  onEdit: (id: string) => void
 }) {
   return (
     <TableRow>
@@ -153,13 +180,16 @@ const CostRow = memo(function CostRow({
       </TableCell>
       <TableCell className="text-muted-foreground text-xs max-w-[280px] truncate" title={category.description}>{category.description || "-"}</TableCell>
       <TableCell className="text-right">
+        <Button variant="ghost" size="sm" className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50" onClick={() => onEdit(category.id)}>
+          <PencilIcon className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => onDelete(category.id, category.name, "COST")}>
           <TrashIcon className="h-4 w-4" />
         </Button>
       </TableCell>
     </TableRow>
   )
-}, (prev, next) => prev.category === next.category && prev.onDelete === next.onDelete)
+}, (prev, next) => prev.category === next.category && prev.onDelete === next.onDelete && prev.onEdit === next.onEdit)
 
 // ============ LOADING SKELETON ============
 
@@ -233,6 +263,7 @@ interface SkuTabProps {
 const SkuTab = memo(function SkuTab({ onToggle, onDelete }: SkuTabProps) {
   const { formatCurrency } = useCurrency()
   const [state, setState] = useState<SearchPagination>(defaultPagination)
+  const [editTarget, setEditTarget] = useState<{ id: string; form: { code: string; name: string; category: string; price: string } } | null>(null)
   const query = useQuery({
     queryKey: ["master-skus", state],
     queryFn: async () => {
@@ -249,6 +280,13 @@ const SkuTab = memo(function SkuTab({ onToggle, onDelete }: SkuTabProps) {
   const setPage = useCallback((p: number) => setState((s) => ({ ...s, page: p })), [])
   const setLimit = useCallback((l: number) => setState((s) => ({ ...s, page: 1, limit: l })), [])
   const setSearch = useCallback((search: string) => setState((s) => ({ ...s, page: 1, search })), [])
+
+  const handleEdit = useCallback((id: string) => {
+    const sku = (query.data?.data ?? []).find((s) => s.id === id)
+    if (sku) {
+      setEditTarget({ id, form: { code: sku.code, name: sku.name, category: sku.category, price: String(sku.price) } })
+    }
+  }, [query.data])
 
   return (
     <Card>
@@ -289,7 +327,7 @@ const SkuTab = memo(function SkuTab({ onToggle, onDelete }: SkuTabProps) {
               </TableHeader>
               <TableBody>
                 {skus.map((sku) => (
-                  <SkuRow key={sku.id} sku={sku} formatCurrency={formatCurrency} onToggle={onToggle} onDelete={onDelete} />
+                  <SkuRow key={sku.id} sku={sku} formatCurrency={formatCurrency} onToggle={onToggle} onDelete={onDelete} onEdit={handleEdit} />
                 ))}
               </TableBody>
             </Table>
@@ -299,11 +337,22 @@ const SkuTab = memo(function SkuTab({ onToggle, onDelete }: SkuTabProps) {
           <PaginationControl page={state.page} totalPages={pagination.totalPages} total={pagination.total} limit={state.limit} onPageChange={setPage} onLimitChange={setLimit} />
         )}
       </CardContent>
+      {editTarget && (
+        <SkuEditDialog
+          id={editTarget.id}
+          initialForm={editTarget.form}
+          open={true}
+          onOpenChange={(open) => { if (!open) setEditTarget(null) }}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
     </Card>
   )
 })
 
 const SkuAddDialog = dynamic(() => import("./_components/SkuAddDialog").then((m) => m.SkuAddDialog), { ssr: false })
+
+const SkuEditDialog = dynamic(() => import("./_components/SkuEditDialog").then((m) => m.SkuEditDialog), { ssr: false })
 
 // ============ SUPPLIER TAB ============
 
@@ -313,6 +362,7 @@ interface SupplierTabProps {
 
 const SupplierTab = memo(function SupplierTab({ onDelete }: SupplierTabProps) {
   const [state, setState] = useState<SearchPagination>(defaultPagination)
+  const [editTarget, setEditTarget] = useState<{ id: string; form: { code: string; name: string; contactPerson: string; phone: string; address: string } } | null>(null)
   const query = useQuery({
     queryKey: ["master-suppliers", state],
     queryFn: async () => {
@@ -329,6 +379,13 @@ const SupplierTab = memo(function SupplierTab({ onDelete }: SupplierTabProps) {
   const setPage = useCallback((p: number) => setState((s) => ({ ...s, page: p })), [])
   const setLimit = useCallback((l: number) => setState((s) => ({ ...s, page: 1, limit: l })), [])
   const setSearch = useCallback((search: string) => setState((s) => ({ ...s, page: 1, search })), [])
+
+  const handleEdit = useCallback((id: string) => {
+    const supplier = (query.data?.data ?? []).find((s) => s.id === id)
+    if (supplier) {
+      setEditTarget({ id, form: { code: supplier.code, name: supplier.name, contactPerson: supplier.contactPerson, phone: supplier.phone, address: supplier.address } })
+    }
+  }, [query.data])
 
   return (
     <Card>
@@ -367,7 +424,7 @@ const SupplierTab = memo(function SupplierTab({ onDelete }: SupplierTabProps) {
               </TableHeader>
               <TableBody>
                 {suppliers.map((supplier) => (
-                  <SupplierRow key={supplier.id} supplier={supplier} onDelete={onDelete} />
+                  <SupplierRow key={supplier.id} supplier={supplier} onDelete={onDelete} onEdit={handleEdit} />
                 ))}
               </TableBody>
             </Table>
@@ -377,11 +434,22 @@ const SupplierTab = memo(function SupplierTab({ onDelete }: SupplierTabProps) {
           <PaginationControl page={state.page} totalPages={pagination.totalPages} total={pagination.total} limit={state.limit} onPageChange={setPage} onLimitChange={setLimit} />
         )}
       </CardContent>
+      {editTarget && (
+        <SupplierEditDialog
+          id={editTarget.id}
+          initialForm={editTarget.form}
+          open={true}
+          onOpenChange={(open) => { if (!open) setEditTarget(null) }}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
     </Card>
   )
 })
 
 const SupplierAddDialog = dynamic(() => import("./_components/SupplierAddDialog").then((m) => m.SupplierAddDialog), { ssr: false })
+
+const SupplierEditDialog = dynamic(() => import("./_components/SupplierEditDialog").then((m) => m.SupplierEditDialog), { ssr: false })
 
 // ============ COST TAB ============
 
@@ -391,6 +459,7 @@ interface CostTabProps {
 
 const CostTab = memo(function CostTab({ onDelete }: CostTabProps) {
   const [state, setState] = useState<SearchPagination>(defaultPagination)
+  const [editTarget, setEditTarget] = useState<{ id: string; form: { code: string; name: string; type: "DIRECT" | "INDIRECT"; description: string } } | null>(null)
   const query = useQuery({
     queryKey: ["master-cost-categories", state],
     queryFn: async () => {
@@ -407,6 +476,13 @@ const CostTab = memo(function CostTab({ onDelete }: CostTabProps) {
   const setPage = useCallback((p: number) => setState((s) => ({ ...s, page: p })), [])
   const setLimit = useCallback((l: number) => setState((s) => ({ ...s, page: 1, limit: l })), [])
   const setSearch = useCallback((search: string) => setState((s) => ({ ...s, page: 1, search })), [])
+
+  const handleEdit = useCallback((id: string) => {
+    const category = (query.data?.data ?? []).find((c) => c.id === id)
+    if (category) {
+      setEditTarget({ id, form: { code: category.code, name: category.name, type: category.type, description: category.description || "" } })
+    }
+  }, [query.data])
 
   return (
     <Card>
@@ -444,7 +520,7 @@ const CostTab = memo(function CostTab({ onDelete }: CostTabProps) {
               </TableHeader>
               <TableBody>
                 {categories.map((category) => (
-                  <CostRow key={category.id} category={category} onDelete={onDelete} />
+                  <CostRow key={category.id} category={category} onDelete={onDelete} onEdit={handleEdit} />
                 ))}
               </TableBody>
             </Table>
@@ -454,11 +530,22 @@ const CostTab = memo(function CostTab({ onDelete }: CostTabProps) {
           <PaginationControl page={state.page} totalPages={pagination.totalPages} total={pagination.total} limit={state.limit} onPageChange={setPage} onLimitChange={setLimit} />
         )}
       </CardContent>
+      {editTarget && (
+        <CostEditDialog
+          id={editTarget.id}
+          initialForm={editTarget.form}
+          open={true}
+          onOpenChange={(open) => { if (!open) setEditTarget(null) }}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
     </Card>
   )
 })
 
 const CostAddDialog = dynamic(() => import("./_components/CostAddDialog").then((m) => m.CostAddDialog), { ssr: false })
+
+const CostEditDialog = dynamic(() => import("./_components/CostEditDialog").then((m) => m.CostEditDialog), { ssr: false })
 
 // ============ STATS OVERVIEW (memoized) ============
 
@@ -513,6 +600,14 @@ const StatsOverview = memo(function StatsOverview({ skuTotal, supplierTotal, cos
 // MASTER DATA: Data real dari backend API (database PostgreSQL)
 // Auto-seed saat halaman dimuat bila database kosong
 // Server-side pagination + search untuk skalabilitas 1000+ baris
+//
+// POLICY DATA MASTER:
+// - Data Master (Bahan Baku, Supplier, Kategori Biaya) BERSIFAT PERSISTEN
+// - Saat Factory Reset: Data Master TIDAK terhapus (dijaga)
+// - Data Master hanya berubah jika:
+//   1. User mengubah langsung (add/edit/delete via UI)
+//   2. Restore Backup dengan mode Replace
+// - Jika ingin kembali ke default: gunakan tombol "Reset ke Default" di bawah
 
 export default function MasterPage() {
   const router = useRouter()
@@ -579,6 +674,33 @@ export default function MasterPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: "SKU" | "SUPPLIER" | "COST"; name: string } | null>(null)
 
+  // Reset to Default states
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [resetting, setResetting] = useState(false)
+
+  const handleResetToDefault = useCallback(async () => {
+    setResetting(true)
+    try {
+      const response = await fetch("/api/seed/master", { method: "PATCH" })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.error || "Gagal reset ke default")
+        return
+      }
+      toast.success("Data Master berhasil direset ke default", {
+        description: `Bahan Baku: ${data.skus.created}, Supplier: ${data.suppliers.created}, Kategori Biaya: ${data.costCategories.created}`,
+      })
+      refetchSkus()
+      refetchSuppliers()
+      refetchCostCategories()
+      setResetDialogOpen(false)
+    } catch {
+      toast.error("Terjadi kesalahan")
+    } finally {
+      setResetting(false)
+    }
+  }, [refetchSkus, refetchSuppliers, refetchCostCategories])
+
   const handleToggleSKU = useCallback(async (id: string, currentStatus: boolean) => {
     try {
       const response = await fetch(`/api/master-skus/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !currentStatus }) })
@@ -633,9 +755,26 @@ export default function MasterPage() {
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               Kembali
             </Button>
+            <Button variant="outline" onClick={() => setResetDialogOpen(true)} className="text-orange-600 hover:bg-orange-50 border-orange-200">
+              <ArrowPathIcon className="mr-2 h-4 w-4" />
+              Reset ke Default
+            </Button>
           </div>
         }
       />
+
+      {/* Policy Info Banner */}
+      <Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+        <InformationCircleIcon className="h-4 w-4 text-blue-600" />
+        <AlertTitle className="text-blue-900 dark:text-blue-100">Policy Data Master</AlertTitle>
+        <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
+          <ul className="list-disc list-inside space-y-1 mt-1">
+            <li><strong>Data Master bersifat persisten</strong> — tidak terhapus saat Factory Reset</li>
+            <li>Data Master hanya berubah jika: (1) diubah manual via UI, (2) restore backup mode Replace</li>
+            <li>Gunakan <strong>&quot;Reset ke Default&quot;</strong> untuk mengembalikan ke data bawaan (12 SKU, 8 Supplier, 14 Kategori Biaya)</li>
+          </ul>
+        </AlertDescription>
+      </Alert>
 
       {statsLoading ? (
         <StatsSkeleton />
@@ -663,6 +802,42 @@ export default function MasterPage() {
       </Tabs>
 
       <DeleteDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} target={deleteTarget} onConfirm={handleConfirmDelete} />
+
+      {/* Reset to Default Confirmation Dialog */}
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent className="border-orange-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <ArrowPathIcon className="h-5 w-5" />
+              Reset Data Master ke Default
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">
+                Anda akan <strong>menghapus semua data master saat ini</strong> dan menggantinya dengan data default bawaan sistem.
+              </span>
+              <span className="block bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded p-2.5 text-orange-700 dark:text-orange-300 text-sm">
+                Tindakan ini <strong>tidak dapat dibatalkan</strong>. Data master yang sudah disesuaikan (harga, supplier, kategori) akan hilang digantikan data bawaan.
+              </span>
+              <span className="block text-xs">
+                Data default: <Badge variant="secondary">12 Bahan Baku</Badge> <Badge variant="secondary">8 Supplier</Badge> <Badge variant="secondary">14 Kategori Biaya</Badge>
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resetting}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleResetToDefault()
+              }}
+              disabled={resetting}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {resetting ? "Memproses..." : "Ya, Reset ke Default"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

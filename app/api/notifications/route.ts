@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { notifications, employees } from "@/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
+import { eq, desc, lt } from "drizzle-orm"
 
-const NOTIFICATION_EXPIRY_DAYS = 14
+const recipientEmployee = alias(employees, "recipient_employee")
+const actorEmployee = alias(employees, "actor_employee")
+
+const NOTIFICATION_EXPIRY_DAYS = 30
+
+async function cleanupExpiredNotifications() {
+  try {
+    const expiryDate = new Date()
+    expiryDate.setDate(expiryDate.getDate() - NOTIFICATION_EXPIRY_DAYS)
+    await db.delete(notifications).where(lt(notifications.createdAt, expiryDate))
+  } catch (error) {
+    console.error("Error cleaning up expired notifications:", error)
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +25,8 @@ export async function GET(request: NextRequest) {
     const employeeId = searchParams.get("employeeId")
     const unreadOnly = searchParams.get("unreadOnly") === "true"
     const type = searchParams.get("type")
+
+    await cleanupExpiredNotifications()
 
     const expiryDate = new Date()
     expiryDate.setDate(expiryDate.getDate() - NOTIFICATION_EXPIRY_DAYS)
@@ -28,12 +44,17 @@ export async function GET(request: NextRequest) {
         isRead: notifications.isRead,
         createdAt: notifications.createdAt,
         employee: {
-          id: employees.id,
-          name: employees.name,
+          id: recipientEmployee.id,
+          name: recipientEmployee.name,
+        },
+        actor: {
+          id: actorEmployee.id,
+          name: actorEmployee.name,
         },
       })
       .from(notifications)
-      .leftJoin(employees, eq(notifications.employeeId, employees.id))
+      .leftJoin(recipientEmployee, eq(notifications.employeeId, recipientEmployee.id))
+      .leftJoin(actorEmployee, eq(notifications.actorId, actorEmployee.id))
       .where(eq(notifications.employeeId, employeeId))
       .orderBy(desc(notifications.createdAt))
       .limit(50)
@@ -51,8 +72,18 @@ export async function GET(request: NextRequest) {
         referenceId: notifications.referenceId,
         isRead: notifications.isRead,
         createdAt: notifications.createdAt,
+        employee: {
+          id: recipientEmployee.id,
+          name: recipientEmployee.name,
+        },
+        actor: {
+          id: actorEmployee.id,
+          name: actorEmployee.name,
+        },
       })
       .from(notifications)
+      .leftJoin(recipientEmployee, eq(notifications.employeeId, recipientEmployee.id))
+      .leftJoin(actorEmployee, eq(notifications.actorId, actorEmployee.id))
       .orderBy(desc(notifications.createdAt))
       .limit(100)
     }
@@ -79,7 +110,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { employeeId, type, title, message, reference, referenceId } = body
+    const { employeeId, type, title, message, reference, referenceId, actorId } = body
 
     if (!type || !title || !message) {
       return NextResponse.json({ error: "type, title, and message are required" }, { status: 400 })
@@ -87,6 +118,7 @@ export async function POST(request: NextRequest) {
 
     const newNotification = await db.insert(notifications).values({
       employeeId: employeeId || null,
+      actorId: actorId || null,
       type,
       title,
       message,

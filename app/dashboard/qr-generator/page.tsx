@@ -23,7 +23,7 @@ export default function QRGeneratorPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
   const [selectedJoId, setSelectedJoId] = useState("")
 
-  const { data: lots } = useFetch<{ id: string; lotNumber: string; qrCode: string; product?: { code: string; name: string } }[]>("/api/material-lots")
+  const { data: lots } = useFetch<{ id: string; lotNumber: string; qrCode: string; product?: { code: string; name: string }; supplier?: string }[]>("/api/material-lots")
   const { data: employees } = useFetch<{ id: string; name: string; qrCode?: string; role?: string }[]>("/api/employees")
   const { data: joData } = useFetch<{ data: { id: string; joNumber: string; qrCode?: string; product?: { name: string } }[] }>("/api/job-orders")
   const joList = (joData as unknown as { data?: { id: string; joNumber: string; qrCode?: string; product?: { name: string } }[] })?.data || (Array.isArray(joData) ? (joData as unknown as { id: string; joNumber: string }[]) : [])
@@ -55,9 +55,9 @@ export default function QRGeneratorPage() {
         const payload = generateMaterialLotQR({
           id: lot.id,
           lotNumber: lot.lotNumber,
-          qrCode: lot.qrCode,
           skuCode: lot.product?.code,
           skuName: lot.product?.name,
+          supplier: lot.supplier,
         })
         setQRValue(payload)
         toast.success(`QR generated untuk lot ${lot.lotNumber}`)

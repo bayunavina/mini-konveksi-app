@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { productionAssignments, employees, materialLots, masterSkus, productionProgress, jobOrders, notifications, products } from "@/db/schema"
 import { eq, desc } from "drizzle-orm"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function GET(request: NextRequest) {
     try {
@@ -164,9 +165,11 @@ export async function POST(request: NextRequest) {
         const lot = materialLotId ? await db.select().from(materialLots).where(eq(materialLots.id, materialLotId)) : []
 
         // Send notification to employee
+        const actorId = await getActorEmployeeId(request.headers)
         if (employee[0] && jobOrder[0]) {
             await db.insert(notifications).values({
                 employeeId,
+                actorId,
                 type: "JOB_ORDER",
                 title: "Job Order Baru",
                 message: `Anda mendapat job order ${jobOrder[0].joNumber} dengan target ${targetQty} Pcs.`,

@@ -4,6 +4,7 @@ import { productionAssignments, jobOrders, qcReports, productionSalary, employee
 import { eq, desc } from "drizzle-orm"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
 import { formatCurrencyServer } from "@/lib/server-currency"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function POST(request: NextRequest) {
     try {
@@ -116,8 +117,10 @@ export async function POST(request: NextRequest) {
             .where(eq(employees.id, employeeId))
             .limit(1)
 
+        const actorId = await getActorEmployeeId(request.headers)
         await db.insert(notifications).values({
             employeeId,
+            actorId,
             type: "SALARY_CLAIM",
             title: "Klaim Gaji Baru",
             message: `${employee[0]?.name || "Karyawan"} mengajukan klaim gaji ${await formatCurrencyServer(totalSalary)} untuk job order ${joNumber || "Manual"}`,
@@ -132,7 +135,8 @@ export async function POST(request: NextRequest) {
             `${employee[0]?.name || "Karyawan"} klaim gaji ${await formatCurrencyServer(totalSalary)}`,
             "SALARY_CLAIM",
             newSalary[0].id,
-            { employeeName: employee[0]?.name || "Karyawan", amount: totalSalary }
+            { employeeName: employee[0]?.name || "Karyawan", amount: totalSalary },
+            actorId || undefined
         )
 
         return NextResponse.json({

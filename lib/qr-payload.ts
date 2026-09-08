@@ -24,21 +24,30 @@ export interface ParsedQR {
 
 // --- Generators ---
 
+function sanitizeValue(value: string): string {
+  return value.replace(/:/g, " ").replace(/-/g, " ")
+}
+
 export function generateMaterialLotQR(data: {
   id: string
   lotNumber: string
-  qrCode: string
   skuCode?: string
   skuName?: string
+  quantity?: number
+  unit?: string
+  supplier?: string
+  dateIn?: string
 }): string {
-  const payload: QRPayload = {
-    type: "MATERIAL_LOT",
-    id: data.id,
-    code: data.lotNumber,
-    name: data.skuName || data.skuCode || data.lotNumber,
-    extra: { qrCode: data.qrCode, skuCode: data.skuCode },
-  }
-  return JSON.stringify(payload)
+  const lotId = data.lotNumber
+  const sku = data.skuCode || data.skuName || ""
+  const quantity = data.quantity || 0
+  const unit = data.unit || "Pcs"
+  const supplier = data.supplier || ""
+  const dateIn = data.dateIn || new Date().toISOString().split("T")[0]
+
+  const sanitizedSupplier = sanitizeValue(supplier)
+
+  return `MATERIAL_LOT:lotId-${lotId}:sku-${sku}:${quantity}-${unit}:Supplier-${sanitizedSupplier}:DateIn-${dateIn}`
 }
 
 export function generateEmployeeQR(data: {
@@ -118,6 +127,52 @@ function detectByPattern(raw: string): QRPayloadType | "UNKNOWN" {
   return "UNKNOWN"
 }
 
+export function parseMaterialLotString(raw: string): { type: QRPayloadType; lotId: string; sku: string; quantity: number; unit: string; supplier: string; dateIn: string } | null {
+  const trimmed = raw.trim()
+  // Format: MATERIAL_LOT:lotId-<id>:sku-<sku>:<quantity>-<unit>:Supplier-<supplier>:DateIn-<date>
+  if (!/^MATERIAL_LOT:/i.test(trimmed)) return null
+
+  const parts = trimmed.split(":")
+  if (parts.length !== 6) return null
+
+  // Part 0: MATERIAL_LOT (type prefix, already checked)
+  // Part 1: lotId-<id>
+  const lotIdMatch = parts[1].match(/^lotId-(.+)$/i)
+  if (!lotIdMatch) return null
+  const lotId = lotIdMatch[1]
+
+  // Part 2: sku-<sku>
+  const skuMatch = parts[2].match(/^sku-(.+)$/i)
+  if (!skuMatch) return null
+  const sku = skuMatch[1]
+
+  // Part 3: <quantity>-<unit>
+  const qtyUnitMatch = parts[3].match(/^(\d+)-(.+)$/)
+  if (!qtyUnitMatch) return null
+  const quantity = parseInt(qtyUnitMatch[1], 10)
+  const unit = qtyUnitMatch[2]
+
+  // Part 4: Supplier-<supplier>
+  const supplierMatch = parts[4].match(/^Supplier-(.+)$/i)
+  if (!supplierMatch) return null
+  const supplier = supplierMatch[1].trim()
+
+  // Part 5: DateIn-<date>
+  const dateInMatch = parts[5].match(/^DateIn-(.+)$/i)
+  if (!dateInMatch) return null
+  const dateIn = dateInMatch[1]
+
+  return {
+    type: "MATERIAL_LOT",
+    lotId,
+    sku,
+    quantity,
+    unit,
+    supplier,
+    dateIn,
+  }
+}
+
 export function parseQRPayload(raw: string): ParsedQR {
   const trimmed = raw.trim()
 
@@ -151,7 +206,29 @@ export function parseQRPayload(raw: string): ParsedQR {
       }
     }
   } catch {
-    // Not JSON — fall through to regex
+    // Not JSON — fall through to new string format or regex
+  }
+
+  // Try new string format: MATERIAL_LOT:lotId-<id>:sku-<sku>:<qty>-<unit>:Supplier-<supplier>:DateIn-<date>
+  const materialLotParsed = parseMaterialLotString(trimmed)
+  if (materialLotParsed) {
+    return {
+      payload: {
+        type: materialLotParsed.type,
+        id: materialLotParsed.lotId,
+        code: materialLotParsed.lotId,
+        name: `${materialLotParsed.sku} - ${materialLotParsed.quantity} ${materialLotParsed.unit}`,
+        extra: {
+          quantity: materialLotParsed.quantity,
+          unit: materialLotParsed.unit,
+          supplier: materialLotParsed.supplier,
+          dateIn: materialLotParsed.dateIn,
+        },
+      },
+      raw: trimmed,
+      isLegacy: false,
+      detectedType: "MATERIAL_LOT",
+    }
   }
 
   // Regex fallback for plain text / Code128

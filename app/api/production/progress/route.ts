@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { productionProgress, productionAssignments, jobOrders, notifications } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { sendNotificationToAdmin, sendNotificationToQC } from "@/lib/notification-utils"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function GET(request: NextRequest) {
     try {
@@ -112,12 +113,15 @@ export async function POST(request: NextRequest) {
                 }
             }
 
+            const actorId = await getActorEmployeeId(request.headers)
+
             await db.insert(notifications).values({
                 type: "PROGRESS_UPDATE",
                 title: "Progress Produksi Baru",
                 message: `Job Order ${joNumber}: ${qtyCompletedInt} pcs selesai, ${qtyRejectedInt} pcs reject`,
                 reference: "PRODUCTION",
                 referenceId: assignmentId,
+                actorId,
                 isRead: false,
             })
 
@@ -127,7 +131,9 @@ export async function POST(request: NextRequest) {
                 "Progress Produksi Baru",
                 `${joNumber}: ${qtyCompletedInt} pcs selesai`,
                 "PRODUCTION",
-                assignmentId
+                assignmentId,
+                {},
+                actorId || undefined
             )
 
             await sendNotificationToQC(
@@ -135,7 +141,9 @@ export async function POST(request: NextRequest) {
                 "Progress Produksi Baru",
                 `${joNumber}: ${qtyCompletedInt} pcs selesai - Siap QC`,
                 "PRODUCTION",
-                assignmentId
+                assignmentId,
+                {},
+                actorId || undefined
             )
         }
 

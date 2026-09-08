@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { salaries, employees, transactions, notifications } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { formatCurrencyServer } from "@/lib/server-currency"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function GET(
   request: NextRequest,
@@ -88,8 +89,10 @@ export async function PUT(
         date: new Date(),
       })
 
+      const actorId = await getActorEmployeeId(request.headers)
       await db.insert(notifications).values({
         employeeId: salary.employeeId,
+        actorId,
         type: "SALARY_PAID",
         title: "Gaji Telah Ditransfer",
         message: `Gaji periode ${salary.period} sebesar ${await formatCurrencyServer(salary.totalSalary || 0)} telah ditransfer.`,

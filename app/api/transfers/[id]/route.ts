@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { transfers, transferItems, inventoryStock, inventoryMovements } from "@/db/schema"
+import { transfers, transferItems, transferPhotos, inventoryStock, inventoryMovements } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
+import { PERMISSION } from "@/lib/constants"
+import { requirePermission, requireAnyPermission } from "@/lib/rbac"
+
+async function getSessionRole(headers: Headers): Promise<string> {
+  try {
+    const session = await fetch("/api/debug-session2", {
+      headers: { "Cookie": headers.get("cookie") || "" }
+    })
+    const sessionData = await session.json()
+    return sessionData.user?.role || "GUEST"
+  } catch {
+    return "GUEST"
+  }
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const role = await getSessionRole(request.headers)
+    const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_VIEW, PERMISSION.BARANG_KELUAR_VIEW])
+    if (!permCheck.authorized) return permCheck.error
+
     const { id } = await params
     const transfer = await db.select().from(transfers).where(eq(transfers.id, id))
     
@@ -16,8 +34,16 @@ export async function GET(
     }
 
     const items = await db.select().from(transferItems).where(eq(transferItems.transferId, id))
+    const photos = await db.select({
+      id: transferPhotos.id,
+      transferId: transferPhotos.transferId,
+      photoData: transferPhotos.photoData,
+      label: transferPhotos.label,
+      timestamp: transferPhotos.timestamp,
+      createdAt: transferPhotos.createdAt,
+    }).from(transferPhotos).where(eq(transferPhotos.transferId, id))
 
-    return NextResponse.json({ ...transfer[0], items })
+    return NextResponse.json({ ...transfer[0], items, photos })
   } catch (error) {
     console.error("Error fetching transfer:", error)
     return NextResponse.json({ error: "Failed to fetch transfer" }, { status: 500 })
@@ -29,6 +55,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const role = await getSessionRole(request.headers)
+    const permCheck = requirePermission(role, PERMISSION.BARANG_MASUK_TERIMA)
+    if (!permCheck.authorized) return permCheck.error
+
     const { id } = await params
     const body = await request.json()
     const { status, notes } = body
@@ -78,7 +108,6 @@ export async function PUT(
         const quantity = item.quantity!
 
         try {
-          // Validate source stock before any mutation for this item
           if (transfer.fromWarehouseId) {
             const sourceStock = await db
               .select()
@@ -158,31 +187,28 @@ export async function PUT(
         }
       }
 
-      // Handle productId-less items as failed (no stock movement possible)
-      for (const item of itemsWithoutProductId) {
-        failedItems.push({
-          productId: null,
-          skuCode: item.skuCode || null,
-          quantity: item.quantity || 0,
-          reason: "Missing productId - no stock movement possible",
-        })
-      }
+      const failedItemsForRevert = itemsWithoutProductId.map(item => ({
+        productId: null,
+        skuCode: item.skuCode || null,
+        quantity: item.quantity || 0,
+        reason: "Missing productId - no stock movement possible",
+      }))
 
-      // If any items failed, revert status to IN_PROGRESS and inform caller
-      if (failedItems.length > 0) {
+      if (failedItems.length > 0 || failedItemsForRevert.length > 0) {
+        const allFailed = [...failedItems, ...failedItemsForRevert]
         const hasPartialSuccess = succeededItems.length > 0
         const newStatus = hasPartialSuccess ? "IN_PROGRESS" : "PENDING"
         await db.update(transfers)
           .set({ status: newStatus, updatedAt: new Date() })
           .where(eq(transfers.id, id))
         
-        console.log(`[PUT /transfers/${id}] Partial completion: ${succeededItems.length} succeeded, ${failedItems.length} failed -> status ${newStatus}`)
+        console.log(`[PUT /transfers/${id}] Partial completion: ${succeededItems.length} succeeded, ${allFailed.length} failed -> status ${newStatus}`)
 
         return NextResponse.json({
           ...updated[0],
           status: newStatus,
-          warning: `Transfer partially completed: ${failedItems.length} item(s) failed`,
-          failedItems,
+          warning: `Transfer partially completed: ${allFailed.length} item(s) failed`,
+          failedItems: allFailed,
           succeededCount: succeededItems.length,
         })
       }
@@ -201,12 +227,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const role = await getSessionRole(request.headers)
+    const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_DELETE, PERMISSION.BARANG_KELUAR_DELETE])
+    if (!permCheck.authorized) return permCheck.error
+
     const { id } = await params
 
-    // Delete transfer items first
     await db.delete(transferItems).where(eq(transferItems.transferId, id))
     
-    // Delete transfer
     const deleted = await db.delete(transfers).where(eq(transfers.id, id)).returning()
 
     if (deleted.length === 0) {

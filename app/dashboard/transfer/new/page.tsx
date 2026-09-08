@@ -25,11 +25,7 @@ import {
 import { PageHeader } from "@/components/shared"
 import { ArrowLeftIcon, PlusIcon, TruckIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { useFetch } from "@/hooks/useFetch"
-import { ScanButton } from "@/components/scanner"
-import { parseQRPayload } from "@/lib/qr-payload"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { toast } from "sonner"
-import { QrCodeIcon } from "@heroicons/react/24/outline"
 
 interface TransferItem {
   id: string
@@ -55,7 +51,6 @@ interface Product {
 export default function NewTransferPage() {
   const router = useRouter()
   const { user } = useSessionWithRole()
-  const operatorId = user?.id || user?.email || "OP-001"
   const isQC = user?.role === "QC"
   const [sourceWarehouse, setSourceWarehouse] = useState("")
   const [destinationWarehouse, setDestinationWarehouse] = useState("")
@@ -64,14 +59,9 @@ export default function NewTransferPage() {
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState("")
 
-  // Cumulative count tracking: productId -> scan count (for "1 Scan = 1 Pcs")
-  const [scannedMap, setScannedMap] = useState<Record<string, number>>({})
-
   // QC status tracking: productId -> "GOOD" | "REJECT" | undefined (only QC can set)
   const [qcStatusMap, setQcStatusMap] = useState<Record<string, "GOOD" | "REJECT" | undefined>>({})
 
-  // Target for deviation calculation (fase pertama: target tetap 100 Pcs)
-  const targetQty = 100
   const { data: products } = useFetch<Product[]>("/api/products")
 
   const { data: warehouses } = useFetch<Warehouse[]>("/api/warehouses")
@@ -93,58 +83,6 @@ export default function NewTransferPage() {
     setItems([...items, newItem])
     setSelectedItem("")
     setQuantity("")
-  }
-
-  const handleScan = (raw: string) => {
-    const parsed = parseQRPayload(raw)
-    if (!parsed.payload) {
-      toast.error("QR code tidak valid")
-      return
-    }
-
-    const code = parsed.payload.code
-    const id = parsed.payload.id
-
-    // Find the product by code or ID - Product has sku, not code
-    const product = products?.find(
-      (p) =>
-        p.id === id ||
-        p.sku === code ||
-        p.name.toLowerCase() === code.toLowerCase()
-    )
-
-    if (!product) {
-      toast.error(`Produk tidak ditemukan: ${code}`)
-      return
-    }
-
-    // Always set quantity = 1 for "1 Scan = 1 Pcs"
-    const newScanCount = (scannedMap[product.id] || 0) + 1
-    setScannedMap({ ...scannedMap, [product.id]: newScanCount })
-
-    // Initialize QC status as undefined (pending) for new product scans
-    setQcStatusMap((prev) => {
-      const newMap = { ...prev }
-      if (newMap[product.id] === undefined) {
-        newMap[product.id] = "GOOD" // default to GOOD, QC can change to REJECT
-      }
-      return newMap
-    })
-
-    // Add item to items array with quantity = 1
-    const newItem: TransferItem = {
-      id: Math.random().toString(36).substring(7),
-      sku: product.sku,
-      name: product.name,
-      quantity: 1, // Always 1 for scan flow
-      unit: "Pcs",
-    }
-
-    setItems([...items, newItem])
-    setSelectedItem("")
-    setQuantity("")
-
-    toast.success(`Produk terpilih: ${product.sku}, Qty: 1 (scan #${newScanCount})`)
   }
 
   const handleRemoveItem = (id: string) => {

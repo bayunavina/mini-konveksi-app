@@ -51,8 +51,11 @@ export async function PUT(
     }
 
     return NextResponse.json(result[0])
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating product:", error)
+    if (String(error?.message || "").includes("duplicate") || String(error?.cause?.message || "").includes("duplicate") || error?.code === "23505") {
+      return NextResponse.json({ error: "SKU sudah digunakan. Silakan gunakan SKU yang berbeda." }, { status: 409 })
+    }
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
   }
 }

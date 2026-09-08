@@ -5,6 +5,7 @@ import { eq, desc, like, sql } from "drizzle-orm"
 import { generateKasbonCode } from "@/lib/utils"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
 import { formatCurrencyServer } from "@/lib/server-currency"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { employeeId, amount, purpose, remark } = body
+    const actorId = await getActorEmployeeId(request.headers)
 
     // Generate kasbon code with format KB-YYYYMMDD-XXX
     const today = new Date()
@@ -114,7 +116,8 @@ export async function POST(request: NextRequest) {
       `${employeeName} mengajukan kasbon ${await formatCurrencyServer(Number(amount || 0))}`,
       "KASBON",
       newAdvance[0].id,
-      { employeeName, amount: Number(amount || 0) }
+      { employeeName, amount: Number(amount || 0) },
+      actorId || undefined
     )
 
     return NextResponse.json(newAdvance[0], { status: 201 })

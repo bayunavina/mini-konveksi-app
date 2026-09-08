@@ -448,8 +448,8 @@ export function BatchBarcodeGenerator({
               <div className="grid grid-cols-3 gap-4 mt-4">
                 {items
                   .filter((item) => generatedCodes.has(item.sku))
-                  .map((item) => (
-                    <div key={item.sku} className="text-center border rounded p-2">
+                  .map((item, index) => (
+                    <div key={`${item.sku}-${index}`} className="text-center border rounded p-2">
                       <img
                         src={generatedCodes.get(item.sku)}
                         alt={item.sku}

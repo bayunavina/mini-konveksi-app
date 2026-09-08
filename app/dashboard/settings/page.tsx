@@ -55,6 +55,7 @@ import {
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline"
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/constants"
+import { useUserRole } from "@/lib/use-session-with-role"
 import { toast } from "sonner"
 
 interface Employee {
@@ -89,6 +90,17 @@ const CONFIRM_TEXT = "FACTORY RESET"
 export default function SettingsPage() {
   const [users, setUsers] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
+
+  const { role: userRole } = useUserRole()
+  const isSuperAdmin = userRole === "SUPERADMIN"
+
+  const requireSuperAdmin = (action: string): boolean => {
+    if (!isSuperAdmin) {
+      toast.error(`${action} tidak bisa dilakukan karena anda bukan superadmin`)
+      return false
+    }
+    return true
+  }
 
   // Backup states
   const [backupLoading, setBackupLoading] = useState(false)
@@ -143,6 +155,7 @@ export default function SettingsPage() {
   }
 
   const handleBackup = async () => {
+    if (!requireSuperAdmin("Backup")) return
     setBackupLoading(true)
     try {
       const res = await fetch("/api/backup?download=true")
@@ -181,6 +194,7 @@ export default function SettingsPage() {
   }
 
   const handleRestore = async () => {
+    if (!requireSuperAdmin("Restore")) return
     if (!restoreFile) {
       toast.error("Pilih file backup terlebih dahulu")
       return
@@ -224,6 +238,7 @@ export default function SettingsPage() {
   }
 
   const handleFactoryReset = async () => {
+    if (!requireSuperAdmin("Reset")) return
     if (confirmText !== CONFIRM_TEXT) {
       toast.error(`Ketik "${CONFIRM_TEXT}" untuk konfirmasi`)
       return
@@ -392,6 +407,14 @@ export default function SettingsPage() {
           <CardDescription>Cadangkan dan pulihkan data sistem. Backup berisi semua tabel dalam format JSON.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {!isSuperAdmin && (
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                <ShieldCheckIcon className="h-3 w-3 inline mr-1" />
+                Fitur <strong>Backup & Restore</strong> khusus <strong>Super Admin</strong>. Anda sebagai {userRole || "Admin"} tidak dapat melakukan backup atau restore.
+              </p>
+            </div>
+          )}
           {/* Backup Info */}
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2 space-y-4">
@@ -461,7 +484,9 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     className="border-green-200 text-green-700 hover:bg-green-50"
-                    onClick={() => setShowRestoreDialog(true)}
+                    onClick={() => {
+                      if (requireSuperAdmin("Restore")) setShowRestoreDialog(true)
+                    }}
                     disabled={!restoreFile || restoring}
                   >
                     <CloudArrowDownIcon className="h-4 w-4 mr-2" />
@@ -516,6 +541,14 @@ export default function SettingsPage() {
           <CardDescription>Hapus data sistem dan kembalikan ke pengaturan awal. Tindakan ini tidak dapat dibatalkan.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {!isSuperAdmin && (
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                <ShieldCheckIcon className="h-3 w-3 inline mr-1" />
+                Zona ini khusus <strong>Super Admin</strong>. Reset tidak bisa dilakukan karena anda bukan superadmin.
+              </p>
+            </div>
+          )}
           <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/20 p-4">
             <h4 className="font-medium text-red-900 dark:text-red-100 flex items-center gap-2">
               <TrashIcon className="h-4 w-4" />
@@ -571,13 +604,15 @@ export default function SettingsPage() {
               <Button
   variant="destructive"
   disabled={confirmText !== CONFIRM_TEXT || factoryLoading}
-  onClick={() => setShowFactoryDialog(true)}
+  onClick={() => {
+    if (requireSuperAdmin("Reset")) setShowFactoryDialog(true)
+  }}
   className="w-full"
   >
   <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
   {factoryLoading ? "Memproses..." : <span className="text-red-500 dark:text-yellow-400">{`Reset ${scopeLabels[factoryScope] || factoryScope}`}</span>}
   </Button>
-              <p className="text-xs text-muted-foreground text-center">Butuh akses Admin. Hanya admin yang dapat melakukan factory reset.</p>
+              <p className="text-xs text-muted-foreground text-center">Khusus Super Admin. Admin tidak dapat melakukan factory reset.</p>
             </div>
 
             <div className="rounded-lg border p-4 space-y-3">

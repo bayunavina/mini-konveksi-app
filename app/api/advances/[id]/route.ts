@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { advances, employees, notifications, transactions } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { formatCurrencyServer } from "@/lib/server-currency"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function GET(
   request: NextRequest,
@@ -79,7 +80,6 @@ export async function PUT(
       paymentRemark 
     } = body
 
-    // Get current advance
     const currentAdvance = await db
       .select()
       .from(advances)
@@ -93,21 +93,22 @@ export async function PUT(
     const current = currentAdvance[0]
     const updateData: Record<string, unknown> = {}
     const amountDisplay = await formatCurrencyServer(current.amount || 0)
+    const totalAmount = current.amount || 0
     
     if (amount !== undefined) updateData.amount = amount
     if (purpose !== undefined) updateData.purpose = purpose
     if (approvedBy !== undefined) updateData.approvedBy = approvedBy
     if (remark !== undefined) updateData.remark = remark
 
-    // Handle status changes
     if (status !== undefined) {
       updateData.status = status
       
       if (status === "APPROVED") {
-        // Notify employee about approval
+        const actorId = await getActorEmployeeId(request.headers)
         if (current.employeeId) {
           await db.insert(notifications).values({
             employeeId: current.employeeId,
+            actorId,
             type: "KASBON_APPROVED",
             title: "Kasbon Disetujui",
             message: `Pengajuan kasbon ${current.kode} sebesar ${amountDisplay} telah disetujui.`,
@@ -116,10 +117,11 @@ export async function PUT(
           })
         }
       } else if (status === "REJECTED") {
-        // Notify employee about rejection
+        const actorId = await getActorEmployeeId(request.headers)
         if (current.employeeId) {
           await db.insert(notifications).values({
             employeeId: current.employeeId,
+            actorId,
             type: "KASBON_REJECTED",
             title: "Kasbon Ditolak",
             message: `Pengajuan kasbon ${current.kode} sebesar ${amountDisplay} ditolak.`,
@@ -130,13 +132,14 @@ export async function PUT(
       } else if (status === "PAID") {
         updateData.paidAt = new Date()
         
-        // Notify employee about full payment
+        const actorId = await getActorEmployeeId(request.headers)
         if (current.employeeId) {
           await db.insert(notifications).values({
             employeeId: current.employeeId,
+            actorId,
             type: "KASBON_PAID",
             title: "Kasbon Lunas",
-            message: `Kasbon ${current.kode} sebesar ${amountDisplay} telah dilunasi.`,
+            message: `Kasbon ${current.kode} sebesar ${await formatCurrencyServer(totalAmount)} telah dilunasi.`,
             reference: "KASBON",
             referenceId: current.id,
           })
@@ -144,13 +147,10 @@ export async function PUT(
       }
     }
 
-    // Handle payment
     if (paymentAmount !== undefined && paymentAmount > 0) {
       const currentPaidAmount = current.paidAmount || 0
       const newPaidAmount = currentPaidAmount + paymentAmount
-      const totalAmount = current.amount || 0
       
-      // Create INCOME transaction for kasbon payment
       const employeeResult = await db
         .select({ name: employees.name })
         .from(employees)
@@ -159,7 +159,6 @@ export async function PUT(
       
       const employeeName = employeeResult[0]?.name || "Karyawan"
       
-      // Create INCOME transaction (kasbon payment is income for company)
       await db.insert(transactions).values({
         date: paymentDate ? new Date(paymentDate) : new Date(),
         type: "INCOME",
@@ -169,7 +168,6 @@ export async function PUT(
         reference: current.kode,
       })
 
-      // Update payment history
       const currentHistory = current.paymentHistory ? JSON.parse(current.paymentHistory) : []
       currentHistory.push({
         amount: paymentAmount,
@@ -180,15 +178,15 @@ export async function PUT(
       updateData.paidAmount = newPaidAmount
       updateData.paymentHistory = JSON.stringify(currentHistory)
       
-      // Auto-set status to LUNAS if fully paid
       if (newPaidAmount >= totalAmount) {
         updateData.status = "LUNAS"
         updateData.paidAt = new Date()
         
-        // Notify employee about full payment
+        const actorId = await getActorEmployeeId(request.headers)
         if (current.employeeId) {
           await db.insert(notifications).values({
             employeeId: current.employeeId,
+            actorId,
             type: "KASBON_PAID",
             title: "Kasbon Lunas",
             message: `Kasbon ${current.kode} sebesar ${await formatCurrencyServer(totalAmount)} telah dilunasi.`,
@@ -198,17 +196,17 @@ export async function PUT(
         }
       }
 
-      // Notify admin about partial payment
+      const actorId = await getActorEmployeeId(request.headers)
       await db.insert(notifications).values({
         type: "TRANSACTION_INCOME",
         title: "Pembayaran Kasbon",
         message: `Pembayaran kasbon ${current.kode} oleh ${employeeName} sebesar ${await formatCurrencyServer(paymentAmount)}.`,
         reference: "KASBON",
         referenceId: current.id,
+        actorId,
       })
     }
 
-    // Update the advance
     updateData.updatedAt = new Date()
     const result = await db.update(advances)
       .set(updateData)

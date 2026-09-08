@@ -41,7 +41,7 @@ import { eq, not, sql, inArray } from "drizzle-orm"
 const SUPERADMIN_EMAIL = "erpkonveksi@gmail.com"
 const CONFIRM_TEXT = "FACTORY RESET"
 
-async function requireAdmin(request: NextRequest) {
+async function requireSuperAdmin(request: NextRequest) {
   const sessionData = await getSessionFromHeaders(request.headers)
   if (!sessionData) {
     return { authorized: false, response: NextResponse.json({ error: "Unauthorized - Silakan login terlebih dahulu" }, { status: 401 }) }
@@ -52,15 +52,15 @@ async function requireAdmin(request: NextRequest) {
   }
   if (email) {
     const emp = await db.select().from(employees).where(eq(employees.email, email)).limit(1)
-    if (emp.length > 0 && (emp[0].role === "ADMIN" || emp[0].role === "SUPERADMIN")) {
+    if (emp.length > 0 && emp[0].role === "SUPERADMIN") {
       return { authorized: true, email }
     }
   }
-  return { authorized: false, response: NextResponse.json({ error: "Forbidden - Hanya Admin yang dapat melakukan factory reset" }, { status: 403 }) }
+  return { authorized: false, response: NextResponse.json({ error: "Forbidden - Khusus Super Admin. Reset tidak bisa dilakukan karena anda bukan superadmin" }, { status: 403 }) }
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireSuperAdmin(request)
   if (!auth.authorized) return auth.response!
 
   try {
@@ -78,6 +78,9 @@ export async function GET(request: NextRequest) {
       db.select({ count: sql<number>`count(*)` }).from(salaries).then(r => Number(r[0]?.count || 0)),
       db.select({ count: sql<number>`count(*)` }).from(advances).then(r => Number(r[0]?.count || 0)),
       db.select({ count: sql<number>`count(*)` }).from(assets).then(r => Number(r[0]?.count || 0)),
+      db.select({ count: sql<number>`count(*)` }).from(masterSkus).then(r => Number(r[0]?.count || 0)),
+      db.select({ count: sql<number>`count(*)` }).from(suppliers).then(r => Number(r[0]?.count || 0)),
+      db.select({ count: sql<number>`count(*)` }).from(costCategories).then(r => Number(r[0]?.count || 0)),
     ])
 
     return NextResponse.json({
@@ -95,8 +98,12 @@ export async function GET(request: NextRequest) {
         salaries: counts[10],
         advances: counts[11],
         assets: counts[12],
+        // Master data - ditampilkan tapi DIJAGA (tidak dihapus)
+        masterSkus: counts[13],
+        suppliers: counts[14],
+        costCategories: counts[15],
       },
-      warning: "Factory reset akan menghapus SEMUA data bisnis. Akun superadmin (erpkonveksi@gmail.com) akan dipertahankan.",
+      warning: "Factory reset akan menghapus SEMUA data bisnis (transaksi, produksi, inventory, karyawan, dll). Data Master (Bahan Baku, Supplier, Kategori Biaya) DIJAGA dan TIDAK dihapus. Akun superadmin (erpkonveksi@gmail.com) akan dipertahankan.",
       confirmText: CONFIRM_TEXT,
     })
   } catch (error) {
@@ -106,7 +113,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireSuperAdmin(request)
   if (!auth.authorized) return auth.response!
 
   try {
@@ -163,9 +170,11 @@ export async function POST(request: NextRequest) {
       await countAndDelete(inventoryMovements, "inventoryMovements_2") // already done
       await countAndDelete(jobOrders, "jobOrders")
       await countAndDelete(products, "products")
-      await countAndDelete(masterSkus, "masterSkus")
-      await countAndDelete(costCategories, "costCategories")
-      await countAndDelete(suppliers, "suppliers")
+      // MASTER DATA DIPERTAHANKAN saat factory reset (policy: data master bersifat persisten)
+      // Data master hanya berubah jika: (1) user mengubah langsung, (2) restore backup dengan mode replace
+      // await countAndDelete(masterSkus, "masterSkus")
+      // await countAndDelete(costCategories, "costCategories")
+      // await countAndDelete(suppliers, "suppliers")
       await countAndDelete(warehouses, "warehouses")
       await countAndDelete(salaryComponents, "salaryComponents")
 
@@ -237,7 +246,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: "Factory reset berhasil. Semua data bisnis telah dihapus. Akun superadmin dipertahankan.",
+        message: "Factory reset berhasil. Semua data bisnis telah dihapus. Data Master (Bahan Baku, Supplier, Kategori Biaya) DIJAGA. Akun superadmin dipertahankan.",
         deleted,
         scope: "all",
       })

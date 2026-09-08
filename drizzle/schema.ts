@@ -519,6 +519,7 @@ export const materialLots = pgTable("material_lots", {
 	initialQty: integer("initial_qty").default(0).notNull(),
 	status: text().default('AVAILABLE'),
 	notes: text(),
+	supplier: text("supplier"),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
 	isReadyForProduction: boolean("is_ready_for_production").default(false),
@@ -653,4 +654,19 @@ export const productionAssignments = pgTable("production_assignments", {
 			foreignColumns: [employees.id],
 			name: "production_assignments_employee_id_employees_id_fk"
 		}),
+]);
+
+export const transferPhotos = pgTable("transfer_photos", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	transferId: uuid("transfer_id").notNull(),
+	photoData: text("photo_data").notNull(),
+	label: text().notNull(),
+	timestamp: timestamp("timestamp", { mode: 'string' }).defaultNow(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
+}, (table) => [
+	foreignKey({
+			columns: [table.transferId],
+			foreignColumns: [transfers.id],
+			name: "transfer_photos_transfer_id_transfers_id_fk"
+		}).onDelete("cascade"),
 ]);

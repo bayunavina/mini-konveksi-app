@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { productionAssignments, jobOrders, notifications, materialLots } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function PUT(
     request: NextRequest,
@@ -97,8 +98,10 @@ export async function PUT(
             if (status === "REJECTED") {
                 const jo = await db.select().from(jobOrders).where(eq(jobOrders.id, assignment.jobOrderId!))
                 if (jo[0]) {
+                    const actorId = await getActorEmployeeId(request.headers)
                     await db.insert(notifications).values({
                         employeeId: assignment.employeeId,
+                        actorId,
                         type: "QC_REJECTED",
                         title: "Job Order Ditolak",
                         message: `Job order ${jo[0].joNumber} telah ditolak.`,

@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { productionSalary, productionAssignments, jobOrders, employees, transactions, notifications } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { formatCurrencyServer } from "@/lib/server-currency"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function PUT(request: NextRequest) {
     try {
@@ -86,8 +87,10 @@ export async function PUT(request: NextRequest) {
                 }
             }
 
+            const actorId = await getActorEmployeeId(request.headers)
             await db.insert(notifications).values({
                 employeeId: salary[0].employeeId,
+                actorId,
                 type: "SALARY_PAID",
                 title: notificationTitle,
                 message: notificationMessage + (joNumber !== "-" ? ` Job Order: ${joNumber}` : ""),

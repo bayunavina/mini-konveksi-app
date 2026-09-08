@@ -29,6 +29,20 @@
       "when": 1788338138253,
       "tag": "0003_add_qrcode_to_employees_joborders",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788774628669,
+      "tag": "0004_gray_exiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788817054921,
+      "tag": "0005_sudden_preak",
+      "breakpoints": true
     }
   ]
 }

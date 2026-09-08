@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { products, inventory, warehouses, assets, assetMaintenance, jobOrders, qcReports, employees, teams, salaries, transfers, transferItems, user, session, account, productionLogs, advances, inventoryStock, inventoryMovements, materialLots, productionFromMaterials, rejects, notifications, productionAssignments, productionProgress, productionSalary } from "./schema";
+import { products, inventory, warehouses, assets, assetMaintenance, jobOrders, qcReports, employees, teams, salaries, transfers, transferItems, user, session, account, productionLogs, advances, inventoryStock, inventoryMovements, materialLots, productionFromMaterials, rejects, notifications, productionAssignments, productionProgress, productionSalary, transferPhotos } from "./schema";
 
 export const inventoryRelations = relations(inventory, ({one}) => ({
 	product: one(products, {
@@ -107,6 +107,7 @@ export const transferItemsRelations = relations(transferItems, ({one}) => ({
 
 export const transfersRelations = relations(transfers, ({one, many}) => ({
 	transferItems: many(transferItems),
+	transferPhotos: many(transferPhotos),
 	warehouse_fromWarehouseId: one(warehouses, {
 		fields: [transfers.fromWarehouseId],
 		references: [warehouses.id],
@@ -252,5 +253,11 @@ export const productionSalaryRelations = relations(productionSalary, ({one}) => 
 	productionAssignment: one(productionAssignments, {
 		fields: [productionSalary.assignmentId],
 		references: [productionAssignments.id]
+	}),
+}));
+export const transferPhotosRelations = relations(transferPhotos, ({one}) => ({
+	transfer: one(transfers, {
+		fields: [transferPhotos.transferId],
+		references: [transfers.id]
 	}),
 }));

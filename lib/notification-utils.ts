@@ -33,6 +33,7 @@ export interface CreateNotificationParams {
   targetEmails?: string[]
   excludeEmail?: string
   emailData?: Record<string, string | number>
+  actorId?: string
 }
 
 async function getAdminEmails(): Promise<string[]> {
@@ -180,6 +181,7 @@ export async function sendNotification(params: CreateNotificationParams) {
     targetRoles = [],
     excludeEmail,
     emailData,
+    actorId,
   } = params
 
   try {
@@ -210,6 +212,7 @@ export async function sendNotification(params: CreateNotificationParams) {
     await db.insert(notifications).values(
       filteredEmployees.map((emp) => ({
         employeeId: emp.id,
+        actorId: actorId || null,
         type,
         title,
         message,
@@ -248,7 +251,8 @@ export async function sendNotificationToRole(
   message: string,
   reference?: string,
   referenceId?: string,
-  emailData?: Record<string, string | number>
+  emailData?: Record<string, string | number>,
+  actorId?: string
 ) {
   return sendNotification({
     type,
@@ -258,6 +262,7 @@ export async function sendNotificationToRole(
     referenceId,
     targetRoles: [role],
     emailData,
+    actorId,
   })
 }
 
@@ -267,9 +272,10 @@ export async function sendNotificationToAdmin(
   message: string,
   reference?: string,
   referenceId?: string,
-  emailData?: Record<string, string | number>
+  emailData?: Record<string, string | number>,
+  actorId?: string
 ) {
-  return sendNotificationToRole("ADMIN", type, title, message, reference, referenceId, emailData)
+  return sendNotificationToRole("ADMIN", type, title, message, reference, referenceId, emailData, actorId)
 }
 
 export async function sendNotificationToGudang(
@@ -278,9 +284,10 @@ export async function sendNotificationToGudang(
   message: string,
   reference?: string,
   referenceId?: string,
-  emailData?: Record<string, string | number>
+  emailData?: Record<string, string | number>,
+  actorId?: string
 ) {
-  return sendNotificationToRole("GUDANG", type, title, message, reference, referenceId, emailData)
+  return sendNotificationToRole("GUDANG", type, title, message, reference, referenceId, emailData, actorId)
 }
 
 export async function sendNotificationToQC(
@@ -289,9 +296,10 @@ export async function sendNotificationToQC(
   message: string,
   reference?: string,
   referenceId?: string,
-  emailData?: Record<string, string | number>
+  emailData?: Record<string, string | number>,
+  actorId?: string
 ) {
-  return sendNotificationToRole("QC", type, title, message, reference, referenceId, emailData)
+  return sendNotificationToRole("QC", type, title, message, reference, referenceId, emailData, actorId)
 }
 
 export async function sendNotificationToKaryawan(
@@ -301,11 +309,13 @@ export async function sendNotificationToKaryawan(
   message: string,
   reference?: string,
   referenceId?: string,
-  emailData?: Record<string, string | number>
+  emailData?: Record<string, string | number>,
+  actorId?: string
 ) {
   try {
     await db.insert(notifications).values({
       employeeId,
+      actorId: actorId || null,
       type,
       title,
       message,

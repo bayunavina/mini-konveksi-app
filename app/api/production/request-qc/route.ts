@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { productionAssignments, jobOrders, notifications } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { sendNotificationToQC } from "@/lib/notification-utils"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function POST(request: NextRequest) {
     try {
@@ -53,12 +54,15 @@ export async function POST(request: NextRequest) {
                         })
                         .where(eq(jobOrders.id, current.jobOrderId))
 
+                    const actorId = await getActorEmployeeId(request.headers)
+
                     await db.insert(notifications).values({
                         type: "QC_PENDING",
                         title: "Request QC Baru",
                         message: `Job Order ${joNumber}: ${pendingQty} pcs menunggu QC`,
                         reference: "PRODUCTION",
                         referenceId: assignmentId,
+                        actorId,
                         isRead: false,
                     })
 
@@ -67,7 +71,9 @@ export async function POST(request: NextRequest) {
                         "Request QC Baru",
                         `${joNumber}: ${pendingQty} pcs menunggu verifikasi QC`,
                         "PRODUCTION",
-                        assignmentId
+                        assignmentId,
+                        {},
+                        actorId || undefined
                     )
                 }
             }

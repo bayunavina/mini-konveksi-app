@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
                 ml.initial_qty as "initialQty",
                 ml.status,
                 ml.notes,
+                ml.supplier,
                 ml.is_ready_for_production as "isReadyForProduction",
                 ml.created_at as "createdAt",
                 ms.id as "skuId",
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
             status: string
             isReadyForProduction: boolean | null
             notes: string | null
+            supplier: string | null
             createdAt: Date
             skuId: string | null
             skuCode: string | null
@@ -101,6 +103,7 @@ export async function GET(request: NextRequest) {
             status: lot.status,
             isReadyForProduction: lot.isReadyForProduction ?? false,
             notes: lot.notes,
+            supplier: lot.supplier,
             createdAt: lot.createdAt,
             product: lot.skuId ? {
                 id: lot.skuId,
@@ -121,7 +124,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { productId, quantity, notes } = body
+        const { productId, quantity, notes, supplier } = body
 
         if (!productId || !quantity) {
             return NextResponse.json({ error: "productId and quantity are required" }, { status: 400 })
@@ -138,6 +141,7 @@ export async function POST(request: NextRequest) {
             initialQty: parseInt(quantity),
             status: "AVAILABLE",
             notes,
+            supplier,
         }).returning()
 
         const lot = newLot[0]

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { transfers, transferItems } from "@/db/schema"
+import { transfers, transferItems, transferPhotos } from "@/db/schema"
 import { desc, eq } from "drizzle-orm"
 import { sendNotificationToGudang, sendNotificationToAdmin } from "@/lib/notification-utils"
+import { getActorEmployeeId } from "@/lib/auth-utils"
+import { PERMISSION } from "@/lib/constants"
+import { requirePermission, requireAnyPermission } from "@/lib/rbac"
 
 function generateTransferNumber(type: string): string {
   const now = new Date()
@@ -14,8 +17,24 @@ function generateTransferNumber(type: string): string {
   return `${prefix}-${year}${month}${day}-${random}`
 }
 
-export async function GET() {
+async function getSessionRole(headers: Headers): Promise<string> {
   try {
+    const session = await fetch("/api/debug-session2", {
+      headers: { "Cookie": headers.get("cookie") || "" }
+    })
+    const sessionData = await session.json()
+    return sessionData.user?.role || "GUEST"
+  } catch {
+    return "GUEST"
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const role = await getSessionRole(request.headers)
+    const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_VIEW, PERMISSION.BARANG_KELUAR_VIEW])
+    if (!permCheck.authorized) return permCheck.error
+
     const allTransfers = await db.select().from(transfers).orderBy(desc(transfers.createdAt))
     
     const transfersWithItems = await Promise.all(
@@ -32,9 +51,22 @@ export async function GET() {
           .from(transferItems)
           .where(eq(transferItems.transferId, transfer.id))
         
+        const photos = await db
+          .select({
+            id: transferPhotos.id,
+            transferId: transferPhotos.transferId,
+            photoData: transferPhotos.photoData,
+            label: transferPhotos.label,
+            timestamp: transferPhotos.timestamp,
+            createdAt: transferPhotos.createdAt,
+          })
+          .from(transferPhotos)
+          .where(eq(transferPhotos.transferId, transfer.id))
+        
         return {
           ...transfer,
           items,
+          photos,
         }
       })
     )
@@ -48,14 +80,20 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const role = await getSessionRole(request.headers)
     const body = await request.json()
-    const { transferNumber, type, fromWarehouseId, toWarehouseId, status, notes, items } = body
+    const { type } = body
+    const requiredPermission = type === "INCOMING" ? PERMISSION.BARANG_MASUK_CREATE : PERMISSION.BARANG_KELUAR_CREATE
+    const permCheck = requirePermission(role, requiredPermission)
+    if (!permCheck.authorized) return permCheck.error
 
-    const generatedTransferNumber = transferNumber || generateTransferNumber(type)
+    const { transferNumber, type: transferType, fromWarehouseId, toWarehouseId, status, notes, items } = body
+
+    const generatedTransferNumber = transferNumber || generateTransferNumber(transferType)
 
     const newTransfer = await db.insert(transfers).values({
       transferNumber: generatedTransferNumber,
-      type,
+      type: transferType,
       fromWarehouseId: fromWarehouseId || null,
       toWarehouseId: toWarehouseId || null,
       status: status || "PENDING",
@@ -76,8 +114,10 @@ export async function POST(request: NextRequest) {
     }
 
     const totalQty = items?.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0) || 0
-    const transferLabel = type === "INCOMING" ? "Barang Masuk" : "Barang Keluar"
-    const notificationType = type === "INCOMING" ? "TRANSFER_IN" : "TRANSFER_OUT"
+    const transferLabel = transferType === "INCOMING" ? "Barang Masuk" : "Barang Keluar"
+    const notificationType = transferType === "INCOMING" ? "TRANSFER_IN" : "TRANSFER_OUT"
+
+    const actorId = await getActorEmployeeId(request.headers)
 
     await sendNotificationToGudang(
       notificationType as "TRANSFER_IN" | "TRANSFER_OUT",
@@ -85,7 +125,8 @@ export async function POST(request: NextRequest) {
       `${generatedTransferNumber} - ${totalQty} item${items?.length ? ` (${items.length} produk)` : ""}`,
       "TRANSFER",
       newTransfer[0].id,
-      { transferNumber: generatedTransferNumber, items: totalQty }
+      { transferNumber: generatedTransferNumber, items: totalQty },
+      actorId || undefined
     )
 
     await sendNotificationToAdmin(
@@ -94,7 +135,8 @@ export async function POST(request: NextRequest) {
       `${generatedTransferNumber} - ${totalQty} item${items?.length ? ` (${items.length} produk)` : ""}`,
       "TRANSFER",
       newTransfer[0].id,
-      { transferNumber: generatedTransferNumber, items: totalQty }
+      { transferNumber: generatedTransferNumber, items: totalQty },
+      actorId || undefined
     )
 
     return NextResponse.json(newTransfer[0], { status: 201 })

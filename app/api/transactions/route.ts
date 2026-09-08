@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { transactions, jobOrderCosts } from "@/db/schema"
 import { desc, eq, and, gte, lte, sql } from "drizzle-orm"
-import { getSessionFromHeaders } from "@/lib/auth-utils"
+import { getSessionFromHeaders, getActorEmployeeId } from "@/lib/auth-utils"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
 import { formatCurrencyServer } from "@/lib/server-currency"
 import { SUPERADMIN_EMAIL } from "@/lib/constants"
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { date, type, category, amount, description, reference, jobOrderId } = body
+    const actorId = await getActorEmployeeId(request.headers)
 
     const newTransaction = await db.insert(transactions).values({
       date: date ? new Date(date) : new Date(),
@@ -98,7 +99,8 @@ export async function POST(request: NextRequest) {
       `${transactionType}: ${await formatCurrencyServer(Number(amount || 0))} - ${description || "-"}`,
       "TRANSACTION",
       newTransaction[0].id,
-      { amount, description }
+      { amount, description },
+      actorId || undefined
     )
 
     return NextResponse.json(newTransaction[0], { status: 201 })

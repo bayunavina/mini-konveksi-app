@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared"
 import { ExportPrint } from "@/components/shared/export-print"
+import { PhotoGallery } from "@/components/shared/photo-gallery"
 import { ScanButton } from "@/components/scanner"
 import {
   ArrowLeftIcon,
@@ -52,6 +53,7 @@ import { useSessionWithRole } from "@/lib/use-session-with-role"
 import { MAX_PHOTO_UPLOAD } from "@/lib/constants"
 import { formatDate, formatDateLong } from "@/lib/utils"
 import { toast } from "sonner"
+import { hasPermission, PERMISSION } from "@/lib/constants"
 
 interface Transfer {
   id: string
@@ -63,6 +65,16 @@ interface Transfer {
   notes?: string
   createdAt: string
   items?: TransferItem[]
+  photos?: TransferPhoto[]
+}
+
+interface TransferPhoto {
+  id: string
+  transferId: string
+  photoData: string
+  label: string
+  timestamp: string
+  createdAt: string
 }
 
 interface TransferItem {
@@ -93,6 +105,7 @@ interface PhotoItem {
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Menunggu",
+  RECEIVED: "Diterima",
   IN_PROGRESS: "Diproses",
   COMPLETED: "Selesai",
   CANCELLED: "Dibatalkan",
@@ -100,6 +113,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
+  RECEIVED: "bg-green-100 text-green-800",
   IN_PROGRESS: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)]",
   COMPLETED: "bg-green-100 text-green-800",
   CANCELLED: "bg-red-100 text-red-800",
@@ -122,6 +136,7 @@ export default function IncomingPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [scanDialogOpen, setScanDialogOpen] = useState(false)
   const [scanProcessing, setScanProcessing] = useState(false)
+  const [photosDialogOpen, setPhotosDialogOpen] = useState(false)
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null)
   const [receivingNotes, setReceivingNotes] = useState("")
   const [creating, setCreating] = useState(false)
@@ -135,13 +150,17 @@ export default function IncomingPage() {
   const [itemQuantity, setItemQuantity] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const { data: allTransfers, loading, refetch } = useFetch<Transfer[]>("/api/transfers")
   const { data: warehouses } = useFetch<Warehouse[]>("/api/warehouses")
   const { skus: skuMaster } = useSKUMaster()
   const { user, isLoading: roleLoading } = useSessionWithRole()
   const userRole = user?.role || "GUDANG"
-  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN"
+  const canCreate = hasPermission(userRole, PERMISSION.BARANG_MASUK_CREATE)
+  const canReceive = hasPermission(userRole, PERMISSION.BARANG_MASUK_TERIMA)
+  const canDelete = hasPermission(userRole, PERMISSION.BARANG_MASUK_DELETE)
+  const canScan = hasPermission(userRole, PERMISSION.TRANSFER_SCAN)
 
   // P3-1: Simplifikasi Transfer - non-ADMIN otomatis ke Gudang Utama (default warehouse)
   const defaultWarehouse = useMemo(() => {
@@ -152,10 +171,10 @@ export default function IncomingPage() {
 
   // Sinkronkan destinationWarehouse dengan default warehouse untuk non-ADMIN
   useEffect(() => {
-    if (!isAdmin && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id && !roleLoading) {
+    if (!canCreate && defaultWarehouse && destinationWarehouse !== defaultWarehouse.id && !roleLoading) {
       setDestinationWarehouse(defaultWarehouse.id)
     }
-  }, [isAdmin, defaultWarehouse, destinationWarehouse, roleLoading])
+  }, [canCreate, defaultWarehouse, destinationWarehouse, roleLoading])
 
   const incomingTransfers = (allTransfers || []).filter(t => t.type === "INCOMING")
 
@@ -277,6 +296,11 @@ export default function IncomingPage() {
   const handleView = (transfer: Transfer) => {
     setSelectedTransfer(transfer)
     setViewDialogOpen(true)
+  }
+
+  const handleViewPhotos = (transfer: Transfer) => {
+    setSelectedTransfer(transfer)
+    setPhotosDialogOpen(true)
   }
 
   const handleAddItem = () => {
@@ -403,15 +427,33 @@ export default function IncomingPage() {
     }
   }
 
-  const handleConfirmReceive = async () => {
+const handleConfirmReceive = async () => {
     if (!selectedTransfer) return
 
     try {
+      const formData = new FormData()
+      formData.append("transferId", selectedTransfer.id)
+      formData.append("label", `Dokumentasi ${selectedTransfer.transferNumber}`)
+      
+      const photoFiles: File[] = photos.map(p => p.file)
+      photoFiles.forEach(file => formData.append("photos", file))
+
+      if (photoFiles.length > 0) {
+        const uploadResponse = await fetch("/api/transfers/photos", {
+          method: "POST",
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          console.error("Failed to upload photos")
+        }
+      }
+
       const response = await fetch(`/api/transfers/${selectedTransfer.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "COMPLETED",
+          status: "RECEIVED",
           notes: receivingNotes || selectedTransfer.notes,
         }),
       })
@@ -455,10 +497,12 @@ export default function IncomingPage() {
       />
 
       <div className="flex gap-2">
-        <ScanButton onScan={handleScan} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80" />
+        {canScan && (
+          <ScanButton onScan={handleScan} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80" />
+        )}
         <Button
           onClick={() => setCreateDialogOpen(true)}
-          disabled={roleLoading || !isAdmin}
+          disabled={roleLoading || !canCreate}
           className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80"
         >
           {roleLoading ? <Spinner data-icon="inline-start" /> : <PlusIcon className="mr-2 h-4 w-4" />}
@@ -478,7 +522,7 @@ export default function IncomingPage() {
           <div className="space-y-4 py-2 overflow-y-auto flex-1 min-h-0">
             <div className="space-y-2">
               <Label>Gudang Tujuan *</Label>
-              {isAdmin ? (
+              {canCreate ? (
                 <Select value={destinationWarehouse} onValueChange={setDestinationWarehouse}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih gudang tujuan" />
@@ -594,7 +638,7 @@ export default function IncomingPage() {
                   { key: "sku", label: "Kode" },
                   { key: "product", label: "Produk" },
                   { key: "quantity", label: "Jumlah" },
-                  { key: "warehouse", label: "Ke Gudang" },
+                  { key: "warehouse", label: "Gudang" },
                   { key: "notes", label: "Catatan" },
                   { key: "status", label: "Status" },
                 ]}
@@ -628,75 +672,86 @@ export default function IncomingPage() {
               <p className="text-sm">Klik &quot;Buat Transfer Masuk&quot; untuk mencatat penerimaan barang</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>No. Transfer</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Kode</TableHead>
-                  <TableHead>Produk</TableHead>
-                  <TableHead className="text-center">Jumlah</TableHead>
-                  <TableHead>Ke Gudang</TableHead>
-                  <TableHead>Catatan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {incomingTransfers.map((transfer) => (
-                  <TableRow key={transfer.id}>
-                    <TableCell className="font-mono font-medium">{transfer.transferNumber}</TableCell>
-                    <TableCell>{formatDate(transfer.createdAt)}</TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {transfer.items?.map((item) => {
-                        const sku = skuMaster?.find(s => s.id === item.productId || s.code === item.skuCode)
-                        return (
-                        <div key={item.id}>
-                          {item.skuCode || sku?.code || "N/A"}
-                        </div>
-                      )}) || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {transfer.items?.map((item) => {
-                        const sku = skuMaster?.find(s => s.id === item.productId || s.code === item.skuCode)
-                        return (
-                        <div key={item.id}>
-                          {item.skuName || sku?.name || "-"}
-                        </div>
-                      )}) || "-"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {transfer.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}
-                    </TableCell>
-                    <TableCell>{getWarehouseName(transfer.toWarehouseId)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[150px]">
-                      {transfer.notes ? (
-                        <span title={transfer.notes} className="block truncate cursor-help">
-                          {transfer.notes}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
-                        {STATUS_LABELS[transfer.status] || transfer.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 justify-center">
-                        <Button
-                          variant="ghost"
-                          size="icon-lg"
-                          
-                          onClick={() => handleView(transfer)}
-                        >
-                          <EyeIcon className="h-4 w-4" />
-                        </Button>
-                        {transfer.status === "PENDING" && (
-                          <Button 
-                            size="sm" 
-                            className="bg-green-600 hover:bg-green-700"
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>No. Transfer</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Kode</TableHead>
+                    <TableHead>Produk</TableHead>
+                    <TableHead className="text-center">Jumlah</TableHead>
+                    <TableHead>Gudang</TableHead>
+                    <TableHead>Catatan</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {incomingTransfers.map((transfer) => (
+                    <TableRow key={transfer.id}>
+                      <TableCell className="font-mono font-medium">{transfer.transferNumber}</TableCell>
+                      <TableCell>{formatDate(transfer.createdAt)}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {transfer.items?.map((item) => {
+                          const sku = skuMaster?.find(s => s.id === item.productId || s.code === item.skuCode)
+                          return (
+                          <div key={item.id}>
+                            {item.skuCode || sku?.code || "N/A"}
+                          </div>
+                        )}) || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {transfer.items?.map((item) => {
+                          const sku = skuMaster?.find(s => s.id === item.productId || s.code === item.skuCode)
+                          return (
+                          <div key={item.id}>
+                            {item.skuName || sku?.name || "-"}
+                          </div>
+                        )}) || "-"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {transfer.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}
+                      </TableCell>
+                      <TableCell>{getWarehouseName(transfer.toWarehouseId)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[150px]">
+                        {transfer.notes ? (
+                          <span title={transfer.notes} className="block truncate cursor-help">
+                            {transfer.notes}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={`${STATUS_COLORS[transfer.status] || "bg-gray-100"}`}>
+                          {STATUS_LABELS[transfer.status] || transfer.status}
+                        </Badge>
+                      </TableCell>
+                    <TableCell className="min-w-fit whitespace-nowrap">
+                      <div className="flex flex-row items-center gap-2 flex-nowrap">
+                        {hasPermission(userRole, PERMISSION.BARANG_MASUK_VIEW) && (
+                          <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            onClick={() => handleView(transfer)}
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {hasPermission(userRole, PERMISSION.BARANG_MASUK_VIEW) && (
+                          <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            onClick={() => handleViewPhotos(transfer)}
+                          >
+                            <CameraIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {transfer.status === "PENDING" && canReceive && (
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 px-3.5 leading-none"
                             onClick={() => {
                               setSelectedTransfer(transfer)
                               setConfirmDialogOpen(true)
@@ -706,20 +761,23 @@ export default function IncomingPage() {
                             Terima
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon-lg"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => openDeleteDialog(transfer)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => openDeleteDialog(transfer)}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -745,7 +803,7 @@ export default function IncomingPage() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Ke Gudang</p>
+                <p className="text-sm text-muted-foreground">Gudang</p>
                 <p className="font-medium text-sm">{getWarehouseName(selectedTransfer.toWarehouseId)}</p>
               </div>
               <div>
@@ -782,6 +840,26 @@ export default function IncomingPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={photosDialogOpen} onOpenChange={(open) => {
+        setPhotosDialogOpen(open)
+        if (!open) setSelectedTransfer(null)
+      }}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Foto Dokumentasi</DialogTitle>
+            <DialogDescription>
+              {selectedTransfer ? `Foto dokumentasi untuk transfer ${selectedTransfer.transferNumber}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <PhotoGallery transferId={selectedTransfer?.id || null} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPhotosDialogOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setSelectedTransfer(null) }}>
         <DialogContent className="w-[95vw] max-w-sm overflow-hidden flex flex-col">
           <DialogHeader className="shrink-0">
@@ -801,7 +879,7 @@ export default function IncomingPage() {
                   <span className="font-mono font-medium text-sm break-all">{selectedTransfer.transferNumber}</span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-sm text-muted-foreground shrink-0">Ke Gudang:</span>
+                  <span className="text-sm text-muted-foreground shrink-0">Gudang:</span>
                   <span className="font-medium text-sm">{getWarehouseName(selectedTransfer.toWarehouseId)}</span>
                 </div>
                 <div className="flex justify-between gap-2">
@@ -858,12 +936,22 @@ export default function IncomingPage() {
                     </div>
                   ))}
                   {photos.length < MAX_PHOTO_UPLOAD && (
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                    >
-                      <CameraIcon className="h-5 w-5" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                      >
+                        <CameraIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="aspect-square rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                        </svg>
+                      </button>
+                    </>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
@@ -874,6 +962,14 @@ export default function IncomingPage() {
                   type="file"
                   accept="image/*"
                   multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />

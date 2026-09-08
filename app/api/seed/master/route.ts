@@ -135,3 +135,47 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Failed to reset master data" }, { status: 500 })
   }
 }
+
+// PATCH: Reset and re-seed master data to defaults (used for "Reset to Default" button)
+export async function PATCH() {
+  try {
+    // Step 1: Delete all master data
+    await db.delete(masterSkus)
+    await db.delete(costCategories)
+    await db.delete(suppliers)
+
+    // Step 2: Re-seed with defaults
+    let suppliersCreated = 0
+    let costCategoriesCreated = 0
+    let skusCreated = 0
+
+    // Seed Suppliers
+    for (const s of SEED_SUPPLIERS) {
+      await db.insert(suppliers).values(s)
+      suppliersCreated++
+    }
+
+    // Seed Cost Categories
+    for (const c of SEED_COST_CATEGORIES) {
+      await db.insert(costCategories).values(c)
+      costCategoriesCreated++
+    }
+
+    // Seed SKUs
+    for (const sku of SEED_SKUS) {
+      await db.insert(masterSkus).values({ ...sku, isActive: true })
+      skusCreated++
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Data Master berhasil direset ke default",
+      suppliers: { created: suppliersCreated, total: SEED_SUPPLIERS.length },
+      costCategories: { created: costCategoriesCreated, total: SEED_COST_CATEGORIES.length },
+      skus: { created: skusCreated, total: SEED_SKUS.length },
+    })
+  } catch (error) {
+    console.error("Error resetting master data to defaults:", error)
+    return NextResponse.json({ error: "Failed to reset master data to defaults" }, { status: 500 })
+  }
+}

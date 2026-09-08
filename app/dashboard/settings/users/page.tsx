@@ -58,15 +58,19 @@ interface Team {
 }
 
 const ROLE_LABELS: Record<string, string> = {
+  SUPERADMIN: "Super Admin",
   ADMIN: "Administrator",
   KARYAWAN: "Karyawan",
   QC: "Quality Control",
   GUDANG: "Gudang",
 }
 
+const USER_ROLE_OPTIONS = ["SUPERADMIN", "ADMIN", "QC", "GUDANG", "KARYAWAN"] as const
+
 const SYSTEM_ADMIN_EMAIL = "erpkonveksi@gmail.com"
 
 const ROLE_COLORS: Record<string, string> = {
+  SUPERADMIN: "bg-destructive/10 text-destructive",
   ADMIN: "bg-red-100 text-red-800",
   KARYAWAN: "bg-[var(--chart-blue)]/10 text-[var(--chart-blue)]",
   QC: "bg-purple-100 text-purple-800",
@@ -200,7 +204,7 @@ export default function UsersPage() {
       })
 
       if (response.ok) {
-        const employeeData = await response.json()
+        await response.json()
 
         const pwResponse = await fetch("/api/auth/set-password", {
           method: "POST",
@@ -415,7 +419,7 @@ export default function UsersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground space-y-1">
-              {["ADMIN", "KARYAWAN", "QC"].map((role) => (
+              {USER_ROLE_OPTIONS.map((role) => (
                 <div key={role} className="flex justify-between">
                   <span>{ROLE_LABELS[role]}</span>
                   <span className="font-medium">
@@ -482,10 +486,11 @@ export default function UsersPage() {
                         <SelectValue placeholder="Pilih role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ADMIN">Administrator</SelectItem>
-                        <SelectItem value="QC">Quality Control</SelectItem>
-                        <SelectItem value="KARYAWAN">Karyawan</SelectItem>
-                        <SelectItem value="GUDANG">Gudang</SelectItem>
+                        {USER_ROLE_OPTIONS.filter(r => r !== "SUPERADMIN").map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {ROLE_LABELS[role]}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -725,10 +730,14 @@ export default function UsersPage() {
                   <SelectValue placeholder="Pilih role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ADMIN">Administrator</SelectItem>
-                  <SelectItem value="QC">Quality Control</SelectItem>
-                  <SelectItem value="KARYAWAN">Karyawan</SelectItem>
-                  <SelectItem value="GUDANG">Gudang</SelectItem>
+                  {(selectedUser?.email === SYSTEM_ADMIN_EMAIL
+                    ? USER_ROLE_OPTIONS
+                    : USER_ROLE_OPTIONS.filter(r => r !== "SUPERADMIN")
+                  ).map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {ROLE_LABELS[role]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

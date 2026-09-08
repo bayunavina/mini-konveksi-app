@@ -46,8 +46,11 @@ export async function POST(request: NextRequest) {
     }).returning()
 
     return NextResponse.json(newProduct[0], { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating product:", error)
+    if (String(error?.message || "").includes("duplicate") || String(error?.cause?.message || "").includes("duplicate") || error?.code === "23505") {
+      return NextResponse.json({ error: "SKU sudah digunakan. Silakan gunakan SKU yang berbeda." }, { status: 409 })
+    }
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
   }
 }

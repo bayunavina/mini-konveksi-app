@@ -8,9 +8,9 @@ import { Spinner } from "@/components/ui/spinner"
 import { Input } from "@/components/ui/input"
 import { PageHeader } from "@/components/shared"
 import { useSessionWithRole } from "@/lib/use-session-with-role"
-import { useRouter } from "next/navigation"
 import { BellIcon, ClipboardDocumentListIcon, MagnifyingGlassIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
+import { formatActivityTimestamp } from "@/lib/activity-log"
 
 interface NotificationLog {
   id: string
@@ -18,7 +18,14 @@ interface NotificationLog {
   title: string
   message: string
   createdAt: string
+  reference?: string
+  referenceId?: string
   employee?: {
+    id: string
+    name: string
+  }
+  actor?: {
+    id: string
     name: string
   }
 }
@@ -44,8 +51,7 @@ function getTypeColor(type: string) {
 }
 
 export default function LogAktivitasPage() {
-  const router = useRouter()
-  const { user, isLoading } = useSessionWithRole()
+  const { isLoading } = useSessionWithRole()
   
   const [logs, setLogs] = useState<NotificationLog[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,21 +93,7 @@ export default function LogAktivitasPage() {
     return () => clearInterval(interval)
   }, [fetchLogs])
 
-  useEffect(() => {
-    if (!isLoading && user && user.role !== "ADMIN" && user.role !== "SUPERADMIN") {
-      router.push("/dashboard")
-    }
-  }, [user, isLoading, router])
-
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    )
-  }
-
-  if (!isLoading && user?.role !== "ADMIN" && user?.role !== "SUPERADMIN") {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
         <Spinner className="size-8 text-primary" />
@@ -119,17 +111,16 @@ export default function LogAktivitasPage() {
     return matchesSearch && matchesType
   })
 
-  const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return "-"
-    const date = new Date(dateStr)
-    return date.toLocaleString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
+  // Satu aksi = satu baris log. Group by referensi aksi agar tidak duplikat
+  // (satu transfer mengirim notifikasi ke banyak penerima dengan actor sama).
+  const seenKeys = new Set<string>()
+  const uniqueLogs = filteredLogs.filter((log) => {
+    if (!log.referenceId) return true
+    const key = `${log.reference || ""}:${log.referenceId}`
+    if (seenKeys.has(key)) return false
+    seenKeys.add(key)
+    return true
+  })
 
   const getTypeLabel = (type: string) => {
     if (type.includes("INCOME")) return "Pemasukan"
@@ -213,7 +204,7 @@ export default function LogAktivitasPage() {
             Daftar Aktivitas
           </CardTitle>
           <CardDescription>
-            {filteredLogs.length} aktivitas ditemukan
+            {uniqueLogs.length} aktivitas ditemukan
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -229,9 +220,13 @@ export default function LogAktivitasPage() {
               <p className="text-lg font-medium">Belum ada aktivitas</p>
               <p className="text-sm">Aktivitas sistem akan muncul di sini</p>
             </div>
+          ) : uniqueLogs.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="text-sm">Tidak ada aktivitas yang cocok dengan filter</p>
+            </div>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
-              {filteredLogs.map((log, idx) => {
+              {uniqueLogs.map((log, idx) => {
                 const color = getTypeColor(log.type)
                 return (
                   <div 
@@ -250,11 +245,18 @@ export default function LogAktivitasPage() {
                             {getTypeLabel(log.type)}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">
-                          {formatDateTime(log.createdAt)}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span title="Timestamp event">
+                            Timestamp: {formatActivityTimestamp(log.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <p className="text-xs text-muted-foreground truncate">{log.message}</p>
+                        <span className="text-xs text-muted-foreground">
+                          User akses: {log.actor?.name || log.employee?.name || "Tidak diketahui"}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 truncate">{log.message}</p>
                     </div>
                   </div>
                 )

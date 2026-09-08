@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { canAccess } from "@/lib/rbac"
 
 const protectedRoutes = ["/dashboard"]
 const authRoutes = ["/sign-in"]
@@ -12,6 +13,12 @@ const SESSION_COOKIE_NAMES = [
   "__Secure-better-auth.session_token.0",
 ]
 
+// API route permission mapping: path prefix -> required role
+const API_PERMISSION_ROUTES: Record<string, string[]> = {
+  "/api/transfers": ["ADMIN", "SUPERADMIN", "GUDANG"],
+  "/api/transfers/": ["ADMIN", "SUPERADMIN", "GUDANG"],
+}
+
 function getSessionToken(cookieHeader: string | null): string | undefined {
   if (!cookieHeader) return undefined
   const cookies = cookieHeader.split(";").map((c) => c.trim())
@@ -20,6 +27,18 @@ function getSessionToken(cookieHeader: string | null): string | undefined {
     if (found) return found.split("=").slice(1).join("=")
   }
   return undefined
+}
+
+async function getSessionRole(cookieHeader: string | null): Promise<string> {
+  try {
+    const sessionResponse = await fetch(new URL("/api/debug-session2", "http://localhost").toString(), {
+      headers: { "Cookie": cookieHeader || "" }
+    })
+    const sessionData = await sessionResponse.json()
+    return sessionData.user?.role || "GUEST"
+  } catch {
+    return "GUEST"
+  }
 }
 
 export default async function middleware(request: NextRequest) {
@@ -66,6 +85,31 @@ export default async function middleware(request: NextRequest) {
     const signInUrl = new URL("/sign-in", request.url)
     signInUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(signInUrl)
+  }
+
+  // API route permission check
+  if (isApiRoute && hasSession) {
+    const role = await getSessionRole(cookieHeader)
+    
+    // Check permission-based routes
+    for (const [prefix, allowedRoles] of Object.entries(API_PERMISSION_ROUTES)) {
+      if (pathname === prefix || pathname.startsWith(prefix + "/")) {
+        if (!allowedRoles.includes(role)) {
+          return NextResponse.json(
+            { error: "Forbidden - Insufficient permissions. Required roles: " + allowedRoles.join(", ") },
+            { status: 403 }
+          )
+        }
+      }
+    }
+
+    // Also check RBAC route access
+    if (!canAccess(pathname, role as any)) {
+      return NextResponse.json(
+        { error: "Forbidden - Access denied for your role" },
+        { status: 403 }
+      )
+    }
   }
 
   return NextResponse.next()

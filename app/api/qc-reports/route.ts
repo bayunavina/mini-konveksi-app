@@ -20,6 +20,7 @@ import { eq, desc, and, sql } from "drizzle-orm"
 import { sendNotificationToAdmin } from "@/lib/notification-utils"
 import { generateKode } from "@/lib/utils"
 import { MTC_PER_PCS, REJECT_RATE_THRESHOLD } from "@/lib/constants"
+import { getActorEmployeeId } from "@/lib/auth-utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { jobOrderId, employeeId, successQty, rejectQty, notes, rejectReason } = body
+    const actorId = await getActorEmployeeId(request.headers)
 
     const newReport = await db.insert(qcReports).values({
       jobOrderId,
@@ -267,8 +269,10 @@ export async function POST(request: NextRequest) {
       })
 
       if (employeeId) {
+        const actorId = await getActorEmployeeId(request.headers)
         await db.insert(notifications).values({
           employeeId,
+          actorId,
           type: "QC_REJECTED",
           title: "Produksi Ditolak QC",
           message: `Job Order ${currentJo.joNumber} memiliki ${rejectQty} Pcs yang ditolak QC.`,
@@ -317,21 +321,24 @@ export async function POST(request: NextRequest) {
           `Reject ${rejectQty}/${totalChecked} pcs (${Math.round(rejectRate * 100)}%) → auto biaya MTC ${mtcAmount.toLocaleString("id-ID")}`,
           "QC_REPORT",
           reportId,
-          { joNumber: currentJo.joNumber, rejectQty, rejectRate }
+          { joNumber: currentJo.joNumber, rejectQty, rejectRate },
+          actorId || undefined
         )
       }
     }
 
     if (successQty > 0 && employeeId) {
-      await db.insert(notifications).values({
-        employeeId,
-        type: "QC_ACCEPTED",
-        title: "Produksi Lolos QC - Klaim Gaji",
-        message: `Job Order ${currentJo.joNumber}: ${successQty} Pcs diterima QC. Anda bisa klaim gaji sekarang!`,
-        reference: "QC_REPORT",
-        referenceId: reportId,
-      })
-    }
+        const actorId = await getActorEmployeeId(request.headers)
+        await db.insert(notifications).values({
+          employeeId,
+          actorId,
+          type: "QC_ACCEPTED",
+          title: "Produksi Lolos QC - Klaim Gaji",
+          message: `Job Order ${currentJo.joNumber}: ${successQty} Pcs diterima QC. Anda bisa klaim gaji sekarang!`,
+          reference: "QC_REPORT",
+          referenceId: reportId,
+        })
+      }
 
     // Notify Admin about QC completion
     await sendNotificationToAdmin(
@@ -340,7 +347,8 @@ export async function POST(request: NextRequest) {
       `${currentJo.joNumber}: ${successQty} pcs OK, ${rejectQty} pcs reject`,
       "QC_REPORT",
       reportId,
-      { joNumber: currentJo.joNumber, qty: successQty || rejectQty }
+      { joNumber: currentJo.joNumber, qty: successQty || rejectQty },
+      actorId || undefined
     )
 
     // Add finished good to inventory from QC if successQty > 0

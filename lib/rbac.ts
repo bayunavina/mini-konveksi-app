@@ -1,4 +1,6 @@
 import type { UserRole } from "./use-session-with-role"
+import { PERMISSION, hasPermission, hasAnyPermission } from "./constants"
+export { PERMISSION } from "./constants"
 
 // Central RBAC mapping: path prefix -> allowed roles
 // ADMIN = superadmin (erpkonveksi@gmail.com) + any admin account
@@ -49,7 +51,6 @@ export const ROUTE_RULES: RouteRule[] = [
 ]
 
 export function getAllowedRoles(pathname: string): UserRole[] | null {
-  // Exact or prefix match: find longest matching prefix
   let matched: RouteRule | null = null
   for (const rule of ROUTE_RULES) {
     if (pathname === rule.prefix || pathname.startsWith(rule.prefix + "/") || pathname.startsWith(rule.prefix + "?") || pathname === rule.prefix) {
@@ -57,13 +58,10 @@ export function getAllowedRoles(pathname: string): UserRole[] | null {
         matched = rule
       }
     }
-    // Also handle query string: /dashboard/karyawan?foo=bar
     if (pathname.split("?")[0].startsWith(rule.prefix) && pathname.split("?")[0] === rule.prefix) {
       if (!matched || rule.prefix.length > matched.prefix.length) matched = rule
     }
   }
-  // For exact prefix without handling query, simpler:
-  // Check again with startsWith
   if (!matched) {
     for (const rule of ROUTE_RULES) {
       if (pathname.startsWith(rule.prefix)) {
@@ -71,13 +69,12 @@ export function getAllowedRoles(pathname: string): UserRole[] | null {
       }
     }
   }
-  return matched ? matched.roles : null // null = no rule = allowed for any authenticated
+  return matched ? matched.roles : null
 }
 
 export function canAccess(pathname: string, role: UserRole): boolean {
   const allowed = getAllowedRoles(pathname)
-  if (allowed === null) return true // no rule = open for authenticated
-  // SUPERADMIN can access all ADMIN routes; already included in mapping, but also allow SUPERADMIN as wildcard for admin routes
+  if (allowed === null) return true
   if (role === "SUPERADMIN" && allowed.includes("ADMIN")) return true
   return allowed.includes(role)
 }
@@ -95,4 +92,39 @@ export function getRedirectForRole(role: UserRole): string {
     case "KARYAWAN": return "/dashboard/karyawan"
     default: return "/sign-in"
   }
+}
+
+// Permission-based access control for API endpoints
+export function checkPermission(role: string, permission: PERMISSION): boolean {
+  return hasPermission(role, permission)
+}
+
+export function checkAnyPermission(role: string, permissions: PERMISSION[]): boolean {
+  return hasAnyPermission(role, permissions)
+}
+
+export function requirePermission(role: string, permission: PERMISSION): { authorized: boolean; error?: Response } {
+  if (!checkPermission(role, permission)) {
+    return {
+      authorized: false,
+      error: new Response(JSON.stringify({ error: "Forbidden - Permission denied: " + permission }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      }),
+    }
+  }
+  return { authorized: true }
+}
+
+export function requireAnyPermission(role: string, permissions: PERMISSION[]): { authorized: boolean; error?: Response } {
+  if (!checkAnyPermission(role, permissions)) {
+    return {
+      authorized: false,
+      error: new Response(JSON.stringify({ error: "Forbidden - Insufficient permissions" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      }),
+    }
+  }
+  return { authorized: true }
 }
