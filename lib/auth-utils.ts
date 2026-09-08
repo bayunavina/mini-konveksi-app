@@ -26,6 +26,47 @@ export async function getSessionFromHeaders(headers: Headers) {
   }
 }
 
+export async function getSessionRoleFromHeaders(headers: Headers): Promise<string> {
+  try {
+    const session = await getSessionFromHeaders(headers)
+    if (!session?.user) return "GUEST"
+
+    const email = (session.user.email || "").toLowerCase()
+
+    if (email) {
+      const employee = await db
+        .select({ role: employees.role })
+        .from(employees)
+        .where(eq(employees.email, email))
+        .limit(1)
+      if (employee.length > 0) return employee[0].role || "KARYAWAN"
+    }
+
+    if (session.user.id) {
+      const byUserId = await db
+        .select({ role: employees.role })
+        .from(employees)
+        .where(eq(employees.userId, session.user.id))
+        .limit(1)
+      if (byUserId.length > 0) return byUserId[0].role || "KARYAWAN"
+    }
+
+    if (email) {
+      const authUser = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.email, email))
+        .limit(1)
+      if (authUser.length > 0) return "ADMIN"
+    }
+
+    return "GUEST"
+  } catch (error) {
+    console.error("Error resolving session role:", error)
+    return "GUEST"
+  }
+}
+
 export async function getActorEmployeeId(headers: Headers): Promise<string | null> {
   try {
     const session = await getSessionFromHeaders(headers)

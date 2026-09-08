@@ -3,7 +3,7 @@ import { db } from "@/db"
 import { transfers, transferItems, transferPhotos } from "@/db/schema"
 import { desc, eq } from "drizzle-orm"
 import { sendNotificationToGudang, sendNotificationToAdmin } from "@/lib/notification-utils"
-import { getActorEmployeeId } from "@/lib/auth-utils"
+import { getActorEmployeeId, getSessionRoleFromHeaders } from "@/lib/auth-utils"
 import { PERMISSION } from "@/lib/constants"
 import { requirePermission, requireAnyPermission } from "@/lib/rbac"
 
@@ -17,21 +17,9 @@ function generateTransferNumber(type: string): string {
   return `${prefix}-${year}${month}${day}-${random}`
 }
 
-async function getSessionRole(headers: Headers): Promise<string> {
-  try {
-    const session = await fetch("/api/debug-session2", {
-      headers: { "Cookie": headers.get("cookie") || "" }
-    })
-    const sessionData = await session.json()
-    return sessionData.user?.role || "GUEST"
-  } catch {
-    return "GUEST"
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const role = await getSessionRole(request.headers)
+    const role = await getSessionRoleFromHeaders(request.headers)
     const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_VIEW, PERMISSION.BARANG_KELUAR_VIEW])
     if (!permCheck.authorized) return permCheck.error
 
@@ -80,7 +68,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const role = await getSessionRole(request.headers)
+    const role = await getSessionRoleFromHeaders(request.headers)
     const body = await request.json()
     const { type } = body
     const requiredPermission = type === "INCOMING" ? PERMISSION.BARANG_MASUK_CREATE : PERMISSION.BARANG_KELUAR_CREATE

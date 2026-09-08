@@ -29,10 +29,11 @@ function getSessionToken(cookieHeader: string | null): string | undefined {
   return undefined
 }
 
-async function getSessionRole(cookieHeader: string | null): Promise<string> {
+async function getSessionRole(request: NextRequest): Promise<string> {
   try {
-    const sessionResponse = await fetch(new URL("/api/debug-session2", "http://localhost").toString(), {
-      headers: { "Cookie": cookieHeader || "" }
+    const origin = request.nextUrl.origin
+    const sessionResponse = await fetch(new URL("/api/debug-session2", origin).toString(), {
+      headers: { "Cookie": request.headers.get("cookie") || "" }
     })
     const sessionData = await sessionResponse.json()
     return sessionData.user?.role || "GUEST"
@@ -89,7 +90,7 @@ export default async function middleware(request: NextRequest) {
 
   // API route permission check
   if (isApiRoute && hasSession) {
-    const role = await getSessionRole(cookieHeader)
+    const role = await getSessionRole(request)
     
     // Check permission-based routes
     for (const [prefix, allowedRoles] of Object.entries(API_PERMISSION_ROUTES)) {

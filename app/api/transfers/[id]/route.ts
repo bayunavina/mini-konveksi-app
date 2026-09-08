@@ -4,25 +4,14 @@ import { transfers, transferItems, transferPhotos, inventoryStock, inventoryMove
 import { eq, and } from "drizzle-orm"
 import { PERMISSION } from "@/lib/constants"
 import { requirePermission, requireAnyPermission } from "@/lib/rbac"
-
-async function getSessionRole(headers: Headers): Promise<string> {
-  try {
-    const session = await fetch("/api/debug-session2", {
-      headers: { "Cookie": headers.get("cookie") || "" }
-    })
-    const sessionData = await session.json()
-    return sessionData.user?.role || "GUEST"
-  } catch {
-    return "GUEST"
-  }
-}
+import { getSessionRoleFromHeaders } from "@/lib/auth-utils"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const role = await getSessionRole(request.headers)
+    const role = await getSessionRoleFromHeaders(request.headers)
     const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_VIEW, PERMISSION.BARANG_KELUAR_VIEW])
     if (!permCheck.authorized) return permCheck.error
 
@@ -55,7 +44,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const role = await getSessionRole(request.headers)
+    const role = await getSessionRoleFromHeaders(request.headers)
     const permCheck = requirePermission(role, PERMISSION.BARANG_MASUK_TERIMA)
     if (!permCheck.authorized) return permCheck.error
 
@@ -227,7 +216,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const role = await getSessionRole(request.headers)
+    const role = await getSessionRoleFromHeaders(request.headers)
     const permCheck = requireAnyPermission(role, [PERMISSION.BARANG_MASUK_DELETE, PERMISSION.BARANG_KELUAR_DELETE])
     if (!permCheck.authorized) return permCheck.error
 
