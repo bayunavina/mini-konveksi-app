@@ -6,27 +6,23 @@ const protectedRoutes = ["/dashboard"]
 const authRoutes = ["/sign-in"]
 const maintenanceRoute = "/maintenance"
 
-const SESSION_COOKIE_NAMES = [
-  "better-auth.session_token",
-  "__Secure-better-auth.session_token",
-  "better-auth.session_token.0",
-  "__Secure-better-auth.session_token.0",
-]
-
 // API route permission mapping: path prefix -> required role
 const API_PERMISSION_ROUTES: Record<string, string[]> = {
   "/api/transfers": ["ADMIN", "SUPERADMIN", "GUDANG"],
   "/api/transfers/": ["ADMIN", "SUPERADMIN", "GUDANG"],
 }
 
-function getSessionToken(cookieHeader: string | null): string | undefined {
-  if (!cookieHeader) return undefined
-  const cookies = cookieHeader.split(";").map((c) => c.trim())
-  for (const cookieName of SESSION_COOKIE_NAMES) {
-    const found = cookies.find((c) => c.startsWith(`${cookieName}=`))
-    if (found) return found.split("=").slice(1).join("=")
+async function hasValidSession(request: NextRequest): Promise<boolean> {
+  try {
+    const origin = request.nextUrl.origin
+    const sessionResponse = await fetch(new URL("/api/debug-session2", origin).toString(), {
+      headers: { "Cookie": request.headers.get("cookie") || "" }
+    })
+    const sessionData = await sessionResponse.json()
+    return Boolean(sessionData.user)
+  } catch {
+    return false
   }
-  return undefined
 }
 
 async function getSessionRole(request: NextRequest): Promise<string> {
@@ -57,8 +53,9 @@ export default async function middleware(request: NextRequest) {
   }
 
   const cookieHeader = request.headers.get("cookie")
-  const sessionToken = getSessionToken(cookieHeader)
-  const hasSession = !!sessionToken
+  const hasSession = (isAuthRoute || isProtectedRoute)
+    ? await hasValidSession(request)
+    : false
 
   // Check maintenance mode first (before auth check)
   const maintenanceCookie = cookieHeader?.includes("maintenance=true")

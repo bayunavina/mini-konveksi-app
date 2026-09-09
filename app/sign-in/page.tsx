@@ -18,10 +18,13 @@ function getRedirectUrl(role: string | undefined): string {
   switch (role) {
     case "SUPERADMIN":
     case "ADMIN":
+      return "/dashboard/admin"
     case "QC":
-    case "KARYAWAN":
+      return "/dashboard/qc"
     case "GUDANG":
-      return "/dashboard"
+      return "/dashboard/gudang"
+    case "KARYAWAN":
+      return "/dashboard/karyawan"
     default:
       return "/dashboard"
   }

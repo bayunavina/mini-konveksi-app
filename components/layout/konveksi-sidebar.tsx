@@ -36,6 +36,8 @@ import {
   CheckIcon,
   ArchiveBoxIcon,
   ScaleIcon,
+  BookOpenIcon,
+  MapIcon,
 } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/spinner"
@@ -199,6 +201,16 @@ const navigationData = {
         { title: "Data Master", url: "/dashboard/settings/master" },
       ],
     },
+    {
+      title: "Panduan Penggunaan",
+      url: "/dashboard/panduan",
+      icon: BookOpenIcon,
+    },
+    {
+      title: "Mind Map ERP",
+      url: "/dashboard/mindmap-erp",
+      icon: MapIcon,
+    },
   ] as NavItem[],
   qc: [
     {
@@ -214,6 +226,16 @@ const navigationData = {
         { title: "Overview", url: "/dashboard/qc/overview" },
         { title: "Report", url: "/dashboard/qc/report" },
       ],
+    },
+    {
+      title: "Panduan Penggunaan",
+      url: "/dashboard/panduan",
+      icon: BookOpenIcon,
+    },
+    {
+      title: "Mind Map ERP",
+      url: "/dashboard/mindmap-erp",
+      icon: MapIcon,
     },
   ] as NavItem[],
   gudang: [
@@ -258,6 +280,16 @@ const navigationData = {
       url: "/dashboard/transfer/outgoing-docs",
       icon: ArrowUpIcon,
     },
+    {
+      title: "Panduan Penggunaan",
+      url: "/dashboard/panduan",
+      icon: BookOpenIcon,
+    },
+    {
+      title: "Mind Map ERP",
+      url: "/dashboard/mindmap-erp",
+      icon: MapIcon,
+    },
   ] as NavItem[],
   karyawan: [
     {
@@ -284,6 +316,16 @@ const navigationData = {
       title: "Chart Gaji",
       url: "/dashboard/karyawan/chart-gaji",
       icon: CubeIcon,
+    },
+    {
+      title: "Panduan Penggunaan",
+      url: "/dashboard/panduan",
+      icon: BookOpenIcon,
+    },
+    {
+      title: "Mind Map ERP",
+      url: "/dashboard/mindmap-erp",
+      icon: MapIcon,
     },
   ] as NavItem[],
   quickActions: [
