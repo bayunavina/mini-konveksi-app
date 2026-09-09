@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import mermaid from "mermaid"
-import { ArrowDownTrayIcon, MinusIcon, PlusIcon, ArrowPathIcon, MapIcon } from "@heroicons/react/24/outline"
+import { MinusIcon, PlusIcon, ArrowPathIcon, MapIcon } from "@heroicons/react/24/outline"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -154,37 +154,10 @@ export default function MindMapErpPage() {
   const onPointerMove = (event: React.PointerEvent) => { if (dragging) setOffset({ x: event.clientX - dragStart.x, y: event.clientY - dragStart.y }) }
   const stopDragging = () => setDragging(false)
 
-  const exportSvg = () => {
-    const svg = diagramRef.current?.querySelector("svg")
-    if (!svg) return
-    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url; link.download = `mind-map-erp-${activeTab}.svg`; link.click(); URL.revokeObjectURL(url)
-  }
-
-  const exportPng = () => {
-    const svg = diagramRef.current?.querySelector("svg")
-    if (!svg) return
-    const source = new XMLSerializer().serializeToString(svg)
-    const image = new Image()
-    image.onload = () => {
-      const canvas = document.createElement("canvas")
-      canvas.width = image.width * 2; canvas.height = image.height * 2
-      const context = canvas.getContext("2d")
-      if (!context) return
-      context.scale(2, 2); context.drawImage(image, 0, 0)
-      const link = document.createElement("a")
-      link.download = `mind-map-erp-${activeTab}.png`; link.href = canvas.toDataURL("image/png"); link.click()
-    }
-    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`
-  }
-
   return (
     <div className="min-h-full space-y-5 px-4 py-5 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-3"><div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-brand-primary text-primary-foreground"><MapIcon className="h-6 w-6" /></div><div><h1 className="text-2xl font-bold tracking-tight">Mind Map ERP</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Peta visual proses bisnis, gate verifikasi, role penanggung jawab, dan shortcut modul ERP Konveksi.</p></div></div>
-        <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={exportSvg}><ArrowDownTrayIcon className="h-4 w-4" />Export SVG</Button><Button variant="outline" size="sm" onClick={exportPng}><ArrowDownTrayIcon className="h-4 w-4" />Export PNG</Button></div>
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-border pb-3">{MIND_MAP_TABS.map((tab) => <button key={tab.id} type="button" onClick={() => { setActiveTab(tab.id); resetView() }} className={cn("rounded-lg px-3 py-2 text-sm font-medium transition-colors", activeTab === tab.id ? "bg-brand-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}>{tab.label}</button>)}</div>
