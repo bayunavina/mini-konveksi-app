@@ -63,6 +63,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    
+    // Check if warehouse has inventory movements
+    const movements = await pool.query(
+      'SELECT COUNT(*) FROM inventory_movements WHERE warehouse_id = $1',
+      [id]
+    )
+    
+    if (parseInt(movements.rows[0].count) > 0) {
+      return NextResponse.json(
+        { error: "Tidak dapat menghapus gudang yang memiliki riwayat pergerakan inventaris" },
+        { status: 400 }
+      )
+    }
+    
     const result = await pool.query('DELETE FROM warehouses WHERE id = $1 RETURNING *', [id])
     
     if (result.rows.length === 0) {
