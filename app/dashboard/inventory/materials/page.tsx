@@ -700,20 +700,21 @@ Jumlah terpakai total: ${usedQty} Pcs dari ${selectedLot.initialQty} Pcs awal`
         title="Bahan Baku"
         description="Kelola stok bahan baku dengan QR Code. Setiap QR kode mengaitkan lot bahan baku spesifik ke produk."
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => router.push("/dashboard/inventory")}>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => router.push("/dashboard/inventory")}>
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               Kembali
             </Button>
-            <Button variant="outline" onClick={() => setScanDialogOpen(true)}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setScanDialogOpen(true)}>
               <CameraIcon className="mr-2 h-4 w-4" />
               Scan QR
             </Button>
-            <Button onClick={() => setAddProductDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+            <Button onClick={() => setAddProductDialogOpen(true)} className="w-full sm:w-auto dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
-              Tambah Bahan Baku
+              <span className="sm:hidden">Tambah</span>
+              <span className="hidden sm:inline">Tambah Bahan Baku</span>
             </Button>
-            <Button onClick={() => setAddLotDialogOpen(true)} className="dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
+            <Button onClick={() => setAddLotDialogOpen(true)} className="w-full sm:w-auto dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)]/80">
               <PlusIcon className="mr-2 h-4 w-4" />
               Tambah Stok
             </Button>
