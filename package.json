@@ -1,5 +1,5 @@
 {
-  "name": "mini-konveksi-app",
+  "name": "erp-konveksi-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -24,7 +24,7 @@
     "db:dev": "docker compose --profile dev up postgres-dev -d",
     "db:dev-down": "docker compose --profile dev down postgres-dev",
     "db:reset": "drizzle-kit drop && drizzle-kit push",
-    "docker:build": "docker build -t mini-konveksi-app .",
+    "docker:build": "docker build -t erp-konveksi-app .",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",

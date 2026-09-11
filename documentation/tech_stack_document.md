@@ -1,6 +1,6 @@
 # Tech Stack Document
 
-Dokumen ini menjelaskan teknologi yang digunakan pada **ERP Konveksi (Mini Konveksi App)**. Ditulis dalam bahasa sederhana agar semua orang — teknis maupun non-teknis — memahami mengapa setiap teknologi dipilih dan bagaimana mendukung aplikasi.
+Dokumen ini menjelaskan teknologi yang digunakan pada **ERP Konveksi**. Ditulis dalam bahasa sederhana agar semua orang — teknis maupun non-teknis — memahami mengapa setiap teknologi dipilih dan bagaimana mendukung aplikasi.
 
 ---
 

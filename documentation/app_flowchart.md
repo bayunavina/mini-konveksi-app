@@ -1,4 +1,4 @@
-# App Flowchart — ERP Konveksi (Mini Konveksi App)
+# App Flowchart — ERP Konveksi
 
 Berikut flowchart alur utama aplikasi dalam format Mermaid.
 

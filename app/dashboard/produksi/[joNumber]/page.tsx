@@ -165,7 +165,7 @@ export default function JobOrderDetailPage({ params }: { params: Promise<{ joNum
 
   useEffect(() => {
     if (jobOrder?.joNumber) {
-      document.title = `JO ${jobOrder.joNumber} - Mini Konveksi`
+      document.title = `JO ${jobOrder.joNumber} - ERP Konveksi`
     }
   }, [jobOrder])
 

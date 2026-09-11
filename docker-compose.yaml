@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: mini-konveksi-postgres
+    container_name: erp-konveksi-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: konveksi_db
@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - mini-konveksi-network
+      - erp-konveksi-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U konveksi_user -d konveksi_db"]
       interval: 5s
@@ -25,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: mini-konveksi-app
+    container_name: erp-konveksi-app
     restart: unless-stopped
     env_file:
       - .env
@@ -40,27 +40,27 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - mini-konveksi-network
+      - erp-konveksi-network
 
   nginx:
     image: nginx:alpine
-    container_name: mini-konveksi-nginx
+    container_name: erp-konveksi-nginx
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - /etc/nginx/sites-available/mini-konveksi:/etc/nginx/conf.d/default.conf:ro
+      - /etc/nginx/sites-available/erp-konveksi:/etc/nginx/conf.d/default.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/html:/var/www/html:ro
     depends_on:
       - app
     networks:
-      - mini-konveksi-network
+      - erp-konveksi-network
 
   postgres-dev:
     image: postgres:16-alpine
-    container_name: mini-konveksi-postgres-dev
+    container_name: erp-konveksi-postgres-dev
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
@@ -71,7 +71,7 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     networks:
-      - mini-konveksi-network
+      - erp-konveksi-network
     profiles:
       - dev
 
@@ -82,5 +82,5 @@ volumes:
     driver: local
 
 networks:
-  mini-konveksi-network:
+  erp-konveksi-network:
     driver: bridge

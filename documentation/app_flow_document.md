@@ -1,4 +1,4 @@
-# App Flow Document — ERP Konveksi (Mini Konveksi App)
+# App Flow Document — ERP Konveksi
 
 Dokumen ini menjelaskan alur pengguna (user flow) dalam aplikasi **ERP Konveksi**, dari autentikasi hingga seluruh alur bisnis inti (produksi, inventory, transfer, QC, finance, payroll).
 

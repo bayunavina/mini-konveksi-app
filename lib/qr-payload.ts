@@ -1,5 +1,5 @@
 /**
- * Unified QR/Barcode payload format for mini-konveksi-app
+ * Unified QR/Barcode payload format for erp-konveksi-app
  * Supports 4 entity types: MATERIAL_LOT, EMPLOYEE, JOB_ORDER, SKU, TRANSFER
  *
  * Format: JSON string for camera-scan QR, plain text for Code128 barcode

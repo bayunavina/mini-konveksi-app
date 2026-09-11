@@ -1,4 +1,4 @@
-# Security Guidelines — ERP Konveksi (Mini Konveksi App)
+# Security Guidelines — ERP Konveksi
 
 Dokumen ini mendefinisikan prinsip keamanan wajib dan praktik implementasi terbaik untuk repositori **ERP Konveksi**. Mengikuti prinsip **Security-by-Design**, **Least Privilege**, dan **Defense-in-Depth**. Setiap bagian merujuk area spesifik codebase (`.env`, `middleware.ts`, `lib/rbac.ts`, `lib/constants.ts`, `Dockerfile`, `docker-compose.yaml`, `deploy.sh`) agar panduannya praktis.
 
@@ -130,7 +130,7 @@ Dokumen ini mendefinisikan prinsip keamanan wajib dan praktik implementasi terba
 - Meng-*install*: Docker, Nginx, Certbot. Update sistem (`apt-get update`) sebelum install.
 - Generate `.env` interaktif: `BETTER_AUTH_SECRET` & DB password acak, `chmod 600`.
 - SSL Let's Encrypt: non-interactive, domain valid, auto-renew cron (pre/post-hook stop/start nginx).
-- Nginx config: hanya mendengarkan 80/443, proxy ke `mini-konveksi-app:<port>` di jaringan Docker internal.
+- Nginx config: hanya mendengarkan 80/443, proxy ke `erp-konveksi-app:<port>` di jaringan Docker internal.
 - Jangan jalankan `./deploy.sh` berulang tanpa review — ia menimpa `.env` (akan generate secret baru) kecuali sudah dipahami dampaknya.
 
 ---

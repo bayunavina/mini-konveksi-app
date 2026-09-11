@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
         version: "1.0",
         exportedAt: new Date().toISOString(),
         exportedBy: auth.email,
-        app: "mini-konveksi-app",
+        app: "erp-konveksi-app",
       },
       data: {
         masterSkus: dataMasterSkus,
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const isDownload = searchParams.get("download") === "true"
     if (isDownload) {
-      const filename = `backup-mini-konveksi-${new Date().toISOString().slice(0, 10)}.json`
+      const filename = `backup-erp-konveksi-${new Date().toISOString().slice(0, 10)}.json`
       return new NextResponse(JSON.stringify(backup, null, 2), {
         headers: {
           "Content-Type": "application/json",

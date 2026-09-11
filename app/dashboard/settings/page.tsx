@@ -169,7 +169,7 @@ export default function SettingsPage() {
       const a = document.createElement("a")
       a.href = url
       const disposition = res.headers.get("Content-Disposition")
-      let filename = `backup-mini-konveksi-${new Date().toISOString().slice(0, 10)}.json`
+      let filename = `backup-erp-konveksi-${new Date().toISOString().slice(0, 10)}.json`
       if (disposition) {
         const match = disposition.match(/filename="?([^"]+)"?/)
         if (match) filename = match[1]

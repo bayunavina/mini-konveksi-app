@@ -1,4 +1,4 @@
-# Project Requirements Document: ERP Konveksi (Mini Konveksi App)
+# Project Requirements Document: ERP Konveksi
 
 ---
 

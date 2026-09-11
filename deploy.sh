@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ============================================================================
 #  deploy.sh — Production Docker Deployment Script
-#  Mini Konveksi App (Next.js + PostgreSQL + Nginx + SSL)
+#  ERP Konveksi App (Next.js + PostgreSQL + Nginx + SSL)
 # ============================================================================
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -39,7 +39,7 @@ clear
 echo -e "${CYAN}"
 cat << 'BANNER'
   ╔═══════════════════════════════════════════════════════╗
-  ║       MINI KONVEKSI APP — PRODUCTION DEPLOYER        ║
+  ║       ERP KONVEKSI APP — PRODUCTION DEPLOYER        ║
   ║       Next.js · PostgreSQL · Nginx · SSL              ║
   ╚═══════════════════════════════════════════════════════╝
 BANNER
@@ -235,7 +235,7 @@ divider
 # ============================================================================
 info "Mengkonfigurasi Nginx reverse proxy..."
 
-NGINX_CONF="/etc/nginx/sites-available/mini-konveksi"
+NGINX_CONF="/etc/nginx/sites-available/erp-konveksi"
 mkdir -p /etc/nginx/sites-available /var/www/html
 rm -f /etc/nginx/sites-enabled/default
 
@@ -250,7 +250,7 @@ server {
     }
 
     location / {
-        proxy_pass http://mini-konveksi-app:APP_PORT_PLACEHOLDER;
+        proxy_pass http://erp-konveksi-app:APP_PORT_PLACEHOLDER;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -342,7 +342,7 @@ server {
     client_max_body_size 50M;
 
     location / {
-        proxy_pass http://mini-konveksi-app:${APP_PORT};
+        proxy_pass http://erp-konveksi-app:${APP_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';

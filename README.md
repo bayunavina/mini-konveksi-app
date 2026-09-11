@@ -1,4 +1,4 @@
-# Mini Konveksi App (ERP Konveksi)
+# ERP Konveksi
 
 Sistem ERP untuk manajemen produksi konveksi berbasis web. Dibangun dengan **Next.js 15 (App Router + Turbopack)**, **TypeScript**, **Drizzle ORM**, dan **PostgreSQL**.
 
@@ -145,7 +145,7 @@ Salin `.env.example` menjadi `.env`. Konfigurasi lengkap:
 ## Struktur Proyek
 
 ```
-mini-konveksi-app/
+erp-konveksi-app/
 ├── app/                        # Next.js App Router
 │   ├── api/                    # API routes (admin, produksi, qc, dll)
 │   ├── dashboard/              # Halaman dashboard per role & modul
@@ -181,7 +181,7 @@ mini-konveksi-app/
 
 ```bash
 git clone <your-repo>
-cd mini-konveksi-app
+cd erp-konveksi-app
 cp .env.example .env
 # isi DATABASE_URL, BETTER_AUTH_SECRET, dll dengan nilai produksi
 npm run deploy

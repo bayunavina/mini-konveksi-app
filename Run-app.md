@@ -1,4 +1,4 @@
-# Panduan Menjalankan Mini Konveksi App
+# Panduan Menjalankan ERP Konveksi
 
 ## Arsitektur Aplikasi
 
@@ -175,7 +175,7 @@ ssh user@server "sudo /tmp/deploy.sh"
 | 1. Pre-flight check | Auto-install Docker, Docker Compose, Git, Nginx, Certbot jika belum ada |
 | 2. Pilih mode | `[1]` GitHub Clone (input URL) atau `[2]` Build Lokal (file sudah ada) |
 | 3. Konfigurasi `.env` | Input domain, auto-generate auth secret & DB password, optional SMTP |
-| 4. Nginx config | Generate reverse proxy → `http://mini-konveksi-app:3000` |
+| 4. Nginx config | Generate reverse proxy → `http://erp-konveksi-app:3000` |
 | 5. Docker build | `docker compose build --no-cache && up -d` |
 | 6. SSL (opsional) | Certbot standalone + auto-renew cron (jika domain bukan localhost) |
 | 7. Summary | Tampilkan URL, perintah logs, restart, troubleshooting |

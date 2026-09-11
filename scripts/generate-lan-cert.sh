@@ -22,7 +22,7 @@ openssl req -x509 -newkey rsa:2048 \
   -keyout certs/dev-key.pem \
   -out certs/dev-cert.pem \
   -days 825 -nodes \
-  -subj "/CN=mini-konveksi-dev" \
+  -subj "/CN=erp-konveksi-dev" \
   -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1,IP:${LAN_IP}"
 
 echo "OK: certs/dev-key.pem + certs/dev-cert.pem (SAN mencakup localhost, 127.0.0.1, ${LAN_IP})"
