@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contoh Estimasi HPP - 100 Pcs Seragam PDH Kaki Lengan Panjang</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f5f4;
+      color: #292524;
+      line-height: 1.5;
+      padding: clamp(12px, 3vw, 32px) clamp(12px, 3vw, 16px);
+    }
+    .container { max-width: 880px; margin: 0 auto; }
+    .card {
+      background: #fff;
+      border: 1px solid #e7e5e4;
+      border-radius: 12px;
+      padding: clamp(16px, 4vw, 24px);
+      margin-bottom: clamp(16px, 4vw, 24px);
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    h1 { font-size: clamp(17px, 4.5vw, 20px); font-weight: 700; color: #1c1917; line-height: 1.3; }
+    .subtitle { font-size: clamp(12px, 3.2vw, 13px); color: #78716c; margin-top: 6px; }
+    h2 { font-size: clamp(15px, 4vw, 16px); font-weight: 700; color: #b45309; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: clamp(12px, 3.4vw, 14px); }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e7e5e4; vertical-align: top; }
+    th { background: #fffbeb; color: #92400e; font-weight: 600; border-bottom: 2px solid #fcd34d; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+
+    pre {
+      background: #fafaf9;
+      border: 1px solid #e7e5e4;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: clamp(12px, 3.4vw, 13px);
+      overflow-x: auto;
+      margin: 12px 0;
+      white-space: pre;
+    }
+    .note { font-size: clamp(12px, 3.2vw, 13px); color: #57534e; }
+    .muted-inline { font-weight: 700; }
+    .total-summary {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .total-label { font-weight: 700; color: #92400e; font-size: clamp(13px, 3.4vw, 14px); }
+    .total-main { font-weight: 700; color: #92400e; font-size: clamp(15px, 4.2vw, 18px); white-space: nowrap; }
+    .total-sub { margin-top: 2px; color: #b45309; font-size: clamp(12px, 3.2vw, 13px); font-weight: 600; text-align: right; }
+    .warn {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: clamp(12px, 3.2vw, 13px);
+      color: #92400e;
+    }
+    .formula {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: clamp(12px, 3.2vw, 13px);
+      color: #1e40af;
+      overflow-wrap: break-word;
+    }
+    ul { padding-left: 20px; font-size: clamp(13px, 3.4vw, 14px); }
+    li { margin-bottom: 4px; }
+
+    .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    @media (max-width: 640px) {
+      table { font-size: 13px; }
+      thead { display: none; }
+      tbody, tr, td { display: block; width: 100%; }
+      tr {
+        padding: 6px 0;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      tr:last-child { border-bottom: none; }
+      td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 5px 2px;
+        border-bottom: none;
+        text-align: right;
+      }
+      td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        font-weight: 600;
+        color: #78716c;
+        text-align: left;
+      }
+      td.num { white-space: normal; }
+      td.num .muted-inline { white-space: nowrap; }
+      td.num .note { display: block; text-align: right; white-space: normal; }
+    }
+
+    @media print { body { background: #fff; padding: 0; } .card { box-shadow: none; border: none; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Contoh Estimasi HPP: 100 pcs Seragam PDH Kaki Lengan Panjang</h1>
+      <p class="subtitle">
+        Berdasarkan data di sistem, harga jual SKU-SRG-001 adalah Rp 225.000/pcs (scripts/seed-master.ts:15). Berikut simulasi realistis berdasarkan struktur biaya yang ada di aplikasi.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Rincian Estimasi per 100 pcs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px">Kode</th>
+              <th>Kategori</th>
+              <th>Rincian</th>
+              <th class="num">Estimasi/100 pcs</th>
+              <th class="num">Per Pcs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="Kode"><b>BBL</b></td>
+              <td data-label="Kategori">Bahan Baku Kain</td>
+              <td data-label="Rincian">Kain drill kaki ~2.2m × Rp 35.000/m + kain keras/rib</td>
+              <td data-label="Estimasi/100 pcs" class="num">Rp 8.800.000</td>
+              <td data-label="Per Pcs" class="num">Rp 88.000</td>
+            </tr>
+            <tr>
+              <td data-label="Kode"><b>ACC</b></td>
+              <td data-label="Kategori">Aksesoris Langsung</td>
+              <td data-label="Rincian">Benang, kancing, resleting, label woven</td>
+              <td data-label="Estimasi/100 pcs" class="num">Rp 1.500.000</td>
+              <td data-label="Per Pcs" class="num">Rp 15.000</td>
+            </tr>
+            <tr>
+              <td data-label="Kode"><b>TKL</b></td>
+              <td data-label="Kategori">Upah Jahit Borongan</td>
+              <td data-label="Rincian">Jahit + obras (~60% HPP)</td>
+              <td data-label="Estimasi/100 pcs" class="num">Rp 9.600.000</td>
+              <td data-label="Per Pcs" class="num">Rp 96.000</td>
+            </tr>
+            <tr>
+              <td data-label="Kode"><b>TKL_P</b></td>
+              <td data-label="Kategori">Upah Potong</td>
+              <td data-label="Rincian">Potong kain ~Rp 5.000/pcs</td>
+              <td data-label="Estimasi/100 pcs" class="num">Rp 500.000</td>
+              <td data-label="Per Pcs" class="num">Rp 5.000</td>
+            </tr>
+            <tr>
+              <td data-label="Kode"><b>PKG</b></td>
+              <td data-label="Kategori">Packaging &amp; Label</td>
+              <td data-label="Rincian">Plastik OPP, hangtag, label harga</td>
+              <td data-label="Estimasi/100 pcs" class="num">Rp 1.100.000</td>
+              <td data-label="Per Pcs" class="num">Rp 11.000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="total-summary">
+        <div class="total-row">
+          <span class="total-label">TOTAL HPP DIRECT</span>
+          <span class="total-main">Rp 21.500.000</span>
+        </div>
+        <div class="total-sub">Rp 215.000 / pcs</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Tambah BOP (Indirect) — Dialokasikan per pcs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px">Kode</th>
+              <th>Kategori</th>
+              <th class="num">Estimasi/Bulan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td data-label="Kode"><b>GTL</b></td><td data-label="Kategori">Gaji Mandor/Admin/QC</td><td data-label="Estimasi/Bulan" class="num">Rp 5.000.000</td></tr>
+            <tr><td data-label="Kode"><b>LST</b></td><td data-label="Kategori">Listrik &amp; Air</td><td data-label="Estimasi/Bulan" class="num">Rp 2.000.000</td></tr>
+            <tr><td data-label="Kode"><b>SEWA</b></td><td data-label="Kategori">Sewa Tempat</td><td data-label="Estimasi/Bulan" class="num">Rp 3.000.000</td></tr>
+            <tr><td data-label="Kode"><b>MTC</b></td><td data-label="Kategori">Service Mesin</td><td data-label="Estimasi/Bulan" class="num"><span class="muted-inline">Rp 750.000</span> <span class="note">(MTC_PER_PCS × 100)</span></td></tr>
+            <tr><td data-label="Kode"><b>BPJS</b></td><td data-label="Kategori">BPJS &amp; THR</td><td data-label="Estimasi/Bulan" class="num">Rp 1.500.000</td></tr>
+            <tr><td data-label="Kode"><b>KON</b></td><td data-label="Kategori">Konsumsi</td><td data-label="Estimasi/Bulan" class="num">Rp 1.800.000</td></tr>
+            <tr><td data-label="Kode"><b>ADM</b></td><td data-label="Kategori">Administrasi</td><td data-label="Estimasi/Bulan" class="num">Rp 750.000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="total-summary">
+        <div class="total-row">
+          <span class="total-label">TOTAL BOP Bulanan</span>
+          <span class="total-main">Rp 14.800.000</span>
+        </div>
+      </div>
+      <div class="formula" style="margin-top:16px">
+        <b>BOP/pcs</b> = Total BOP bulanan ÷ Total targetQty semua JO bulan itu<br />
+        Misal bulan ini ada 3 JO × 100 pcs = 300 pcs total → <b>BOP/pcs ≈ Rp 49.333</b>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ringkasan HPP per Pcs</h2>
+      <pre>
+HPP DIRECT/pcs  = Rp 215.000
+BOP/pcs         = Rp  49.333
+────────────────────────────
+FULL HPP/pcs    = Rp 264.333
+Harga Jual      = Rp 225.000
+────────────────────────────
+LABA/LOSS       = -Rp 39.333 / pcs  ← (contoh ini rugi)</pre>
+      <div class="warn">
+        <b>Catatan:</b> Di contoh ini harga jual (225rb) di bawah HPP (264rb) — ini menunjukkan pentingnya mengisi HPP agar bisa analisa margin. Di produksi nyata, TKL biasanya bisa ditekan atau harga jual disesuaikan.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Cara Isi di Form</h2>
+      <p class="note" style="margin-bottom:8px">Di form <b>"Estimasi Biaya Produksi (HPP)"</b>, isikan:</p>
+      <pre>
+BBL    : 8.800.000
+ACC    : 1.500.000
+TKL    : 9.600.000
+TKL_P  : 500.000
+PKG    : 1.100.000</pre>
+      <p class="note" style="margin-bottom:12px">
+        <b>OVP</b> dikosongkan (tidak pakai vendor CMT). Sistem otomatis hitung:
+      </p>
+      <ul>
+        <li>Total HPP Estimasi = <b>Rp 21.500.000</b></li>
+        <li>HPP/pcs = <b>Rp 215.000</b></li>
+      </ul>
+      <p class="note" style="margin-top:12px">
+        Angka aktual nanti akan ter-update otomatis saat pencatatan transaksi pengeluaran di-tag ke JO ini.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

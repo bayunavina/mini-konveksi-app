@@ -589,6 +589,14 @@ export default function NewJobOrderPage() {
                   <p className="text-xs text-muted-foreground">
                     * Kosongkan jika tidak ada. Nanti biaya aktual akan terisi otomatis dari transaksi pengeluaran yang di-tag ke JO ini.
                   </p>
+                  <a
+                    href="/contoh-hpp.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-amber-600 underline underline-offset-2 hover:text-amber-700"
+                  >
+                    Lihat Contoh Estimasi HPP
+                  </a>
                 </>
               )}
             </CardContent>
