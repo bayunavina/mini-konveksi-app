@@ -85,6 +85,15 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl)
   }
 
+  // Page route RBAC check (after session check, before API handling)
+  if (isProtectedRoute && hasSession) {
+    const role = await getSessionRole(request)
+    if (!canAccess(pathname, role as any)) {
+      const redirectUrl = new URL(role === "KARYAWAN" ? "/dashboard/karyawan" : role === "QC" ? "/dashboard/qc" : role === "GUDANG" ? "/dashboard/gudang" : "/dashboard", request.url)
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
   // API route permission check
   if (isApiRoute && hasSession) {
     const role = await getSessionRole(request)

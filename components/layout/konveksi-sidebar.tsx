@@ -231,11 +231,13 @@ const navigationData = {
       title: "Panduan Penggunaan",
       url: "/dashboard/panduan",
       icon: BookOpenIcon,
+      roles: ["ADMIN", "SUPERADMIN"] as UserRole[],
     },
     {
       title: "Mind Map ERP",
       url: "/dashboard/mindmap-erp",
       icon: MapIcon,
+      roles: ["ADMIN", "SUPERADMIN"] as UserRole[],
     },
   ] as NavItem[],
   gudang: [
@@ -284,11 +286,13 @@ const navigationData = {
       title: "Panduan Penggunaan",
       url: "/dashboard/panduan",
       icon: BookOpenIcon,
+      roles: ["ADMIN", "SUPERADMIN"] as UserRole[],
     },
     {
       title: "Mind Map ERP",
       url: "/dashboard/mindmap-erp",
       icon: MapIcon,
+      roles: ["ADMIN", "SUPERADMIN"] as UserRole[],
     },
   ] as NavItem[],
   karyawan: [
@@ -321,11 +325,13 @@ const navigationData = {
       title: "Panduan Penggunaan",
       url: "/dashboard/panduan",
       icon: BookOpenIcon,
+      roles: ["ADMIN", "SUPERADMIN"] as UserRole[],
     },
     {
       title: "Mind Map ERP",
       url: "/dashboard/mindmap-erp",
       icon: MapIcon,
+      roles: ["ADMIN", "SUPERADMIN"] as UserRole[],
     },
   ] as NavItem[],
   quickActions: [
@@ -340,6 +346,11 @@ const navigationData = {
 
 function NavMenuItem({ item, isActive, userRole }: { item: NavItem; isActive: boolean; userRole: UserRole }) {
   const pathname = usePathname()
+
+  // Hide top-level items restricted by role
+  if (item.roles && !item.roles.includes(userRole)) {
+    return null
+  }
   
   // P3-1: Filter submenu items by role
   const visibleSubmenu = item.submenu

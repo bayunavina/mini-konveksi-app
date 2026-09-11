@@ -36,6 +36,8 @@ export const ROUTE_RULES: RouteRule[] = [
   { prefix: "/dashboard/settings", roles: ["ADMIN", "SUPERADMIN"], description: "Settings" },
   { prefix: "/dashboard/qc-reports", roles: ["ADMIN", "SUPERADMIN"], description: "QC Reports (admin)" },
   { prefix: "/overview/finance", roles: ["ADMIN", "SUPERADMIN"], description: "Finance" },
+  { prefix: "/dashboard/panduan", roles: ["ADMIN", "SUPERADMIN"], description: "Panduan Penggunaan (admin only)" },
+  { prefix: "/dashboard/mindmap-erp", roles: ["ADMIN", "SUPERADMIN"], description: "Mind Map ERP (admin only)" },
   // Shared: Transfer - ADMIN/SUPERADMIN and GUDANG
   { prefix: "/dashboard/transfer/warehouses", roles: ["ADMIN", "SUPERADMIN"], description: "Master Gudang" },
   { prefix: "/dashboard/transfer/incoming", roles: ["ADMIN", "SUPERADMIN", "GUDANG"], description: "Barang Masuk" },
