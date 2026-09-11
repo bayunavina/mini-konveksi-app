@@ -144,6 +144,8 @@ Buka browser di **http://localhost:3000**
 
 ## Deploy Produksi
 
+### Opsi 1: Deploy Manual
+
 ```bash
 # Build & start full stack (app + database)
 npm run deploy
@@ -152,3 +154,28 @@ npm run docker:up
 ```
 
 > Sebelum deploy, pastikan `.env` sudah diisi dengan nilai produksi (`DATABASE_URL`, `BETTER_AUTH_SECRET`, dll). Kredensial database produksi di `docker-compose.yaml` menggunakan `konveksi_user` / `konveksi_password` / `konveksi_db`.
+
+### Opsi 2: Deploy via Script (Ubuntu Server)
+
+Script `deploy.sh` mengotomatiskan seluruh proses: install dependensi, clone dari GitHub (atau build lokal), generate `.env`, build Docker, setup Nginx reverse proxy, dan SSL (Let's Encrypt).
+
+```bash
+# Dari dalam repo
+sudo ./deploy.sh
+
+# Atau clone script ke server lain
+scp deploy.sh user@server:/tmp/
+ssh user@server "sudo /tmp/deploy.sh"
+```
+
+**Yang dilakukan script:**
+
+| Langkah | Deskripsi |
+| --- | --- |
+| 1. Pre-flight check | Auto-install Docker, Docker Compose, Git, Nginx, Certbot jika belum ada |
+| 2. Pilih mode | `[1]` GitHub Clone (input URL) atau `[2]` Build Lokal (file sudah ada) |
+| 3. Konfigurasi `.env` | Input domain, auto-generate auth secret & DB password, optional SMTP |
+| 4. Nginx config | Generate reverse proxy → `http://mini-konveksi-app:3000` |
+| 5. Docker build | `docker compose build --no-cache && up -d` |
+| 6. SSL (opsional) | Certbot standalone + auto-renew cron (jika domain bukan localhost) |
+| 7. Summary | Tampilkan URL, perintah logs, restart, troubleshooting |

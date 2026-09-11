@@ -140,6 +140,7 @@ Salin `.env.example` menjadi `.env`. Konfigurasi lengkap:
 | `npm run docker:down`  | Stop semua container                              |
 | `npm run docker:logs`  | Lihat logs container                              |
 | `npm run deploy`       | Rebuild & deploy (down → build --no-cache → up) |
+| `sudo ./deploy.sh`    | Production deploy (install deps + build + Nginx + SSL) |
 
 ## Struktur Proyek
 
@@ -161,7 +162,9 @@ mini-konveksi-app/
 ├── lib/                        # Utility: auth, email, firebase, dll
 ├── public/                     # Aset statis
 ├── scripts/                    # Seed scripts (admin, user, dll)
-├── docker-compose.yaml         # postgres, postgres-dev, app
+├── nginx/templates/            # Template config Nginx reverse proxy
+├── deploy.sh                   # Script production deployment (Ubuntu server)
+├── docker-compose.yaml         # postgres, postgres-dev, app, nginx
 ├── Dockerfile                  # Container app
 ├── middleware.ts               # Route protection & maintenance mode
 └── drizzle.config.ts           # Konfigurasi Drizzle Kit
@@ -170,9 +173,11 @@ mini-konveksi-app/
 ## Mode Maintenance & Deploy
 
 - **Maintenance mode:** dikontrol via cookie `maintenance=true` (lihat `middleware.ts`). Halaman admin settings tetap bisa diakses saat maintenance.
-- **Production deploy:** `npm run deploy` atau `npm run docker:up` setelah mengisi `.env` dengan nilai produksi.
+- **Production deploy:** `npm run deploy`, `npm run docker:up`, atau `sudo ./deploy.sh` (otomatis, lihat bagian Deployment) setelah mengisi `.env` dengan nilai produksi.
 
 ## Deployment (Docker Compose)
+
+### Manual
 
 ```bash
 git clone <your-repo>
@@ -183,6 +188,24 @@ npm run deploy
 ```
 
 Akses di **http://localhost:3000**. Kredensial database produksi (container `postgres`) menggunakan `konveksi_user`/`konveksi_password` dan dapat diubah di `docker-compose.yaml`.
+
+### Otomatis via deploy.sh (Ubuntu Server)
+
+```bash
+# Dari dalam repo
+sudo ./deploy.sh
+
+# Atau clone script ke server lain
+scp deploy.sh user@server:/tmp/
+ssh user@server "sudo /tmp/deploy.sh"
+```
+
+Script akan:
+1. Install dependensi (Docker, Nginx, Certbot) jika belum ada
+2. Clone dari GitHub **atau** build dari file lokal
+3. Generate `.env` secara interaktif (domain, secret, password)
+4. Build & jalankan container (App + PostgreSQL + Nginx)
+5. Setup SSL via Let's Encrypt (otomatis jika pakai domain)
 
 ## Dokumentasi
 

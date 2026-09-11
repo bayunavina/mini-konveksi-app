@@ -1,179 +1,175 @@
-# Backend Structure Document
+# Backend Structure Document — ERP Konveksi
 
-This document outlines the backend architecture, hosting, and infrastructure for the **codeguide-starter** project. It uses plain language so anyone can understand how the backend is set up and how it supports the application.
+Dokumen ini menjelaskan arsitektur backend, database, dan infrastruktur **ERP Konveksi**. Ditulis dengan bahasa sederhana agar siapa pun memahami bagaimana backend diatur dan mendukung aplikasi.
 
-## 1. Backend Architecture
+---
 
-- **Framework and Design Pattern**
-  - We use **Next.js API Routes** to handle all server-side logic. These routes live alongside the frontend code in the same repository, making development and deployment simpler.
-  - The backend follows a **layered pattern**:
-    1. **API Layer**: Receives requests (login, registration, data fetch).  
-    2. **Service Layer**: Contains the core business logic (user validation, password hashing).  
-    3. **Data Access Layer**: Talks to the database via a simple ORM (e.g., Prisma or TypeORM).
+## 1. Arsitektur Backend
 
-- **Scalability**
-  - Stateless API routes can scale horizontally—new instances can spin up on demand.  
-  - We can add caching or a message queue (e.g., Redis or RabbitMQ) without changing the core code.
+- **Framework & Pola**
+  - Backend memakai **Next.js API Routes** — kode server berada di `app/api/` satu proyek dengan frontend.
+  - Pola berlapis:
+    1. **API Layer** (`app/api/**/route.ts`) — menerima request HTTP (GET/POST/PUT/DELETE).
+    2. **Service/Business Logic Layer** — validasi (zod), RBAC/permission, logika bisnis (status assignment, perhitungan upah, pergerakan stok).
+    3. **Data Access Layer** — **Drizzle ORM** dengan schema terpusat (`db/schema/`).
+
+- **Modularitas**
+  - Kode dikelompokkan per modul bisnis: `job-orders`, `production/*`, `inventory/*`, `transfers`, `qc`, `salaries`, `advances`, `transactions`, `assets`, `employees`, `notifications`, dll.
+
+- **Skalabilitas**
+  - API routes stateless → dapat diskala horizontal. Container app adalah `output: 'standalone'` Node server di Docker.
+  - PostgreSQL menyimpan state; volume Docker `postgres_data` menjaga durabilitas.
 
 - **Maintainability**
-  - Code for each feature is grouped by route (authentication, dashboard).  
-  - A service layer separates complex logic from request handling.
+  - Schema database tunggal (`db/schema/app.ts` + `db/schema/auth.ts`) + migrasi Drizzle.
+  - RBAC terpusat (`lib/rbac.ts`, `lib/constants.ts`) untuk halaman & API.
 
-- **Performance**
-  - Lightweight Node.js handlers keep response times low.  
-  - Future use of database connection pooling and Redis for caching repeated queries.
+---
 
-## 2. Database Management
+## 2. Manajemen Database
 
-- **Database Choice**
-  - We recommend **PostgreSQL** for structured data and reliable transactions.  
-  - In-memory caching can be added later with **Redis** for session tokens or frequently read data.
+- **Pilihan DB**: **PostgreSQL 16** (`postgres:16-alpine`), container bernama `postgres` (port 5432) + `postgres-dev` (profile dev, port 5433).
+- **Akses data**: **Drizzle ORM** — TypeScript-first; query aman/typed; pool koneksi via `pg` (`db/index.ts`).
+- **Migrasi**: direktori `drizzle/` berisi SQL migrations (13+ file) + generated `schema.ts`/`relations.ts`. Alur: `db:generate` → `db:migrate` (atau `db:push` untuk cepat).
+- **Seed**: `npm run seed:admin` membuat superadmin default; script seed lain di `scripts/`.
 
-- **Data Storage and Access**
-  - Use an ORM like **Prisma** or **TypeORM** to map JavaScript/TypeScript objects to database tables.
-  - Connection pooling ensures efficient use of database connections under load.
-  - Migrations track schema changes over time, keeping development, staging, and production in sync.
+---
 
-- **Data Practices**
-  - Passwords are never stored in plain text—they are salted and hashed with **bcrypt** before saving.
-  - All outgoing data is typed and validated to prevent malformed records.
+## 3. Skema Database
 
-## 3. Database Schema
+### Auth (Better Auth — `db/schema/auth.ts`)
+- `user`: id, name, email (unique), emailVerified, image.
+- `session`: token (unique), expiresAt, ipAddress, userAgent, userId → cascade.
+- `account`: provider credentials (password hashed via bcrypt disimpan di `account.password`).
+- `verification`: token verifikasi.
 
-### Human-Readable Format
+### Bisnis (`db/schema/app.ts`)
 
-- **Users**
-  - **id**: Unique identifier  
-  - **email**: User’s email address (unique)  
-  - **password_hash**: Securely hashed password  
-  - **created_at**: Account creation timestamp
+**Master Data**
+- `master_skus` — kode, nama, kategori, unit, harga.
+- `products` — SKU produk, kategori, min stock, source (MANUAL/seeded).
+- `warehouses` — kode/nama gudang.
+- `suppliers` — supplier bahan baku.
+- `teams` — tim produksi (leader, active).
+- `employees` — karyawan: name, PIN, QR code, role, team, employment type, base salary, rate per unit.
+- `cost_categories` — kode + nama kategori biaya (`BBL`, `ACC`, ...).
 
-- **Sessions**
-  - **id**: Unique session record  
-  - **user_id**: Links to a user  
-  - **token**: Random string for authentication  
-  - **expires_at**: When the token stops working  
-  - **created_at**: When the session was created
+**Inventory**
+- `inventory` — stok per produk per gudang + lot & lokasi.
+- `material_lots` — lot bahan baku: nomor lot, QR, qty, initialQty, status, isReadyForProduction, supplier.
+- `inventory_stock` — stok real-time + `reservedQty`.
+- `inventory_movements` — riwayat semua pergerakan (IN/OUT/ADJUSTMENT/QC_COMPLETE/REJECT).
 
-- **DashboardItems** *(optional for dynamic data)*
-  - **id**: Unique record  
-  - **title**: Item title  
-  - **content**: Item details  
-  - **created_at**: When the item was added
+**Produksi**
+- `job_orders` — JO: nomor unik + QR, product, team, qc employee, target/completed/rejected qty, status (`DRAFT`, dll), due date.
+- `production_assignments` — penugasan ke employee: targetQty, completed/rejected/accepted/pending qty, ratePerUnit, status (`ASSIGNED`), qcRequestedAt, timestamps.
+- `production_progress` — log progres per assignment (qtyCompleted, qtyRejected).
+- `production_from_materials` — konversi bahan (lot) → produk.
+- `production_logs` — output terindividu per minggu/tahun (periodWeek, periodYear).
+- `production_salary` — ringkasan upah per assignment/periode.
 
-### SQL Schema (PostgreSQL)
-```sql
--- Users table
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+**QC**
+- `qc_reports` — per JO/employee: successQty, rejectQty, notes.
+- `rejects` — reject per JO/produk/QC report: qty, reason, status (`PENDING`), resolution, resolvedBy.
 
--- Sessions table
-CREATE TABLE sessions (
-  id SERIAL PRIMARY KEY,
-  user_id INT REFERENCES users(id) ON DELETE CASCADE,
-  token VARCHAR(255) UNIQUE NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+**Transfer**
+- `transfers` — nomor transfer, type (`INCOMING`/`OUTGOING`/`FINISHED`), from/to warehouse, status.
+- `transfer_items` — item transfer (product, sku code/name, qty, unit).
+- `transfer_photos` — foto dokumentasi (up to 10, 5MB) per transfer.
 
--- Dashboard items table
-CREATE TABLE dashboard_items (
-  id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  content TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```  
+**Finance**
+- `transactions` — INCOME/EXPENSE, kategori, amount, reference, jobOrderId.
+- `job_order_costs` — biaya per JO per kategori: type (DIRECT/INDIRECT), estimated & actual amount → **HPP**.
+- `advances` — kasbon: amount, purpose, status, paidAmount, paymentHistory (JSON), approvedBy.
+- `salaries` — gaji periodik: baseSalary, totalAllowances/Deductions, totalSalary, status.
+- `salary_components` — komponen gaji dinamis (amount/percentage/formula).
 
-## 4. API Design and Endpoints
+**Aset & Maintenance**
+- `assets` — kode, nama, kategori (MACHINE/EQUIPMENT/FURNITURE/VEHICLE/OTHER), nilai, status.
+- `asset_maintenance` — jadwal maintenance: type, dates, technician, cost, status.
 
-- **Approach**: We follow a **RESTful** style, grouping related endpoints under `/api` directories.
+**Notifikasi & Pengaturan**
+- `notifications` — notifikasi in-app per employee/actor.
+- `notification_preferences` — pref per user (email/push/sms untuk order-complete, transfer-in/out, low-stock).
+- `push_subscriptions` — token FCM per perangkat.
+- `app_settings` — key/value pengaturan aplikasi.
 
-- **Key Endpoints**
-  - `POST /api/auth/register`  
-    • Accepts `{ email, password }`  
-    • Creates a new user and issues a session token  
-  - `POST /api/auth/login`  
-    • Accepts `{ email, password }`  
-    • Verifies credentials and returns a session token  
-  - `POST /api/auth/logout`  
-    • Invalidates the session token on the server  
-  - `GET /api/dashboard/data`  
-    • Requires a valid session  
-    • Returns user-specific data or dashboard items  
+---
 
-- **Communication**
-  - Frontend sends JSON requests; backend replies with JSON and appropriate HTTP status codes.  
-  - Protected routes check for a valid session token (in cookies or Authorization header).
+## 4. API Design & Endpoints
 
-## 5. Hosting Solutions
+Pendekatan **RESTful**, semua di bawah `/api`. Semua route dilindungi middleware (sesi) dan RBAC/permission (rol).
 
-- **Cloud Provider**:  
-  - **Vercel** (recommended) offers seamless Next.js deployments, auto-scaling, and built-in CDN.  
-  - Alternatively, **Netlify** or any Node.js-capable host will work.
+Ringkasan modul & endpoint:
 
-- **Benefits**
-  - **Reliability**: Global servers and failover across regions.  
-  - **Scalability**: Auto-scale serverless functions based on traffic.  
-  - **Cost-Effectiveness**: Pay-per-use model means low cost for small projects.
+| Modul | Prefix (`app/api/`) | Contoh Endpoint |
+| --- | --- | --- |
+| Auth | `auth/*` | `auth/pin-login`, `auth/get-session`, `auth/sign-in-email`, Better Auth `auth/[...all]` |
+| Users | `users`, `create-user`, `create-or-update-user`, `user-role`, `setup-admin` | create, update role, setup superadmin |
+| Admin | `admin/salary-claims` | `approve`, `sync` |
+| Produksi | `job-orders/*`, `production/*`, `production-logs` | buat JO, `assign`, `progress`, `request-qc`, `summary`, `from-materials` |
+| Inventory | `inventory/*`, `products`, `master-skus`, `material-lots`, `balance/stock` | `stock`, `movements`, `audit`, `summary` |
+| Transfer | `transfers`, `transfers/photos`, `transfer-items` | create/list/get photo |
+| QC | `qc/*`, `qc-reports`, `rejects` | `job-orders`, `reports`, create/get |
+| Finance | `transactions`, `cost-categories`, `advances/*`, `salaries/*`, `balance/*`, `hpp-dashboard` | kasbon, payroll, HPP |
+| HR | `employees/*`, `teams` | employees, teams |
+| Assets | `assets/*`, `assets/maintenance` | CRUD + maintenance |
+| Notifikasi | `notifications`, `push` | list, mark-read, subscribe FCM |
+| Sistem | `settings`, `backup`, `factory-reset`, `seed`, `debug-session` | export backup, reset |
 
-## 6. Infrastructure Components
+### Komunikasi
+- Frontend mengirim JSON; backend merespons JSON dengan status code HTTP yang sesuai.
+- Auth: cookie sesi (Better Auth) dikirim otomatis; middleware memvalidasi via `/api/debug-session2`.
 
-- **Load Balancer**
-  - Provided by the hosting platform—distributes API requests across function instances.
+---
 
-- **CDN (Content Delivery Network)**
-  - Vercel’s global edge network caches static assets (CSS, JS, images) for faster page loads.
+## 5. RBAC & Otorisasi
 
-- **Caching**
-  - **Redis** (optional) for session storage or caching dashboard queries to reduce database load.
+- **Role**: `SUPERADMIN`, `ADMIN`, `GUDANG`, `QC`, `KARYAWAN`.
+- **Route rules** (`lib/rbac.ts`): prefix → allowed roles; `canAccess()` memutuskan akses halaman.
+- **Permission-based** (`lib/constants.ts`): `PERMISSION` enum (mis. `BARANG_MASUK_CREATE/VIEW/TERIMA/DELETE`, `BARANG_KELUAR_*`, `TRANSFER_SCAN`); `ROLE_PERMISSIONS` memetakan role → daftar permission; `requirePermission()` di API.
+- **Middleware** (`middleware.ts`):
+  - Sesi valid? → lanjut / redirect sign-in.
+  - RBAC halaman: role diizinkan? → lanjut / redirect ke dashboard role.
+  - API: `canAccess(pathname, role)` + mapping `API_PERMISSION_ROUTES` → `403 Forbidden` jika tidak diizinkan.
 
-- **Object Storage**
-  - For file uploads or backups, integrate with AWS S3 or similar services.
+---
 
-- **Message Queue**
-  - In future, use **RabbitMQ** or **Kafka** for background tasks (e.g., email notifications).
+## 6. Hosting & Infrastruktur
 
-## 7. Security Measures
+- **VPS/Ubuntu** dengan Docker Compose sebagai target utama produksi.
+- **Komponen**:
+  - `postgres` (PostgreSQL 16) — volume `postgres_data`.
+  - `app` — image multi-stage `node:20-alpine` (`.next/standalone`), non-root user `nextjs`, port 3000.
+  - `nginx` — reverse proxy (port 80/443), mount config & Let's Encrypt certs.
+  - `postgres-dev` — profile dev (port 5433).
+- **Deploy**: `deploy.sh` (install deps, clone GitHub/build lokal, generate `.env`, build, Nginx, Certbot SSL, cron renew).
+- **Degradasi**: `restart: unless-stopped` + healthcheck postgres (`pg_isready`) + `depends_on: condition: service_healthy`.
 
-- **Authentication & Authorization**
-  - Passwords hashed with **bcrypt** and salted.  
-  - Session tokens stored in secure, HttpOnly cookies or Authorization headers.  
-  - Protected endpoints verify tokens before proceeding.
+---
 
-- **Data Encryption**
-  - **HTTPS/TLS** encrypts data in transit.  
-  - Database connections use SSL to encrypt data between the app and the database.
+## 7. Keamanan Backend
 
-- **Input Validation**
-  - Every incoming request is validated (e.g., valid email format, password length) to prevent SQL injection or other attacks.
+- **Auth**: Better Auth sessions (cookie Secure/HttpOnly), email/password + PIN karyawan.
+- **Password**: hashed `bcrypt`; tidak pernah plaintext.
+- **RBAC**: di middleware (halaman) + permission check di API; response `403` konsisten.
+- **Input**: validasi zod pada data masuk; typed query lewat Drizzle (cegah SQL injection).
+- **Secrets**: hanya dari `.env`; `.gitignore`/`.dockerignore` mengecualikan `.env*`.
+- **HTTPS**: Nginx + Let's Encrypt; enforce redirect HTTP→HTTPS di production.
+- **Data**: `.env` di-`chmod 600`; `.dockerignore` mencegah secret masuk image.
 
-- **Web Security Best Practices**
-  - Enable **CORS** policies to limit allowed origins.  
-  - Use **CSRF tokens** or same-site cookies to prevent cross-site requests.  
-  - Set secure headers with **Helmet** or a similar middleware.
+---
 
-## 8. Monitoring and Maintenance
+## 8. Monitoring & Maintenance
 
-- **Performance Monitoring**
-  - Integrate **Sentry** or **LogRocket** for real-time crash reporting and performance tracing.  
-  - Use Vercel’s built-in analytics to track request latencies and error rates.
+- **Logging**: `docker compose logs -f` (app/postgres/nginx); logs container di-persist via `restart: unless-stopped`.
+- **Health**: healthcheck PostgreSQL (`pg_isready`) + `docker compose ps`.
+- **Backup**: endpoint `/api/backup` (export DB); `factory-reset` untuk reset dev.
+- **Migrasi**: `npm run db:migrate`/`db:push` saat deploy; `db:generate` saat schema berubah.
+- **Renewal SSL**: cron `certbot renew` otomatis (dengan pre/post-hook stop/start nginx).
 
-- **Logging**
-  - Structured logs (JSON) for all API requests and errors, shipped to a log management service like **Datadog** or **Logflare**.
+---
 
-- **Health Checks**
-  - Define a `/health` endpoint that returns a 200 status if the service is up and the database is reachable.
+## 9. Kesimpulan
 
-- **Maintenance Strategies**
-  - Automated migrations run on deploy to keep the database schema up to date.  
-  - Scheduled dependency audits and security scans (e.g., `npm audit`).
-  - Regular backups of the database (daily or weekly depending on usage).
-
-## 9. Conclusion and Overall Backend Summary
-
-The backend for **codeguide-starter** is built on Next.js API Routes and Node.js, paired with PostgreSQL for data and optional Redis for caching. It follows a clear layered architecture that keeps code easy to maintain and extend. With RESTful endpoints for authentication and data, secure practices like password hashing and HTTPS, and hosting on Vercel for scalability and global performance, this setup meets the project’s goals for a fast, secure, and developer-friendly foundation. Future enhancements—such as background job queues, advanced monitoring, or richer data models—can be added without disrupting the core structure.
+Backend **ERP Konveksi** dibangun di atas Next.js API Routes + Node.js, PostgreSQL 16, dan Drizzle ORM, dengan arsitektur berlapis yang modular per modul bisnis (produksi, inventory, transfer, QC, finance, payroll, HR, aset). Keamanan dijaga oleh Better Auth (sesi) dan RBAC ganda (halaman + API dengan permission granular). Deployment ke Ubuntu production dilakukan via Docker Compose + Nginx + Let's Encrypt oleh `deploy.sh`, siap untuk operasional konveksi skala UKM.
