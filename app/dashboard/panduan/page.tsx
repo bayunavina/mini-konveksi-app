@@ -1068,6 +1068,34 @@ export default function PanduanPage() {
                   <GlossaryItem term="CMT" def="Cutting, Making, Trimming — skema upah jahit borongan/vendor (maklon)." />
                   <GlossaryItem term="WIP Stok" def="Stok barang yang masih dalam tahap produksi." />
                 </div>
+
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold">Kategori Biaya (dari Data Master)</h3>
+                  <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+                    Di menu <span className="font-semibold">Settings → Data Master → Kategori Biaya</span>, setiap biaya
+                    diklasifikasikan ke dua jenis: <span className="font-semibold text-foreground">DIRECT</span> (langsung masuk HPP)
+                    dan <span className="font-semibold text-foreground">INDIRECT</span> (biaya operasional / BOP).
+                    Berikut 14 kategori bawaan sistem beserta artinya.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <GlossaryItem term="DIRECT — Biaya Langsung" def="Biaya yang langsung menempel ke produk dan dihitung ke dalam HPP, mis. bahan baku, upah jahit, dan packing." />
+                    <GlossaryItem term="INDIRECT — Biaya Tidak Langsung" def="Biaya operasional yang tidak langsung menempel ke produk (Biaya Overhead Pabrik/BOP), mis. sewa, listrik, gaji tidak langsung." />
+                    <GlossaryItem term="BBL — Bahan Baku Kain" def="Kain utama, kain keras, rib — termasuk ongkir beli bahan." />
+                    <GlossaryItem term="ACC — Aksesoris Langsung" def="Benang, kancing, resleting, karet, busa, dan label woven." />
+                    <GlossaryItem term="TKL — Upah Jahit Borongan" def="Upah jahit per pcs / borongan (sekitar 60% HPP)." />
+                    <GlossaryItem term="TKL-P — Upah Potong" def="Upah potong kain, dibayar harian / borongan." />
+                    <GlossaryItem term="OVP — Ongkos Vendor Jahit (CMT)" def="Maklon / CMT vendor luar yang dipakai saat produksi overload." />
+                    <GlossaryItem term="PKG — Packaging & Label" def="Plastik OPP, hangtag, label harga, dan dus packing." />
+                    <GlossaryItem term="GTL — Gaji Tidak Langsung" def="Gaji mandor, admin produksi, dan QC leader — tetap bulanan." />
+                    <GlossaryItem term="LST — Listrik & Air" def="Utilitas listrik, air, genset, dan kompresor bulanan." />
+                    <GlossaryItem term="SEWA — Sewa Tempat" def="Sewa gudang, workshop & toko, atau cicilan ruko." />
+                    <GlossaryItem term="MTC — Service & Penyusutan Mesin" def="Service mesin jahit, obras, cutting + penyusutan mesin." />
+                    <GlossaryItem term="BPJS — BPJS, THR & Tunjangan" def="BPJS Ketenagakerjaan, THR, dan tunjangan harian karyawan." />
+                    <GlossaryItem term="KON — Konsumsi & Mess" def="Makan siang, air galon, gas, dan mess karyawan." />
+                    <GlossaryItem term="ADM — Administrasi Umum" def="ATK, internet, operasional kantor, dan pajak UMKM." />
+                    <GlossaryItem term="MKT — Marketing & Kirim Jual" def="Foto produk, iklan, fee marketplace, dan ongkir kirim barang jadi." />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

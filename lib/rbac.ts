@@ -25,7 +25,6 @@ export const ROUTE_RULES: RouteRule[] = [
   // ADMIN and SUPERADMIN (superadmin can access all admin routes)
   { prefix: "/dashboard/admin", roles: ["ADMIN", "SUPERADMIN"], description: "Admin dashboard" },
   { prefix: "/dashboard/produksi", roles: ["ADMIN", "SUPERADMIN"], description: "Produksi (Job Order)" },
-  { prefix: "/dashboard/production", roles: ["ADMIN", "SUPERADMIN"], description: "Production assignments" },
   { prefix: "/dashboard/inventory/materials", roles: ["ADMIN", "SUPERADMIN"], description: "Bahan Baku" },
   { prefix: "/dashboard/inventory/rejects", roles: ["ADMIN", "SUPERADMIN"], description: "Reject (admin view)" },
   { prefix: "/dashboard/inventory", roles: ["ADMIN", "SUPERADMIN", "GUDANG"], description: "Stok overview - admin & gudang" },

@@ -7,7 +7,7 @@ const pool = new Pool({
 
 export async function GET() {
   try {
-    const result = await pool.query('SELECT * FROM warehouses ORDER BY created_at DESC LIMIT 10')
+    const result = await pool.query('SELECT * FROM warehouses WHERE is_active = true ORDER BY created_at DESC LIMIT 10')
     return NextResponse.json(result.rows)
   } catch (error: unknown) {
     const err = error as Error

@@ -61,32 +61,56 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const client = await pool.connect()
   try {
     const { id } = await params
-    
-    // Check if warehouse has inventory movements
-    const movements = await pool.query(
-      'SELECT COUNT(*) FROM inventory_movements WHERE warehouse_id = $1',
+
+    await client.query("BEGIN")
+
+    const stockResult = await client.query(
+      'SELECT COALESCE(SUM(quantity), 0) AS total FROM inventory_stock WHERE warehouse_id = $1',
       [id]
     )
-    
-    if (parseInt(movements.rows[0].count) > 0) {
+    const remainingStock = parseInt(stockResult.rows[0].total)
+
+    if (remainingStock > 0) {
+      await client.query("ROLLBACK")
       return NextResponse.json(
-        { error: "Tidak dapat menghapus gudang yang memiliki riwayat pergerakan inventaris" },
+        { error: "Gudang masih memiliki stok tersisa, tidak dapat dihapus" },
         { status: 400 }
       )
     }
-    
-    const result = await pool.query('DELETE FROM warehouses WHERE id = $1 RETURNING *', [id])
-    
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "Warehouse not found" }, { status: 404 })
-    }
-    
-    return NextResponse.json({ success: true })
+
+    await client.query(
+      'DELETE FROM inventory_movements WHERE warehouse_id = $1',
+      [id]
+    )
+    await client.query(
+      'DELETE FROM inventory_stock WHERE warehouse_id = $1',
+      [id]
+    )
+    await client.query(
+      'DELETE FROM inventory WHERE warehouse_id = $1',
+      [id]
+    )
+    await client.query(
+      'UPDATE transfers SET from_warehouse_id = NULL WHERE from_warehouse_id = $1',
+      [id]
+    )
+    await client.query(
+      'UPDATE transfers SET to_warehouse_id = NULL WHERE to_warehouse_id = $1',
+      [id]
+    )
+    await client.query('DELETE FROM warehouses WHERE id = $1', [id])
+
+    await client.query("COMMIT")
+    return NextResponse.json({ success: true, softDeleted: false })
   } catch (error: unknown) {
+    await client.query("ROLLBACK")
     const err = error as Error
     console.error("Error deleting warehouse:", err)
     return NextResponse.json({ error: err.message }, { status: 500 })
+  } finally {
+    client.release()
   }
 }

@@ -8,40 +8,47 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { MODULE_BRANCHES, MIND_MAP_TABS, PROCESS_FLOW, type MindMapTabId } from "@/lib/mindmap-erp"
+import { MODULE_BRANCHES, MIND_MAP_TABS, PROCESS_FLOW, getRoleAwareHref, type MindMapTabId } from "@/lib/mindmap-erp"
+import { useSessionWithRole } from "@/lib/use-session-with-role"
 
-const DIAGRAMS: Record<MindMapTabId, string> = {
-  "main-flow": `flowchart LR
+const DIAGRAMS: Record<MindMapTabId, (role: string) => string> = {
+  "main-flow": (role) => `flowchart LR
     classDef stage fill:#ecfdf5,stroke:#059669,color:#064e3b,stroke-width:2px,font-size:16px
     classDef decision fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:2px,font-size:16px
     classDef external fill:#eff6ff,stroke:#2563eb,color:#1e3a8a,stroke-width:2px,font-size:16px
     classDef reject fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px,font-size:16px
-    order[Order Customer<br/>Customer + Admin]:::external --> approval[Approval Job Order<br/>Admin]:::stage
+    order[Order Customer<br/>Customer + Admin]:::external --> approval[Approval Job Order + Input HPP<br/>Admin]:::stage
     approval --> stock{Stok bahan<br/>cukup?}:::decision
     stock -->|Ya| assign[Assignment Tim Produksi<br/>Admin]:::stage
     stock -->|Tidak| restock[Restock & Terima Bahan<br/>Admin + Supplier + Gudang]:::external
     restock --> assign
-    assign --> production[Cutting → Sewing → Finishing<br/>Tim Produksi · Scan 1 pcs]:::stage
-    production --> qc{QC Good<br/>atau Reject?}:::decision
-    qc -->|Reject| rework[Rework / Catat Reject<br/>QC + Produksi]:::reject
-    rework --> production
-    qc -->|Good| finished[Barang Jadi<br/>Gudang]:::stage
+    assign --> production[Pengerjaan & Input Hasil<br/>Karyawan]:::stage
+    production --> reqqc[Request QC<br/>Karyawan]:::stage
+    reqqc --> qc{QC Good<br/>atau Reject?}:::decision
+    qc -->|Reject| reject[Catat Reject<br/>QC]:::reject
+    reject --> finished
+    qc -->|Good| finished[Barang Jadi di Gudang<br/>Gudang]:::stage
     finished --> delivery[Transfer & Pengiriman<br/>Gudang]:::external
-    delivery --> finance[Invoice & Pembayaran<br/>Finance + Customer]:::external
+    delivery --> salary[Klaim Gaji per Pcs<br/>Karyawan]:::stage
+    salary --> payroll[Review & Bayar Gaji<br/>Admin]:::stage
+    payroll --> finance[Pencatatan Keuangan & HPP<br/>Finance + Admin]:::external
     finance --> done((Selesai)):::stage
-    click order href "/dashboard/produksi"
+    click order href "/dashboard/produksi/new"
     click approval href "/dashboard/produksi"
     click stock href "/dashboard/inventory"
     click restock href "/dashboard/transfer/incoming"
-    click assign href "/dashboard/production/assignments"
-    click production href "/dashboard/production/progress"
+    click assign href "/dashboard/produksi/new"
+    click production href "${role === "KARYAWAN" ? "/dashboard/karyawan/produksi" : "/dashboard/produksi"}"
+    click reqqc href "${role === "KARYAWAN" ? "/dashboard/karyawan" : "/dashboard/qc-reports"}"
     click qc href "/dashboard/qc/overview"
-    click rework href "/dashboard/inventory/rejects"
+    click reject href "/dashboard/inventory/rejects"
     click finished href "/dashboard/inventory/finished"
     click delivery href "/dashboard/transfer/outgoing"
+    click salary href "${role === "KARYAWAN" ? "/dashboard/karyawan/gaji" : "/dashboard/employees/salary-claims"}"
+    click payroll href "/dashboard/employees/salaries"
     click finance href "/overview/finance"
     click done href "/dashboard/admin"`,
-  "module-map": `flowchart TD
+  "module-map": (_role) => `flowchart TD
     app((ERP Konveksi)):::root --> master[Master Data]:::module
     app --> sales[Sales / Produksi]:::module
     app --> quality[Quality Control]:::module
@@ -71,7 +78,7 @@ const DIAGRAMS: Record<MindMapTabId, string> = {
     click finance href "/overview/finance"
     click reports href "/dashboard/balance"
     click qr href "/dashboard/qr-generator"`,
-  restock: `flowchart TD
+  restock: (_role) => `flowchart TD
     low[Stok mencapai batas minimum]:::decision --> review[Review kebutuhan bahan<br/>Admin / Gudang]:::stage
     review --> enough{Stok cukup<br/>untuk Job Order?}:::decision
     enough -->|Ya| ready[Bahan siap dipakai]:::stage
@@ -85,8 +92,8 @@ const DIAGRAMS: Record<MindMapTabId, string> = {
     click supplier href "/overview/finance"
     click receive href "/dashboard/transfer/incoming"
     click update href "/dashboard/inventory"
-    click production href "/dashboard/production/assignments"`,
-  payroll: `flowchart TD
+    click production href "/dashboard/produksi"`,
+  payroll: (role) => `flowchart TD
     assign[Assignment dengan target qty]:::stage --> scan[Operator scan QR<br/>1 scan = 1 pcs]:::stage
     scan --> progress[Progress & deviasi target real-time]:::stage
     progress --> result{Hasil QC}:::decision
@@ -96,9 +103,9 @@ const DIAGRAMS: Record<MindMapTabId, string> = {
     rejected --> calculate
     calculate --> review[Admin review penggajian]:::decision
     review --> slip[Slip / Klaim Gaji]:::stage
-    click assign href "/dashboard/production/assignments"
+    click assign href "/dashboard/produksi"
     click scan href "/dashboard/scan"
-    click progress href "/dashboard/production/progress"
+    click progress href "${role === "KARYAWAN" ? "/dashboard/karyawan" : "/dashboard/produksi"}"
     click result href "/dashboard/qc/overview"
     click accepted href "/dashboard/employees/salaries"
     click rejected href "/dashboard/inventory/rejects"
@@ -110,6 +117,7 @@ const DIAGRAMS: Record<MindMapTabId, string> = {
 const MERMAID_THEME = `%%{init: {'theme':'base','flowchart': {'nodeSpacing': 90,'rankSpacing': 110,'padding': 20,'htmlLabels': true},'themeVariables': {'fontFamily':'ui-sans-serif, system-ui, sans-serif','fontSize':'16px','primaryColor':'#ecfdf5','primaryTextColor':'#172033','lineColor':'#64748b','clusterBkg':'#f8fafc','clusterBorder':'#cbd5e1'}}}%%`
 
 export default function MindMapErpPage() {
+  const { user } = useSessionWithRole()
   const [activeTab, setActiveTab] = useState<MindMapTabId>("main-flow")
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -138,7 +146,7 @@ export default function MindMapErpPage() {
     mermaid.initialize({ startOnLoad: false, securityLevel: "loose", theme: "base" })
     let mounted = true
     const renderDiagram = async () => {
-      const result = await mermaid.render(`mindmap-erp-${activeTab}`, MERMAID_THEME + DIAGRAMS[activeTab])
+      const result = await mermaid.render(`mindmap-erp-${activeTab}`, MERMAID_THEME + DIAGRAMS[activeTab](user?.role ?? "GUEST"))
       if (mounted && diagramRef.current) {
         diagramRef.current.innerHTML = result.svg
         requestAnimationFrame(() => requestAnimationFrame(fitToView))
@@ -146,7 +154,7 @@ export default function MindMapErpPage() {
     }
     renderDiagram()
     return () => { mounted = false }
-  }, [activeTab])
+  }, [activeTab, user?.role])
 
   const resetView = () => fitToView()
   const zoom = (delta: number) => setScale((current) => Math.min(5, Math.max(0.45, Number((current + delta).toFixed(2)))))
@@ -165,7 +173,7 @@ export default function MindMapErpPage() {
 
       <Card className="overflow-hidden shadow-sm"><CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border"><CardTitle className="text-base">Visualisasi Diagram</CardTitle><div className="flex items-center gap-1"><Button variant="outline" size="icon" aria-label="Perkecil diagram" onClick={() => zoom(-0.1)}><MinusIcon className="h-4 w-4" /></Button><span className="min-w-14 text-center text-xs text-muted-foreground">{Math.round(scale * 100)}%</span><Button variant="outline" size="icon" aria-label="Perbesar diagram" onClick={() => zoom(0.1)}><PlusIcon className="h-4 w-4" /></Button><Button variant="outline" size="icon" aria-label="Reset diagram" onClick={resetView}><ArrowPathIcon className="h-4 w-4" /></Button></div></CardHeader><CardContent className="p-0"><div ref={viewportRef} className={cn("min-h-[560px] h-[min(72vh,760px)] w-full overflow-hidden bg-slate-50/70 dark:bg-slate-950/40", dragging ? "cursor-grabbing" : "cursor-grab")} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={stopDragging} onPointerCancel={stopDragging}><div className="flex min-h-full min-w-full items-center justify-center p-8" style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, transformOrigin: "center center" }}><div ref={diagramRef} className="mindmap-diagram w-full max-w-none" /></div></div></CardContent></Card>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]"><Card><CardHeader><CardTitle className="text-base">Keterangan Visual</CardTitle></CardHeader><CardContent className="grid gap-2 text-sm sm:grid-cols-2"><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-500" />Proses internal / otomatis</div><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-500" />Approval atau decision gate</div><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-blue-500" />Customer, supplier, atau pihak luar</div><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-red-500" />Reject atau rework</div><p className="col-span-full text-xs text-muted-foreground">Klik node diagram untuk membuka modul terkait. Diagram dapat digeser dengan drag dan diubah skalanya dengan kontrol zoom.</p><div className="col-span-full mt-2 border-t border-border pt-3"><div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Shortcut Modul</div><div className="flex flex-wrap gap-2">{MODULE_BRANCHES.map((branch) => <Link key={branch.id} href={branch.href} className="rounded-md border border-border px-2 py-1 text-xs text-brand-primary transition-colors hover:bg-accent">{branch.label}</Link>)}</div></div></CardContent></Card><Card><CardHeader><CardTitle className="text-base">Tahap dan Gate Utama</CardTitle></CardHeader><CardContent className="space-y-2">{PROCESS_FLOW.slice(0, activeTab === "main-flow" ? PROCESS_FLOW.length : 4).map((node, index) => <div key={node.id} className="flex gap-3 border-b border-border/60 pb-2 last:border-0"><Badge variant="outline" className="h-fit">{index + 1}</Badge><div className="min-w-0"><div className="text-sm font-medium">{node.label}</div><div className="text-xs text-muted-foreground">{node.role} · Gate: {node.gate}</div>{node.href && <Link href={node.href} className="text-xs text-brand-primary hover:underline">Buka {node.module}</Link>}</div></div>)}</CardContent></Card></div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]"><Card><CardHeader><CardTitle className="text-base">Keterangan Visual</CardTitle></CardHeader><CardContent className="grid gap-2 text-sm sm:grid-cols-2"><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-500" />Proses internal / otomatis</div><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-500" />Approval atau decision gate</div><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-blue-500" />Customer, supplier, atau pihak luar</div><div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-red-500" />Reject atau rework</div><p className="col-span-full text-xs text-muted-foreground">Klik node diagram untuk membuka modul terkait. Diagram dapat digeser dengan drag dan diubah skalanya dengan kontrol zoom.</p><div className="col-span-full mt-2 border-t border-border pt-3"><div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Shortcut Modul</div><div className="flex flex-wrap gap-2">{MODULE_BRANCHES.map((branch) => <Link key={branch.id} href={branch.href} className="rounded-md border border-border px-2 py-1 text-xs text-brand-primary transition-colors hover:bg-accent">{branch.label}</Link>)}</div></div></CardContent></Card><Card><CardHeader><CardTitle className="text-base">Tahap dan Gate Utama</CardTitle></CardHeader><CardContent className="space-y-2">{PROCESS_FLOW.slice(0, activeTab === "main-flow" ? PROCESS_FLOW.length : 4).map((node, index) => <div key={node.id} className="flex gap-3 border-b border-border/60 pb-2 last:border-0"><Badge variant="outline" className="h-fit">{index + 1}</Badge><div className="min-w-0"><div className="text-sm font-medium">{node.label}</div><div className="text-xs text-muted-foreground">{node.role} · Gate: {node.gate}</div>{node.href && <Link href={getRoleAwareHref(node.id, node.href, user?.role)} className="text-xs text-brand-primary hover:underline">Buka {node.module}</Link>}</div></div>)}</CardContent></Card></div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { inventoryMovements, products, warehouses } from "@/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, lt } from "drizzle-orm"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,6 +10,10 @@ export async function GET(request: NextRequest) {
     const warehouseId = searchParams.get("warehouseId")
     const type = searchParams.get("type")
     const limit = parseInt(searchParams.get("limit") || "50")
+
+    await db
+      .delete(inventoryMovements)
+      .where(lt(inventoryMovements.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)))
 
     const query = db
       .select({
