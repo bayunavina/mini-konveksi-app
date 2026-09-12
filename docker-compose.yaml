@@ -33,28 +33,11 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://konveksi_user:konveksi_password@postgres:5432/konveksi_db
       - BETTER_AUTH_SECRET=your-super-secret-key-change-in-production
-      - BETTER_AUTH_URL=http://localhost:3000
     ports:
       - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - erp-konveksi-network
-
-  nginx:
-    image: nginx:alpine
-    container_name: erp-konveksi-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/nginx/sites-available/erp-konveksi:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /var/www/html:/var/www/html:ro
-    depends_on:
-      - app
     networks:
       - erp-konveksi-network
 
