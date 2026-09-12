@@ -12,26 +12,41 @@ const API_PERMISSION_ROUTES: Record<string, string[]> = {
   "/api/transfers/": ["ADMIN", "SUPERADMIN", "GUDANG"],
 }
 
+const INTERNAL_ORIGIN =
+  process.env.INTERNAL_ORIGIN ||
+  (process.env.NODE_ENV === "production"
+    ? "http://erp-konveksi-app:3000"
+    : "http://localhost:3000")
+
+const MW_DEBUG = process.env.MW_DEBUG === "true"
+
+function mwDebug(message: string) {
+  if (MW_DEBUG) console.log(`[MW-DEBUG] ${message}`)
+}
+
 async function hasValidSession(request: NextRequest): Promise<boolean> {
   try {
-    const origin = request.nextUrl.origin
-    const sessionResponse = await fetch(new URL("/api/debug-session2", origin).toString(), {
-      headers: { "Cookie": request.headers.get("cookie") || "" }
-    })
+    const sessionResponse = await fetch(
+      new URL("/api/debug-session2", INTERNAL_ORIGIN).toString(),
+      { headers: { "Cookie": request.headers.get("cookie") || "" } }
+    )
     const sessionData = await sessionResponse.json()
+    mwDebug(`debug-session2 status: ${sessionResponse.status} user: ${Boolean(sessionData.user)}`)
     return Boolean(sessionData.user)
-  } catch {
+  } catch (error) {
+    mwDebug(`debug-session2 error: ${error}`)
     return false
   }
 }
 
 async function getSessionRole(request: NextRequest): Promise<string> {
   try {
-    const origin = request.nextUrl.origin
-    const sessionResponse = await fetch(new URL("/api/debug-session2", origin).toString(), {
-      headers: { "Cookie": request.headers.get("cookie") || "" }
-    })
+    const sessionResponse = await fetch(
+      new URL("/api/debug-session2", INTERNAL_ORIGIN).toString(),
+      { headers: { "Cookie": request.headers.get("cookie") || "" } }
+    )
     const sessionData = await sessionResponse.json()
+    mwDebug(`debug-session2 role: ${sessionData.user?.role || "GUEST"}`)
     return sessionData.user?.role || "GUEST"
   } catch {
     return "GUEST"
