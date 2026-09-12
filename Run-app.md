@@ -123,18 +123,22 @@ Buka browser di **http://localhost:3000**
 ## Akun Default
 
 ### Superadmin
+
 - Email: `erpkonveksi@gmail.com`
 - Password: `erpkonveksi123!`
 
 ### Karyawan
+
 - Email: `karyawan@konveksi.com`
 - Password: `Karyawan123!`
 
 ### User QC
+
 - Email: `qc@konveksi.com`
 - Password: `QC123!`
 
 ### User Gudang
+
 - Email: `gudang@konveksi.com`
 - Password: `Gudang123!`
 
@@ -170,12 +174,12 @@ ssh user@server "sudo /tmp/deploy.sh"
 
 **Yang dilakukan script:**
 
-| Langkah | Deskripsi |
-| --- | --- |
-| 1. Pre-flight check | Auto-install Docker, Docker Compose, Git, Nginx, Certbot jika belum ada |
-| 2. Pilih mode | `[1]` GitHub Clone (input URL) atau `[2]` Build Lokal (file sudah ada) |
-| 3. Konfigurasi `.env` | Input domain, auto-generate auth secret & DB password, optional SMTP |
-| 4. Nginx config | Generate reverse proxy → `http://erp-konveksi-app:3000` |
-| 5. Docker build | `docker compose build --no-cache && up -d` |
-| 6. SSL (opsional) | Certbot standalone + auto-renew cron (jika domain bukan localhost) |
-| 7. Summary | Tampilkan URL, perintah logs, restart, troubleshooting |
+| Langkah                | Deskripsi                                                                  |
+| ---------------------- | -------------------------------------------------------------------------- |
+| 1. Pre-flight check    | Auto-install Docker, Docker Compose, Git, Nginx, Certbot jika belum ada    |
+| 2. Pilih mode          | `[1]` GitHub Clone (input URL) atau `[2]` Build Lokal (file sudah ada) |
+| 3. Konfigurasi`.env` | Input domain, auto-generate auth secret & DB password, optional SMTP       |
+| 4. Nginx config        | Generate reverse proxy →`http://erp-konveksi-app:3000`                  |
+| 5. Docker build        | `docker compose build --no-cache && up -d`                               |
+| 6. SSL (opsional)      | Certbot standalone + auto-renew cron (jika domain bukan localhost)         |
+| 7. Summary             | Tampilkan URL, perintah logs, restart, troubleshooting                     |
